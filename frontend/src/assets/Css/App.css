@@ -1,0 +1,46 @@
+:root {
+    --background-color: #c4c4c4;
+    --normal-text-color: #fff;
+    --main-color: #1a110a;
+    --secondary-color: #00167a;
+    --third-color: #251b17;
+    --fourth-color: #6e6050;
+    --placeholder-color: #9ca3af;
+    --secondary-hover-color: #133eff;
+}
+
+html, body {
+    overflow: auto;
+}
+
+body {
+    font-family: 'Inter Variable', sans-serif;
+    background-color: var(--background-color);
+    color: var(--normal-text-color);
+    height: auto;
+    margin: 0;
+}
+
+img, h2, hr {
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+}
+
+/* If you still need clicking */
+img, a, div {
+    outline: none;
+    caret-color: transparent;
+}
+
+/* Kill any focus cursor */
+img:focus,
+img:active {
+    outline: none;
+    caret-color: transparent;
+}
+
+::placeholder {
+    color: var(--placeholder-color);
+    font-size: 0.95rem;
+}
