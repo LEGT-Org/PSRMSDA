@@ -7,7 +7,7 @@
 </script>
 
 <template>
-    <div class="Staff-Dashboard">
+    <div class="Staff-Navigation-Container">
 
         <div class="Staff-Navigation">
             <button>

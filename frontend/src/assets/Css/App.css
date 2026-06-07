@@ -1,4 +1,6 @@
 @import './Authentication/Login.css';
+@import './Partial/Navigation/Staff.css';
+@import './Partial/Header.css';
 
 :root {
     --background-color: #c4c4c4;
