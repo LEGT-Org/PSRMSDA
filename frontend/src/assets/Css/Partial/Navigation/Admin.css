@@ -1,0 +1,68 @@
+.Admin-Main {
+    display: flex;
+    flex-direction: row;
+    gap: 3rem;
+    color: var(--main-color);
+}
+
+.Admin-Navigation-Container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: var(--main-color);
+    width: 13rem;
+    height: 90vh;
+    gap: 2rem;
+}
+
+.Admin-Navigation-Container button {
+    display: flex;
+    background: none;
+    border: none;
+    margin-top: 1rem;
+}
+
+.Admin-Navigation-Container img {
+    width: 1.25rem;
+}
+
+.Admin-Navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-left: 1rem;
+}
+
+.Admin-Navigation a {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    color: var(--normal-text-color);
+    text-decoration: none;
+    font-weight: 550;
+}
+
+.Admin-Profile {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    color: var(--normal-text-color);
+    margin: 0.75rem 1rem;
+}
+
+.Admin-Profile img {
+    width: 3rem;
+    margin: 0;
+}
+
+.Admin-Profile h4 {
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+.Admin-Profile p {
+    font-size: 0.65rem;
+    margin: 0.25rem 0;
+}

@@ -7,7 +7,7 @@
 </script>
 
 <template>
-    <div class="Admin-Dashboard">
+    <div class="Admin-Navigation-Container">
 
         <div class="Admin-Navigation">
             <button>
