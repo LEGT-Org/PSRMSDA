@@ -5,6 +5,12 @@
     align-items: center;
     background-color: var(--third-color);
     padding: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 5rem;
+    z-index: 100;
 }
 
 .Header-Logo {

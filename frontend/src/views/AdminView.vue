@@ -14,7 +14,7 @@
         </nav>
 
         <main>
-            <section>
+            <section class="Main-Content">
                 <RouterView />
             </section>
         </main>
