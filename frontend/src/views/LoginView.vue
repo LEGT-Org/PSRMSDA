@@ -9,6 +9,7 @@
                 <img 
                     src="@/assets/Images/LEGT-Logo.png" 
                     alt="LEGT-Logo"
+                    class="Login-Logo"
                 />
             </div>
 

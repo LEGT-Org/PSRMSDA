@@ -7,7 +7,7 @@
 </script>
 
 <template>
-    <div class="Admin-Dashboard">
+    <div class="Admin-Navigation-Container">
 
         <div class="Admin-Navigation">
             <button>
@@ -41,7 +41,7 @@
                 <span>New Request</span>
             </RouterLink>
 
-            <RouterLink to="/admin/diagnostic">
+            <RouterLink to="/admin/diagnostics">
                 <img 
                     src="@/assets/Images/Icons/diagnostic.png" 
                     alt="Diagnostic Rules"
@@ -49,7 +49,7 @@
                 <span>Diagnostic Rules</span>
             </RouterLink>
 
-            <RouterLink to="/admin/sop">
+            <RouterLink to="/admin/sops">
                 <img 
                     src="@/assets/Images/Icons/sop.png" 
                     alt="Standard Operational Procedure"

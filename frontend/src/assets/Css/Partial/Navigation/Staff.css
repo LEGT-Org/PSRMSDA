@@ -1,0 +1,68 @@
+.Staff-Main {
+    display: flex;
+    flex-direction: row;
+    gap: 3rem;
+    color: var(--main-color);
+}
+
+.Staff-Navigation-Container {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background-color: var(--main-color);
+    width: 15rem;
+    height: 90vh;
+    gap: 2rem;
+}
+
+.Staff-Navigation-Container button {
+    display: flex;
+    background: none;
+    border: none;
+    margin-top: 1rem;
+}
+
+.Staff-Navigation-Container img {
+    width: 1.25rem;
+}
+
+.Staff-Navigation {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+    margin-left: 1rem;
+}
+
+.Staff-Navigation a {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    color: var(--normal-text-color);
+    text-decoration: none;
+    font-weight: 550;
+}
+
+.Staff-Profile {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    color: var(--normal-text-color);
+    margin: 0.75rem 1rem;
+}
+
+.Staff-Profile img {
+    width: 3rem;
+    margin: 0;
+}
+
+.Staff-Profile h4 {
+    font-size: 0.75rem;
+    margin: 0;
+}
+
+.Staff-Profile p {
+    font-size: 0.65rem;
+    margin: 0.25rem 0;
+}
