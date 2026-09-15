@@ -31,14 +31,3 @@ class UserCreate(BaseModel):
         min_length=8,
         max_length=128
     )
-
-
-class UserResponse(BaseModel):
-
-    id: int
-    first_name: str
-    last_name: str
-    email: str
-    role: str
-
-    model_config = ConfigDict(from_attributes=True)
