@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 
 from app.shared.session import get_db
 
-from app.modules.auth.services.refresh_token import RefreshTokenService
+from app.modules.auth.service.refresh_token import RefreshTokenService
 from app.modules.auth.repository import RefreshTokenRepository
 
 

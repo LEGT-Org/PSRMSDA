@@ -1,7 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.modules.auth.security.refresh_token import RefreshToken
+from app.modules.auth.model import RefreshToken
 
 
 class RefreshTokenRepository:
