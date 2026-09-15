@@ -6,9 +6,11 @@ from datetime import (
 
 from pydantic import EmailStr
 
-from app.modules.user.model import User
 from app.modules.user.repository import UserRepository
+from app.modules.user.value_object.email import Email
+from app.modules.user.value_object.name import Name
 from app.modules.user.schema import UserRole
+from app.modules.user.model import User
 
 from app.shared.exception import (
     EmailAlreadyExistsError, 
@@ -34,8 +36,12 @@ class UserService:
         if self.repository.get_by_email(email):
             raise EmailAlreadyExistsError()
 
-        now = datetime.now(timezone.utc)
+        Name(first_name)
+        Name(last_name)
+        Email(email)
 
+        now = datetime.now(timezone.utc)
+        
         user = User(
             first_name=first_name,
             last_name=last_name,
@@ -48,3 +54,18 @@ class UserService:
         )
 
         return self.repository.create(user)
+
+
+    def get_user_by_email(
+        self, 
+        email: EmailStr
+    ) -> User:
+
+        Email(email)
+
+        user = self.repository.get_by_email(email)
+
+        if user is None:
+            raise InvalidCredentialsError()
+
+        return user

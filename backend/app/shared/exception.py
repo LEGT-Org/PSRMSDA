@@ -4,3 +4,19 @@ class EmailAlreadyExistsError(Exception):
 
 class InvalidCredentialsError(Exception):
     pass
+
+
+class InvalidEmailAddressError(Exception):
+    pass
+
+
+class InvalidNameError(Exception):
+    pass
+
+
+class NameMustBeTwoToFiftyCharacterError(Exception):
+    pass
+
+
+class NameOnlyContainAlphabeticCharacter(Exception):
+    pass
