@@ -19,6 +19,7 @@ const routes = [
         name: 'Login',
         component: () => import('@/views/LoginView.vue'),
         meta: {
+            requiresGuest: true,
             title: 'Lightyear Electrical Goods Trading'
         }
     },

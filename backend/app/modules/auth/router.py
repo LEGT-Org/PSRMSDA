@@ -31,6 +31,9 @@ from app.modules.auth.schema import (
 )
 
 
+from app.modules.user import User
+
+
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"]
@@ -110,7 +113,7 @@ def login(
     try:
 
         user = service.authenticate_user(form_data.email, form_data.password)
-        access_token = create_access_token(user.id)
+        access_token = create_access_token(user.id, user.role)
         refresh_token = (refresh_token_service.create_token(user.id))
 
         return TokenResponse(
@@ -125,3 +128,17 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
         )
+
+
+@router.get(
+    "/me",
+    response_model=UserResponse    
+)
+def get_me(
+    current_user: Annotated[
+        User,
+        Depends(get_current_user)
+    ]
+):
+
+    return current_user
