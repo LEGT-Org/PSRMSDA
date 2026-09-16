@@ -9,7 +9,10 @@ from app.modules.user.service import UserService
 
 
 def get_user_repository(
-    db: Annotated[Session, Depends(get_db)]
+    db: Annotated[
+        Session, 
+        Depends(get_db)
+    ]
 ) -> UserRepository:
 
     return UserRepository(db)
@@ -19,7 +22,14 @@ def get_user_service(
     repository: Annotated[
         UserRepository,
         Depends(get_user_repository)
+    ],
+    db: Annotated[
+        Session, 
+        Depends(get_db)
     ]
 ) -> UserService:
 
-    return UserService(repository)
+    return UserService(
+        repository=repository, 
+        db=db
+    )

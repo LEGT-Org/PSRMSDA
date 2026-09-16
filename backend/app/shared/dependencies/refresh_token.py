@@ -23,7 +23,14 @@ def get_refresh_token_service(
     repository: Annotated[
         RefreshTokenRepository,
         Depends(get_refresh_token_repository)
+    ],
+    db: Annotated[
+        Session, 
+        Depends(get_db)
     ]
 ) -> RefreshTokenService:
 
-    return RefreshTokenService(repository)
+    return RefreshTokenService(
+        repository=repository, 
+        db=db
+    )

@@ -9,7 +9,7 @@ from datetime import (
 from app.shared.config import settings
 
 
-def create_access_token(user_id: int) -> str:
+def create_access_token(user_id: int, role: str) -> str:
 
     expires_at = (
         datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
@@ -17,6 +17,7 @@ def create_access_token(user_id: int) -> str:
     
     payload = {
         "sub": str(user_id),
+        "role": role,
         "exp": expires_at
     }
 

@@ -5,6 +5,7 @@ from datetime import (
 )
 
 from pydantic import EmailStr
+from sqlalchemy.orm import Session
 
 from app.modules.user.repository import UserRepository
 from app.modules.user.value_object.email import Email
@@ -20,9 +21,14 @@ from app.shared.exception import (
 
 class UserService:
 
-    def __init__(self, repository: UserRepository):
+    def __init__(
+        self,
+        repository: UserRepository,
+        db: Session
+    ):
 
         self.repository = repository
+        self.db = db
 
     
     def create_user(
@@ -33,12 +39,12 @@ class UserService:
         password_hash: str
     ) -> User:
 
-        if self.repository.get_by_email(email):
-            raise EmailAlreadyExistsError()
-
         Name(first_name)
         Name(last_name)
         Email(email)
+
+        if self.repository.get_by_email(email):
+            raise EmailAlreadyExistsError()
 
         now = datetime.now(timezone.utc)
         
@@ -53,7 +59,12 @@ class UserService:
             deleted_at=None
         )
 
-        return self.repository.create(user)
+        self.repository.create(user)
+
+        self.db.commit()
+        self.db.refresh(user)
+
+        return user
 
 
     def get_user_by_email(

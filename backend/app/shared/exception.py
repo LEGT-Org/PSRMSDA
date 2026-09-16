@@ -6,6 +6,10 @@ class InvalidCredentialsError(Exception):
     pass
 
 
+class InvalidRefreshToken(Exception):
+    pass
+
+
 class InvalidEmailAddressError(Exception):
     pass
 
@@ -19,4 +23,8 @@ class NameMustBeTwoToFiftyCharacterError(Exception):
 
 
 class NameOnlyContainAlphabeticCharacter(Exception):
+    pass
+
+
+class ExpiredRefreshToken(Exception):
     pass
