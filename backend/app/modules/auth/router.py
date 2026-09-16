@@ -18,8 +18,10 @@ from app.shared.exception import (
     NameOnlyContainAlphabeticCharacter
 )
 
-from app.modules.user.model import User
 
+from app.modules.auth.service.refresh_token import RefreshTokenService
+from app.modules.auth.service.auth import AuthService
+from app.modules.auth.security.jwt import create_access_token 
 from app.modules.auth.schema import (
     UserResponse,
     UserCreate,
@@ -27,9 +29,6 @@ from app.modules.auth.schema import (
     TokenResponse,
     RefreshTokenRequest 
 )
-from app.modules.auth.service.refresh_token import RefreshTokenService
-from app.modules.auth.service.auth import AuthService
-from app.modules.auth.security.jwt import create_access_token 
 
 
 router = APIRouter(
@@ -126,17 +125,3 @@ def login(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid credentials"
         )
-
-
-@router.get(
-    "/me",
-    response_model=UserResponse
-)
-def get_ne(
-    current_user: Annotated[
-        User,
-        Depends(get_current_user)
-    ]
-):
-
-    return current_user

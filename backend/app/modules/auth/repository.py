@@ -14,9 +14,6 @@ class RefreshTokenRepository:
     def create(self, refresh_token: RefreshToken) -> RefreshToken:
 
         self.db.add(refresh_token)
-        self.db.commit()
-        self.db.refresh(refresh_token)
-
         return refresh_token
 
     
@@ -31,4 +28,3 @@ class RefreshTokenRepository:
         from datetime import datetime, timezone
 
         refresh_token.revoked_at = (datetime.now(timezone.utc).replace(tzinfo=None))
-        self.db.commit()

@@ -2,7 +2,6 @@ import re
 
 from dataclasses import dataclass
 
-from app.shared.config import settings
 from app.shared.exception import (
     InvalidNameError,
     NameMustBeTwoToFiftyCharacterError,
