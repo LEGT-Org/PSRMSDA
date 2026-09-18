@@ -1,8 +1,23 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-from app.shared.dependencies import get_db
+from app.modules.auth.router import router as auth_router
+
+from app.shared.config import settings
 
 app = FastAPI(title="Server API")
+
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=settings.access_control_allowed_origin,
+    allow_credentials=settings.allowed_credentials,
+    allow_methods=settings.allowed_methods,
+    allow_headers=settings.allowed_headers
+)
+
+
+app.include_router(auth_router)
 
 
 @app.get('/')

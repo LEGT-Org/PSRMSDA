@@ -1,14 +1,33 @@
 <script setup lang="ts">
     import { ref } from 'vue';
+    import { login } from '@/services/useAuth';
+    import { useRouter } from 'vue-router';
 
-    const Email     = ref<string>('');
-    const Password  = ref<string>('');
-    const Error     = ref<string>('');
+    const Email         = ref<string>('');
+    const Password      = ref<string>('');
+    const ErrorMessage  = ref<string | null>(null);
+
+    const Router        = useRouter();
+    
+    const Login = async () => {
+
+        const LoginResult   = await login(Email.value, Password.value);
+        
+        if (LoginResult.success) {
+            window.location.reload();
+        }
+
+        if (!LoginResult.success) {
+            ErrorMessage.value = LoginResult.error;
+        }
+
+    }
+ 
 </script>
 
 <template>
     <div class="Login-Form">
-        <form>
+        <form @submit.prevent="Login">
             <div class="Login-Input">
                 <label for="Email">Email</label>
                 <input 
@@ -32,8 +51,8 @@
             </div>
 
             <div class="Login-Handler">
-                <p v-if="Error">{{ Error }}</p>
-                <button>Login</button>
+                <p v-if="ErrorMessage">{{ ErrorMessage }}</p>
+                <button type="submit">Login</button>
             </div>
         </form>
     </div>

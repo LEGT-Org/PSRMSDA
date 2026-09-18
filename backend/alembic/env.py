@@ -9,6 +9,10 @@ from alembic import context
 from app.shared.database import Base
 from app.shared.config import settings
 
+# Models Configuration
+from app.modules.auth.model import RefreshToken
+from app.modules.user.model import User
+
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
