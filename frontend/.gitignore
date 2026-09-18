@@ -14,13 +14,6 @@ dist-ssr
 coverage
 *.local
 
-# Secrets
-.env
-.env.local
-.env.*.local
-!.env.example
-!.env.sample
-
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

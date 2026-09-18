@@ -1,7 +1,34 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import routes from './Routes';
 
-import { getCurrentUser } from '@/services/useAuth';
+interface User {
+    id: number
+    first_name: string
+    last_name: string
+    email: string
+    role: string
+}
+
+
+async function getCurrentUser(): Promise<User | null> {
+    const token = localStorage.getItem('xx-do-you-know-it');
+
+    if (!token) {
+        return null;
+    }
+
+    const res = await fetch('http://127.0.0.1:8000/auth/me', {
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    })
+
+    if (!res.ok) {
+        return null;
+    }
+
+    return await res.json();
+}
 
 
 // Router
@@ -29,17 +56,7 @@ router.beforeEach( async (to) =>
         }
 
         if (to.meta.requiresGuest && user) {
-            return user.role === 'admin' ? '/admin' : '/dashboard';
-        }
-
-        if (to.meta.requiresAdmin) {
-            if (!user) return '/';
-            if (user.role !== 'admin') return '/dashboard';
-        }
-
-        if (to.meta.requiresStaff) {
-            if (!user) return '/';
-            if (user.role !== 'staff') return user.role === 'admin' ? '/admin' : '/';
+            return '/dashboard';
         }
 
         return true;

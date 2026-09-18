@@ -1,33 +1,47 @@
 <script setup lang="ts">
     import { ref } from 'vue';
-    import { login } from '@/services/useAuth';
     import { useRouter } from 'vue-router';
 
-    const Email         = ref<string>('');
-    const Password      = ref<string>('');
-    const ErrorMessage  = ref<string | null>(null);
+    const Email     = ref<string>('');
+    const Password  = ref<string>('');
+    const Error     = ref<string>('');
 
-    const Router        = useRouter();
-    
-    const Login = async () => {
+    const Router    = useRouter()
 
-        const LoginResult   = await login(Email.value, Password.value);
+    async function login() {
+        const res = await fetch('http://127.0.0.1:8000/auth/login',
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                },
+                body: JSON.stringify(
+                    {
+                        email: Email.value,
+                        password: Password.value
+                    }
+                )
+            }
+        )
+
+        const data = await res.json()
+
+        if (!res.ok) { 
+            Error.value = data.detail ?? 'Login failed' 
+            return 
+        }
+
+        localStorage.setItem('xx-do-you-know-it', data.access_token)
+        await Router.push('/dashboard')
         
-        if (LoginResult.success) {
-            window.location.reload();
-        }
-
-        if (!LoginResult.success) {
-            ErrorMessage.value = LoginResult.error;
-        }
-
     }
- 
+
 </script>
 
 <template>
     <div class="Login-Form">
-        <form @submit.prevent="Login">
+        <form @submit.prevent="login">
             <div class="Login-Input">
                 <label for="Email">Email</label>
                 <input 
@@ -51,7 +65,7 @@
             </div>
 
             <div class="Login-Handler">
-                <p v-if="ErrorMessage">{{ ErrorMessage }}</p>
+                <p v-if="Error">{{ Error }}</p>
                 <button type="submit">Login</button>
             </div>
         </form>

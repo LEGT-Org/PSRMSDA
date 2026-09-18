@@ -10,10 +10,6 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int
     refresh_token_bytes: int
     allowed_domains: set[str]
-    access_control_allowed_origin: set[str]
-    allowed_credentials: bool
-    allowed_methods: set[str]
-    allowed_headers: set[str]
     
     model_config = SettingsConfigDict(
         env_file=".env",
