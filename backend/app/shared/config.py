@@ -14,6 +14,9 @@ class Settings(BaseSettings):
     allowed_credentials: bool
     allowed_methods: set[str]
     allowed_headers: set[str]
+    allowed_httponly: bool
+    allowed_secure: bool
+    allowed_samesite: str
     
     model_config = SettingsConfigDict(
         env_file=".env",

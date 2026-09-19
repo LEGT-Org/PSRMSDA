@@ -1,7 +1,8 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import routes from './Routes';
 
-import { getCurrentUser } from '@/services/useAuth';
+import { RestoreSession } from '@/services/useAuth';
+import { currentUser, isFetched } from '@/services/state/Auth';
 
 
 // Router
@@ -18,28 +19,41 @@ const router = createRouter(
 
 router.beforeEach( async (to) => 
     {
+
         const defaultTitle = 'Lightyear Electrical Goods Trading';
 
         document.title = to.meta?.title || defaultTitle;
 
-        const user = await getCurrentUser();
+        if (!isFetched.value) {
+            await RestoreSession();
+        }
+
+        const user = currentUser.value;
 
         if (to.meta.requiresAuth && !user) {
+
             return '/';
+
         }
 
         if (to.meta.requiresGuest && user) {
+
             return user.role === 'admin' ? '/admin' : '/dashboard';
+
         }
 
         if (to.meta.requiresAdmin) {
+
             if (!user) return '/';
             if (user.role !== 'admin') return '/dashboard';
+
         }
 
         if (to.meta.requiresStaff) {
+
             if (!user) return '/';
-            if (user.role !== 'staff') return user.role === 'admin' ? '/admin' : '/';
+            if (user.role !== 'user') return user.role === 'admin' ? '/admin' : '/';
+
         }
 
         return true;

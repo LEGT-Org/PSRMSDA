@@ -1,9 +1,23 @@
 <script setup lang="ts">
     import { ref } from 'vue';
+    import { logout } from '@/services/useAuth';
+    import { currentUser } from '@/services/state/Auth';
+    
+    const showProfileMenu = ref<boolean>(false);
 
-    const Name  = ref<string>('John Doe Example');
-    const Email = ref<string>('johndoe@example.com');
-    const Role  = ref<string>('Admin');
+    const ToggleProfileMenu = () => {
+
+        showProfileMenu.value = !showProfileMenu.value
+        
+    }
+
+    const Logout = async () => {
+
+        await logout();
+        showProfileMenu.value = false
+        window.location.reload();
+
+    }
 </script>
 
 <template>
@@ -90,13 +104,29 @@
             </RouterLink>
         </div>
 
-        <div class="Admin-Profile">
-            <img src="@/assets/Images/Icons/user.png" alt="Lighyear Electrical Godds Trading Profile">
-            <div>
-                <h4>{{ Name }}</h4>
-                <p>{{ Email }}</p>
-                <p>{{ Role }}</p>
+        <div class="Admin-Profile-Wrapper">
+            
+            <button type="button" class="Admin-Profile" @click="ToggleProfileMenu">
+                <img src="@/assets/Images/Icons/user.png" alt="Profile">
+                <div v-if="currentUser">
+                    <h4>{{ currentUser.first_name }} {{ currentUser.last_name }}</h4>
+                    <p>{{ currentUser.email }}</p>
+                    <p>{{ currentUser.role }}</p>
+                </div>
+
+                <div v-else>
+                    <h4>Loading...</h4>
+                </div>
+            </button>
+
+            <div v-if="showProfileMenu" class="Admin-Profile-Menu">
+                <RouterLink to="/settings" @click="showProfileMenu = false">
+                    Settings
+                </RouterLink>
+
+                <button type="button" @click="Logout">Logout</button>
             </div>
+
         </div>
     </div>
 </template>

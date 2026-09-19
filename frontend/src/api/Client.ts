@@ -1,3 +1,5 @@
+import { accessToken } from "@/services/state/Auth";
+
 const API_URL = import.meta.env.VITE_API_URL;
 
 
@@ -6,25 +8,22 @@ export async function ApiFetch<T>(
     options: RequestInit = {}
 ): Promise<Response> {
 
-    const token = localStorage.getItem(`${import.meta.env.VITE_ACCESS_TOKEN}`);
+    const headers = new Headers(options.headers);
+
+    headers.set('Content-Type', 'application/json');
+    headers.set('Accept', 'application/json');
+
+    if (accessToken.value) {
+
+        headers.set('Authorization', `Bearer ${accessToken.value}`);
+
+    }
 
     return await fetch(`${API_URL}${endpoint}`, {
         
         ...options,
-
-        headers: {
-
-            'Content-Type': 'application/json',
-            'Accept': 'application/json',
-            
-            ...(token
-                ? { Authorization: `Bearer ${token}` }
-                : {}
-            ),
-
-            ...options.headers
-
-        }
+        headers,
+        credentials: 'include'
 
     });
     

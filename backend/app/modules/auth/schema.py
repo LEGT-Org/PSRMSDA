@@ -49,11 +49,6 @@ class StoredToken(BaseModel):
     created_at: datetime
 
 
-class RefreshTokenRequest(BaseModel):
-
-    refresh_token: str
-
-
 class UserResponse(BaseModel):
 
     id: int

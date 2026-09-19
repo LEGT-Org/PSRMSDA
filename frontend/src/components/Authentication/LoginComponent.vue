@@ -1,25 +1,30 @@
 <script setup lang="ts">
     import { ref } from 'vue';
-    import { login } from '@/services/useAuth';
     import { useRouter } from 'vue-router';
+
+    import { login } from '@/services/useAuth';
+    import { Error, currentUser } from '@/services/state/Auth';
 
     const Email         = ref<string>('');
     const Password      = ref<string>('');
-    const ErrorMessage  = ref<string | null>(null);
+    const ErrorMessage  = ref<string>('');
 
-    const Router        = useRouter();
+    const Router = useRouter();
     
     const Login = async () => {
 
-        const LoginResult   = await login(Email.value, Password.value);
-        
-        if (LoginResult.success) {
-            window.location.reload();
+        const loginResult = await login(Email.value, Password.value);
+
+        console.log('LOGIN RESULT:', loginResult);
+        console.log('CURRENT USER:', currentUser.value);
+
+        if (loginResult) {
+
+            await Router.push(currentUser.value?.role === 'admin' ? '/admin' : '/dashboard');
+
         }
 
-        if (!LoginResult.success) {
-            ErrorMessage.value = LoginResult.error;
-        }
+        ErrorMessage.value = Error.value;
 
     }
  

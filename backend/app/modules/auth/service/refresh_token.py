@@ -72,3 +72,18 @@ class RefreshTokenService:
         new_token = self.create_token(user_id)
 
         return user_id, new_token
+
+
+    def revoke_token(
+        self, 
+        refresh_token: str
+    ) -> None:
+
+        token_hash = hash_refresh_token(refresh_token)
+        stored_token = self.repository.get_by_hash(token_hash)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        StoredToken(value=stored_token, now=now)
+
+        self.repository.revoke(stored_token)
+        self.db.commit()

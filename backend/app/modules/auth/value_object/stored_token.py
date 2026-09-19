@@ -3,8 +3,8 @@ from datetime import datetime
 
 from app.shared.config import settings
 from app.shared.exception import (
-    InvalidRefreshToken,
-    ExpiredRefreshToken
+    InvalidRefreshTokenError,
+    ExpiredRefreshTokenError
 )
 
 from app.modules.auth.schema import StoredToken
@@ -19,10 +19,10 @@ class StoredToken:
     def __post_init__(self):
 
         if self.value is None:
-            raise InvalidRefreshToken()
+            raise InvalidRefreshTokenError()
 
         if self.value.revoked_at is not None:
-            raise InvalidRefreshToken()
+            raise InvalidRefreshTokenError()
 
-        if self.value.expires_at <= now:
-            raise ExpiredRefreshToken()
+        if self.value.expires_at <= self.now:
+            raise ExpiredRefreshTokenError()
