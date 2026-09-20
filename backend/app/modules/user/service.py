@@ -80,3 +80,13 @@ class UserService:
             raise InvalidCredentialsError()
 
         return user
+
+
+    def get_user_by_id(
+        self,
+        user_id: int
+    ) -> User:
+
+        user = self.repository.get_by_id(user_id)
+
+        return user

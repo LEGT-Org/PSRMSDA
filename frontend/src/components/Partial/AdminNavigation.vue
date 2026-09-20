@@ -1,9 +1,25 @@
 <script setup lang="ts">
     import { ref } from 'vue';
 
-    const Name  = ref<string>('John Doe Example');
-    const Email = ref<string>('johndoe@example.com');
-    const Role  = ref<string>('Admin');
+    import { logout } from '@/services/useAuth';
+    import { currentUser } from '@/services/state/Auth';
+    import { capitalizeFirstLetter } from '@/helper/Capitalize';
+    
+    const showProfileMenu = ref<boolean>(false);
+
+    const ToggleProfileMenu = () => {
+
+        showProfileMenu.value = !showProfileMenu.value
+        
+    }
+
+    const Logout = async () => {
+
+        await logout();
+        showProfileMenu.value = false
+        window.location.reload();
+
+    }
 </script>
 
 <template>
@@ -90,13 +106,29 @@
             </RouterLink>
         </div>
 
-        <div class="Admin-Profile">
-            <img src="@/assets/Images/Icons/user.png" alt="Lighyear Electrical Godds Trading Profile">
-            <div>
-                <h4>{{ Name }}</h4>
-                <p>{{ Email }}</p>
-                <p>{{ Role }}</p>
+        <div class="Admin-Profile-Wrapper">
+            
+            <button type="button" class="Admin-Profile" @click="ToggleProfileMenu">
+                <img src="@/assets/Images/Icons/user.png" alt="Profile">
+                <div v-if="currentUser">
+                    <h4>{{ capitalizeFirstLetter(currentUser.first_name) }} {{ capitalizeFirstLetter(currentUser.last_name) }}</h4>
+                    <p>{{ currentUser.email }}</p>
+                    <p>{{ capitalizeFirstLetter(currentUser.role) }}</p>
+                </div>
+
+                <div v-else>
+                    <h4>Loading...</h4>
+                </div>
+            </button>
+
+            <div v-if="showProfileMenu" class="Admin-Profile-Menu">
+                <RouterLink to="/settings" @click="showProfileMenu = false">
+                    Settings
+                </RouterLink>
+
+                <button type="button" @click="Logout">Logout</button>
             </div>
+
         </div>
     </div>
 </template>

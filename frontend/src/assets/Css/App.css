@@ -3,6 +3,7 @@
 @import './Partial/Navigation/Admin.css';
 @import './Partial/Header.css';
 @import './Partial/Content.css';
+@import './Error/NotFound.css';
 
 :root {
     --background-color: #c4c4c4;
@@ -13,6 +14,8 @@
     --fourth-color: #6e6050;
     --placeholder-color: #9ca3af;
     --secondary-hover-color: #133eff;
+    --error-handler-color: #8f0101;
+    --error-handler-button-color: rgb(177, 177, 177);
 }
 
 html, body {

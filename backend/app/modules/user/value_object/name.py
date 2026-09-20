@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from app.shared.exception import (
     InvalidNameError,
     NameMustBeTwoToFiftyCharacterError,
-    NameOnlyContainAlphabeticCharacter
+    NameOnlyContainAlphabeticCharacterError
 )
 
 
@@ -29,4 +29,4 @@ class Name:
             raise NameMustBeTwoToFiftyCharacterError()
 
         if not name_regex.match(cleaned_value):
-            raise NameOnlyContainAlphabeticCharacter()
+            raise NameOnlyContainAlphabeticCharacterError()

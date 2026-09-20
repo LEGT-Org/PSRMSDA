@@ -34,3 +34,11 @@ class AuthService:
             raise InvalidCredentialsError()
 
         return user
+
+    
+    def auth_get_user_by_id(self, user_id: int):
+
+        user = self.interface.get_user_by_id(user_id);
+
+        return user
+

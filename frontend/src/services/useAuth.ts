@@ -1,30 +1,21 @@
-import { ref } from "vue";
 import { ApiFetch } from "@/api/Client";
 
+import { 
+    currentUser, 
+    accessToken, 
+    isLoading, 
+    isFetched, 
+    Error,
 
-interface User {
-    id: number
-    first_name: string
-    last_name: string
-    email: string
-    role: string
-}
-
-
-const Error     = ref<string>('');
-const isLoading = ref<boolean>(false);
-
-const currentUser = ref<User | null>(null);
-const isFetched   = ref(false);
+    type User 
+} from "./state/Auth";
 
 
 // Fetching the User
 
 export async function getCurrentUser(force: boolean = false): Promise<User | null> {
 
-    const token = localStorage.getItem(`${import.meta.env.VITE_ACCESS_TOKEN}`);
-
-    if (!token) {
+    if (!accessToken.value) {
 
         currentUser.value = null;
         isFetched.value = true;
@@ -44,7 +35,7 @@ export async function getCurrentUser(force: boolean = false): Promise<User | nul
 
         if (!res.ok) {
 
-            localStorage.removeItem(`${import.meta.env.VITE_ACCESS_TOKEN}`);
+            accessToken.value = null;
             currentUser.value = null;
             return null;
 
@@ -74,7 +65,7 @@ export async function login(Email: string, Password: string) {
     isLoading.value = true;
 
     try {
-
+        
         const res = await ApiFetch('/auth/login', {
 
             method: 'POST',
@@ -92,36 +83,18 @@ export async function login(Email: string, Password: string) {
         if (!res.ok) { 
 
             Error.value = data.detail ?? 'Invalid email or password';
-
-            return {
-
-                success: false,
-                error: Error.value,
-                
-            };
-
+            return Error.value;
         }
 
-        localStorage.setItem(`${import.meta.env.VITE_ACCESS_TOKEN}`, data.access_token);
+        accessToken.value = data.access_token;
+        await getCurrentUser(true);
 
-        return {
+        return true;
 
-            success: true,
-            error: null,
-
-        }
-        
     } catch(err) {
 
         console.error('Login error', err);
         alert('Unable to connect to the server. Please try again later');
-
-        return {
-
-            success: false,
-            error: null,
-
-        };
 
     } finally {
 
@@ -131,13 +104,74 @@ export async function login(Email: string, Password: string) {
 }
 
 
+// This is for Refresh Token
+
+export async function RestoreSession() {
+    
+    try {
+
+        const res = await ApiFetch('/auth/refresh', { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok) {
+
+            currentUser.value = null;
+            accessToken.value = null;
+            isFetched.value = true;
+
+            return false;
+
+        }
+
+        accessToken.value = data.access_token;
+
+        await getCurrentUser(true);
+
+        return true;
+        
+    } catch {
+
+        currentUser.value = null;
+        accessToken.value = null;
+        isFetched.value = true;
+        return false;
+
+    }
+
+}
+
+
 // Clear The User Cache (Mostly use for logout)
 
-export function clearAuthCache() {
+export async function ClearAuthCache() {
 
     currentUser.value = null;
+    accessToken.value = null;
     isFetched.value = false;
-    localStorage.removeItem(`${import.meta.env.VITE_ACCESS_TOKEN}`);
+
+}
+
+
+// This is for logout and revoking refresh_token
+
+export async function logout() {
+
+    try {
+
+        const res = await ApiFetch('/auth/revoke', { method: 'POST' });
+        const data = await res.json();
+
+        if (!res.ok) {
+
+            alert(data.detail);
+
+        }
+
+    } finally {
+
+        await ClearAuthCache();
+
+    }
 
 }
 

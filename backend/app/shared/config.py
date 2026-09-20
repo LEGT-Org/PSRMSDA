@@ -9,11 +9,16 @@ class Settings(BaseSettings):
     access_token_expire_minutes: int
     refresh_token_expire_days: int
     refresh_token_bytes: int
+    csrf_token_bytes: int
     allowed_domains: set[str]
     access_control_allowed_origin: set[str]
     allowed_credentials: bool
     allowed_methods: set[str]
     allowed_headers: set[str]
+    allowed_refresh_httponly: bool
+    allowed_csrf_httponly: bool
+    allowed_secure: bool
+    allowed_samesite: str
     
     model_config = SettingsConfigDict(
         env_file=".env",

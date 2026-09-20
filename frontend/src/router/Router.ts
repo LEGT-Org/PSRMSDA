@@ -1,7 +1,10 @@
+import { ref } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
-import routes from './Routes';
 
-import { getCurrentUser } from '@/services/useAuth';
+import routes from './Routes';
+import { RestoreSession } from '@/services/useAuth';
+import { currentUser, isFetched, isCSRFInitialized } from '@/services/state/Auth';
+import { getCSRFTokenFromServer } from '@/api/CSRF';
 
 
 // Router
@@ -18,28 +21,67 @@ const router = createRouter(
 
 router.beforeEach( async (to) => 
     {
+
         const defaultTitle = 'Lightyear Electrical Goods Trading';
-
+        
         document.title = to.meta?.title || defaultTitle;
+        
+        // CSRF Middleware
 
-        const user = await getCurrentUser();
+        if (!isCSRFInitialized.value) {
 
+            const csrfResponse = await getCSRFTokenFromServer();
+
+            if (!csrfResponse.ok) {
+
+                const data = await csrfResponse.json();
+                alert(data.detail);
+                return;
+
+            }
+
+            isCSRFInitialized.value = true;
+            
+        }
+
+
+        // Refresh Token Middleware
+
+        if (!isFetched.value) {
+
+            await RestoreSession();
+
+        }
+        
+        
+        // Allowed Routes Middleware
+        
+        const user = currentUser.value;
+        
         if (to.meta.requiresAuth && !user) {
+
             return '/';
+
         }
 
         if (to.meta.requiresGuest && user) {
+
             return user.role === 'admin' ? '/admin' : '/dashboard';
+
         }
 
         if (to.meta.requiresAdmin) {
+
             if (!user) return '/';
             if (user.role !== 'admin') return '/dashboard';
+
         }
 
         if (to.meta.requiresStaff) {
+
             if (!user) return '/';
-            if (user.role !== 'staff') return user.role === 'admin' ? '/admin' : '/';
+            if (user.role !== 'user') return user.role === 'admin' ? '/admin' : '/';
+
         }
 
         return true;
