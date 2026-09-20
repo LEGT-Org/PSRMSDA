@@ -1,7 +1,10 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from datetime import datetime, timedelta, timezone
+
 from app.modules.auth.model import RefreshToken
+from app.shared.config import settings
 
 
 class RefreshTokenRepository:
@@ -23,8 +26,19 @@ class RefreshTokenRepository:
         return self.db.scalar(statement)
 
     
-    def revoke(self, refresh_token: RefreshToken) -> None:
+    def rotate(
+        self,
+        stored_token: RefreshToken,
+        new_token_hash: str,
+        now: datetime
+    ) -> None:
 
-        from datetime import datetime, timezone
+        stored_token.token_hash = new_token_hash
+        stored_token.expires_at = (now + timedelta(days=settings.refresh_token_expire_days))
+        stored_token.revoked_at = None
+        stored_token.created_at = now
+
+
+    def revoke(self, refresh_token: RefreshToken) -> None:
 
         refresh_token.revoked_at = (datetime.now(timezone.utc).replace(tzinfo=None))

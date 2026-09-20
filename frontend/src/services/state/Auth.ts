@@ -15,3 +15,4 @@ export const isFetched   = ref(false);
 export const Error       = ref<string>('');
 export const currentUser = ref<User | null>(null);
 export const accessToken = ref<string | null>(null);
+export const isCSRFInitialized = ref(false);

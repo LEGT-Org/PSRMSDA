@@ -1,4 +1,5 @@
 import { accessToken } from "@/services/state/Auth";
+import { getCSRFToken } from "./CSRF";
 
 const API_URL = import.meta.env.VITE_API_URL;
 
@@ -16,6 +17,19 @@ export async function ApiFetch<T>(
     if (accessToken.value) {
 
         headers.set('Authorization', `Bearer ${accessToken.value}`);
+
+    }
+
+    const csrfToken = getCSRFToken();
+
+    if (
+        csrfToken && ['POST', 'PUT', 'PATCH', 'DELETE'].includes(
+            (options.method ?? 'GET').toUpperCase()
+        )
+    ) {
+
+        headers.set('X-CSRF-Token', csrfToken);
+        console.log('CSRF header:', headers.get('X-CSRF-Token'));
 
     }
 

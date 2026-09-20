@@ -15,9 +15,6 @@
 
         const loginResult = await login(Email.value, Password.value);
 
-        console.log('LOGIN RESULT:', loginResult);
-        console.log('CURRENT USER:', currentUser.value);
-
         if (loginResult) {
 
             await Router.push(currentUser.value?.role === 'admin' ? '/admin' : '/dashboard');

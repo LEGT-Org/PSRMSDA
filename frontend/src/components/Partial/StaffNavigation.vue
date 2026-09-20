@@ -1,7 +1,9 @@
 <script setup lang="ts">
     import { ref } from 'vue';
+
     import { logout } from '@/services/useAuth';
     import { currentUser } from '@/services/state/Auth';
+    import { capitalizeFirstLetter } from '@/helper/Capitalize';
     
     const showProfileMenu = ref<boolean>(false);
 
@@ -61,9 +63,9 @@
             <button type="button" class="Staff-Profile" @click="ToggleProfileMenu">
                 <img src="@/assets/Images/Icons/user.png" alt="Profile">
                 <div v-if="currentUser">
-                    <h4>{{ currentUser.first_name }} {{ currentUser.last_name }}</h4>
+                    <h4>{{ capitalizeFirstLetter(currentUser.first_name) }} {{ capitalizeFirstLetter(currentUser.last_name) }}</h4>
                     <p>{{ currentUser.email }}</p>
-                    <p>{{ currentUser.role }}</p>
+                    <p>{{ capitalizeFirstLetter(currentUser.role) }}</p>
                 </div>
                 
                 <div v-else>

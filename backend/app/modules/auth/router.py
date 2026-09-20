@@ -26,7 +26,8 @@ from app.shared.exception import (
 
 from app.modules.auth.service.refresh_token import RefreshTokenService
 from app.modules.auth.service.auth import AuthService
-from app.modules.auth.security.jwt import create_access_token 
+from app.modules.auth.security.jwt import create_access_token
+from app.modules.auth.security.csrf import generate_csrf_token,validate_csrf 
 from app.modules.auth.schema import (
     UserResponse,
     UserCreate,
@@ -46,7 +47,8 @@ router = APIRouter(
 
 @router.get(
     "/me",
-    response_model=UserResponse    
+    response_model=UserResponse,
+    status_code=status.HTTP_200_OK   
 )
 def get_me(
     current_user: Annotated[
@@ -58,17 +60,40 @@ def get_me(
     return current_user
 
 
+@router.get(
+    "/csrf",
+    status_code=status.HTTP_200_OK
+)
+def get_csrf_token(response: Response):
+
+    csrf_token = generate_csrf_token();
+    
+    response.set_cookie(
+        key="csrf_token",
+        value=csrf_token,
+        httponly=settings.allowed_csrf_httponly,
+        secure=settings.allowed_secure,
+        samesite=settings.allowed_samesite,
+        path="/"
+    )
+
+    return {
+        "csrf_token": csrf_token
+    }
+
+
 @router.post(
     "/register", 
     response_model=UserResponse,
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_201_CREATED
 )
 def register(
     data: UserCreate,
     service: Annotated[
         AuthService,
         Depends(get_auth_service)
-    ]
+    ],
+    _: Annotated[None, Depends(validate_csrf)] = None
 ):
 
     try:
@@ -126,19 +151,20 @@ def login(
     refresh_token_service: Annotated[
         RefreshTokenService,
         Depends(get_refresh_token_service)
-    ]
+    ],
+    _: Annotated[None, Depends(validate_csrf)] = None
 ):
 
     try:
 
         user = service.authenticate_user(form_data.email, form_data.password)
-        access_token = create_access_token(user.id)
+        access_token = create_access_token(user.id, user.role)
         refresh_token = refresh_token_service.create_token(user.id)
 
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
-            httponly=settings.allowed_httponly,
+            httponly=settings.allowed_refresh_httponly,
             secure=settings.allowed_secure,
             samesite=settings.allowed_samesite,
             path="/auth"
@@ -164,14 +190,16 @@ def login(
 )
 def refresh(
     response: Response,
-    refresh_token: Annotated[
-        str | None,
-        Cookie()
-    ] = None,
+    service: Annotated[
+        AuthService,
+        Depends(get_auth_service)
+    ],
     refresh_token_service: Annotated[
         RefreshTokenService,
         Depends(get_refresh_token_service)
-    ] = None
+    ] = None,
+    refresh_token: Annotated[str | None, Cookie()] = None,
+    _: Annotated[None, Depends(validate_csrf)] = None
 ):
 
     if refresh_token is None:
@@ -183,12 +211,13 @@ def refresh(
     try:
         
         user_id, new_refresh_token = refresh_token_service.rotate_token(refresh_token)
-        new_access_token = create_access_token(user_id)
+        user = service.auth_get_user_by_id(user_id);
+        new_access_token = create_access_token(user.id, user.role)
 
         response.set_cookie(
             key="refresh_token",
             value=new_refresh_token,
-            httponly=settings.allowed_httponly,
+            httponly=settings.allowed_refresh_httponly,
             secure=settings.allowed_secure,
             samesite=settings.allowed_samesite,
             path="/auth"
@@ -218,11 +247,12 @@ def refresh(
 )
 def revoke(
     response: Response,
-    refresh_token: Annotated[str | None, Cookie()] = None,
     refresh_token_service: Annotated[
         RefreshTokenService,
         Depends(get_refresh_token_service)
-    ] = None
+    ] = None,
+    refresh_token: Annotated[str | None, Cookie()] = None,
+    _: Annotated[None, Depends(validate_csrf)] = None
 ):
 
     if not refresh_token:

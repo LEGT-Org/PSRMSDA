@@ -65,7 +65,7 @@ export async function login(Email: string, Password: string) {
     isLoading.value = true;
 
     try {
-
+        
         const res = await ApiFetch('/auth/login', {
 
             method: 'POST',

@@ -4,7 +4,6 @@ from datetime import (
     timezone
 )
 
-from fastapi import HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.modules.auth.model import RefreshToken
@@ -60,18 +59,25 @@ class RefreshTokenService:
 
         token_hash = hash_refresh_token(raw_token)
         stored_token = (self.repository.get_by_hash(token_hash))
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        stored_token_now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-        StoredToken(value=stored_token, now=now)
+        StoredToken(value=stored_token, now=stored_token_now)
 
         user_id = stored_token.user_id
-        
-        self.repository.revoke(stored_token)
+
+        new_raw_token = generate_refresh_token()
+        new_token_hash = hash_refresh_token(new_raw_token)
+        now = datetime.now(timezone.utc)
+
+        self.repository.rotate(
+            stored_token=stored_token, 
+            new_token_hash=new_token_hash, 
+            now=now
+        )
+
         self.db.commit()
 
-        new_token = self.create_token(user_id)
-
-        return user_id, new_token
+        return user_id, new_raw_token
 
 
     def revoke_token(

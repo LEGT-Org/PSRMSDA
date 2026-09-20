@@ -1,8 +1,10 @@
+import { ref } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
-import routes from './Routes';
 
+import routes from './Routes';
 import { RestoreSession } from '@/services/useAuth';
-import { currentUser, isFetched } from '@/services/state/Auth';
+import { currentUser, isFetched, isCSRFInitialized } from '@/services/state/Auth';
+import { getCSRFTokenFromServer } from '@/api/CSRF';
 
 
 // Router
@@ -21,15 +23,41 @@ router.beforeEach( async (to) =>
     {
 
         const defaultTitle = 'Lightyear Electrical Goods Trading';
-
+        
         document.title = to.meta?.title || defaultTitle;
+        
+        // CSRF Middleware
 
-        if (!isFetched.value) {
-            await RestoreSession();
+        if (!isCSRFInitialized.value) {
+
+            const csrfResponse = await getCSRFTokenFromServer();
+
+            if (!csrfResponse.ok) {
+
+                const data = await csrfResponse.json();
+                alert(data.detail);
+                return;
+
+            }
+
+            isCSRFInitialized.value = true;
+            
         }
 
-        const user = currentUser.value;
 
+        // Refresh Token Middleware
+
+        if (!isFetched.value) {
+
+            await RestoreSession();
+
+        }
+        
+        
+        // Allowed Routes Middleware
+        
+        const user = currentUser.value;
+        
         if (to.meta.requiresAuth && !user) {
 
             return '/';
