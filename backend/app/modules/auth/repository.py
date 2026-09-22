@@ -1,9 +1,9 @@
 from sqlalchemy import select
 from sqlalchemy.orm import Session
-
 from datetime import datetime, timedelta, timezone
 
 from app.modules.auth.model import RefreshToken
+
 from app.shared.config import settings
 
 
