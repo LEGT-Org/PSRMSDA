@@ -5,11 +5,10 @@ from collections.abc import Callable
 from fastapi import Depends, HTTPException, status
 
 from app.shared.dependencies.user import get_user_repository, get_user_service
+from app.shared.security.jwt import decode_access_token
+from app.shared.security.oauth2 import oauth2_scheme
 
-from app.modules.auth.security.jwt import decode_access_token
-from app.modules.auth.security.oauth2 import oauth2_scheme
 from app.modules.auth.service.auth import AuthService
-
 from app.modules.user.repository import UserRepository
 from app.modules.user.service import UserService
 from app.modules.user.schema import UserRole

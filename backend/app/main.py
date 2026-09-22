@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.modules.auth.router import router as auth_router
+from app.modules.user.router import router as user_router
 
 from app.shared.config import settings
 
@@ -18,6 +19,7 @@ app.add_middleware(
 
 
 app.include_router(auth_router)
+app.include_router(user_router)
 
 
 @app.get('/')

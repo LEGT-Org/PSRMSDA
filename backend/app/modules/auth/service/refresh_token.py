@@ -1,20 +1,15 @@
-from datetime import (
-    datetime, 
-    timedelta, 
-    timezone
-)
-
+from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
 from app.modules.auth.model import RefreshToken
 from app.modules.auth.repository import RefreshTokenRepository
 from app.modules.auth.value_object.stored_token import StoredToken
-from app.modules.auth.security.refresh_token import (
+
+from app.shared.config import settings
+from app.shared.security.refresh_token import (
     generate_refresh_token, 
     hash_refresh_token
 )
-
-from app.shared.config import settings
 
 
 class RefreshTokenService:

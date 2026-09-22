@@ -1,10 +1,5 @@
 import jwt
-
-from datetime import (
-    datetime, 
-    timedelta, 
-    timezone
-)
+from datetime import datetime, timedelta, timezone
 
 from app.shared.config import settings
 
