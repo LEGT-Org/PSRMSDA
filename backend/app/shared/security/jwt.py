@@ -9,7 +9,7 @@ def create_access_token(user_id: int, role: str) -> str:
     now = datetime.now(timezone.utc)
 
     expires_at = (
-        datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)
+        datetime.now(timezone.utc) + timedelta(minutes=settings.auth.access_token_expire_minutes)
     )
     
     payload = {
@@ -21,8 +21,8 @@ def create_access_token(user_id: int, role: str) -> str:
 
     return jwt.encode(
         payload, 
-        settings.jwt_secret_key, 
-        algorithm=settings.algorithm
+        settings.auth.jwt_secret_key, 
+        algorithm=settings.auth.algorithm
     )
 
 
@@ -30,6 +30,6 @@ def decode_access_token(token: str) -> dict:
 
     return jwt.decode(
         token,
-        settings.jwt_secret_key,
-        algorithms=[settings.algorithm]
+        settings.auth.jwt_secret_key,
+        algorithms=[settings.auth.algorithm]
     )

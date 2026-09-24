@@ -1,29 +1,27 @@
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic import BaseModel
 
 
-class Settings(BaseSettings):
+class AuthSettings(BaseModel):
 
-    database_url: str
     jwt_secret_key: str
     algorithm: str
     access_token_expire_minutes: int
     refresh_token_expire_days: int
     refresh_token_bytes: int
     csrf_token_bytes: int
-    allowed_domains: set[str]
+
+
+class CORSSettings(BaseModel):
+
     access_control_allowed_origin: set[str]
     allowed_credentials: bool
     allowed_methods: set[str]
     allowed_headers: set[str]
+
+
+class CookieSettings(BaseModel):
+
     allowed_refresh_httponly: bool
     allowed_csrf_httponly: bool
     allowed_secure: bool
     allowed_samesite: str
-    
-    model_config = SettingsConfigDict(
-        env_file=".env",
-        env_file_encoding="utf-8",
-        extra="ignore"
-    )
-
-settings = Settings()

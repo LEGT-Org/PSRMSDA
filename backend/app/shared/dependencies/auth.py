@@ -21,6 +21,7 @@ def get_auth_service(
 
     return AuthService(user_service)
 
+
 def get_current_user(
     token: Annotated[
         str,

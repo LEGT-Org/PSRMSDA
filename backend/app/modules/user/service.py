@@ -1,18 +1,13 @@
-from datetime import (
-    datetime,
-    timedelta,
-    timezone
-)
-
+from datetime import datetime, timedelta, timezone
 from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
 from app.modules.user.repository import UserRepository
-from app.modules.user.value_object.email import Email
-from app.modules.user.value_object.name import Name
 from app.modules.user.schema import UserRole, UserCreate
 from app.modules.user.model import User
 
+from app.shared.value_object.name import Name
+from app.shared.value_object.email import Email
 from app.shared.security.password import hash_password
 from app.shared.exception import (
     EmailAlreadyExistsError, 

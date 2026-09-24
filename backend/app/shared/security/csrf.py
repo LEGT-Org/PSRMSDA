@@ -13,7 +13,7 @@ from app.shared.config import settings
 
 def generate_csrf_token() -> str:
 
-    return secrets.token_urlsafe(settings.csrf_token_bytes)
+    return secrets.token_urlsafe(settings.auth.csrf_token_bytes)
 
 
 def validate_csrf(

@@ -68,9 +68,9 @@ def get_csrf_token(response: Response):
     response.set_cookie(
         key="csrf_token",
         value=csrf_token,
-        httponly=settings.allowed_csrf_httponly,
-        secure=settings.allowed_secure,
-        samesite=settings.allowed_samesite,
+        httponly=settings.cookie.allowed_csrf_httponly,
+        secure=settings.cookie.allowed_secure,
+        samesite=settings.cookie.allowed_samesite,
         path="/"
     )
 
@@ -107,9 +107,9 @@ def login(
         response.set_cookie(
             key="refresh_token",
             value=refresh_token,
-            httponly=settings.allowed_refresh_httponly,
-            secure=settings.allowed_secure,
-            samesite=settings.allowed_samesite,
+            httponly=settings.cookie.allowed_refresh_httponly,
+            secure=settings.cookie.allowed_secure,
+            samesite=settings.cookie.allowed_samesite,
             path="/auth"
         )
 
@@ -160,9 +160,9 @@ def refresh(
         response.set_cookie(
             key="refresh_token",
             value=new_refresh_token,
-            httponly=settings.allowed_refresh_httponly,
-            secure=settings.allowed_secure,
-            samesite=settings.allowed_samesite,
+            httponly=settings.cookie.allowed_refresh_httponly,
+            secure=settings.cookie.allowed_secure,
+            samesite=settings.cookie.allowed_samesite,
             path="/auth"
         )
 
