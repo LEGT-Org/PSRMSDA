@@ -1,0 +1,1 @@
+from app.modules.llm_diagnosis.model import LLMDiagnosis 

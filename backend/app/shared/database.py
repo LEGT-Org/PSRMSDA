@@ -5,7 +5,7 @@ from app.shared.config import settings
 
 
 engine = create_engine(
-    settings.database_url,
+    settings.database.url,
     pool_pre_ping=True
 )
 

@@ -34,7 +34,7 @@ class RefreshTokenRepository:
     ) -> None:
 
         stored_token.token_hash = new_token_hash
-        stored_token.expires_at = (now + timedelta(days=settings.refresh_token_expire_days))
+        stored_token.expires_at = (now + timedelta(days=settings.auth.refresh_token_expire_days))
         stored_token.revoked_at = None
         stored_token.created_at = now
 

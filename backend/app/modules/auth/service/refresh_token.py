@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 
 from app.modules.auth.model import RefreshToken
 from app.modules.auth.repository import RefreshTokenRepository
-from app.modules.auth.value_object.stored_token import StoredToken
 
 from app.shared.config import settings
+from app.shared.value_object.stored_token import StoredToken
 from app.shared.security.refresh_token import (
     generate_refresh_token, 
     hash_refresh_token
@@ -36,7 +36,7 @@ class RefreshTokenService:
         refresh_token = RefreshToken(
             user_id=user_id,
             token_hash=token_hash,
-            expires_at=(now + timedelta(days=settings.refresh_token_expire_days)),
+            expires_at=(now + timedelta(days=settings.auth.refresh_token_expire_days)),
             created_at=now
         )
 
