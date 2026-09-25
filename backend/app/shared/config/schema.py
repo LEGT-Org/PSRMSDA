@@ -1,6 +1,25 @@
 from pydantic import BaseModel
 
 
+class DomainSettings(BaseModel):
+
+    allowed: set[str]
+
+
+class DatabaseSettings(BaseModel):
+
+    driver: str
+    host: str
+    port: int
+    username: str
+    password: str
+    name: str
+
+    @property
+    def url(self) -> str:
+        return f"{self.driver}://{self.username}:{self.password}@{self.host}:{self.port}/{self.name}"
+
+
 class AuthSettings(BaseModel):
 
     jwt_secret_key: str

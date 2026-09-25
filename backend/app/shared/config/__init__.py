@@ -3,15 +3,16 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from app.shared.config.schema import (
     AuthSettings, 
     CORSSettings, 
-    CookieSettings
+    CookieSettings,
+    DatabaseSettings,
+    DomainSettings
 )
 
 
 class Settings(BaseSettings):
 
-    database_url: str
-    allowed_domains: set[str]
-    
+    domain: DomainSettings
+    database: DatabaseSettings
     auth: AuthSettings
     cors: CORSSettings
     cookie: CookieSettings

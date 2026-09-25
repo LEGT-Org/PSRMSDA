@@ -24,5 +24,5 @@ class Email:
 
         domain = self.value.split("@")[-1].lower()
 
-        if domain not in settings.allowed_domains:
+        if domain not in settings.domain.allowed:
             raise InvalidCredentialsError()
