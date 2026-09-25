@@ -11,7 +11,7 @@ from sqlalchemy import (
 )
 
 from app.shared.database import Base
-from app.modules.service_requests import ServiceRequestStatus
+from app.modules.service_request.schema import ServiceRequestStatus
 
 
 class ServiceRequest(Base):
@@ -21,7 +21,7 @@ class ServiceRequest(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     device_type: Mapped[str] = mapped_column(String(255), nullable=False)
     device_model: Mapped[str] = mapped_column(String(255), nullable=False)
-    device_brand: Mapped[str] = mapped_column(Strin(255), nullable=False)
+    device_brand: Mapped[str] = mapped_column(String(255), nullable=False)
     fault_description: Mapped[str | None] = mapped_column(Text, nullable=True)
     technician_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     sop_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)

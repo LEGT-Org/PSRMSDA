@@ -1,7 +1,13 @@
 from __future__ import annotations
 from datetime import datetime
 
-from sqlalchemy import Datetime, String, ForeignKey
+from sqlalchemy import (
+    ForeignKey, 
+    DateTime, 
+    String, 
+    text
+)
+
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.shared.database import Base
@@ -13,7 +19,7 @@ class ProcurementAlert(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     alert_message: Mapped[str] = mapped_column(String(255), nullable=True)
-    is_resolved: Mapped[bool] = mapped_column(server_default=False)
+    is_resolved: Mapped[bool] = mapped_column(server_default=text("0"))
 
     # Foreign Key
     request_id: Mapped[int] = mapped_column(ForeignKey("service_requests.id"))

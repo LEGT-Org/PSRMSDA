@@ -1,12 +1,13 @@
 from __future__ import annotations
 from datetime import datetime
+from decimal import Decimal
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import (
     ForeignKey,
     DateTime, 
-    Decimal,
-    String, 
+    Numeric, 
+    String,
     Text, 
     Enum,
     JSON
@@ -24,7 +25,7 @@ class LLMDiagnosis(Base):
     prompt: Mapped[str | None] = mapped_column(Text, nullable=True)
     raw_output: Mapped[str | None] = mapped_column(Text, nullable=True)
     parsed_output: Mapped[dict | None] = mapped_column(JSON, nullable=True)
-    confidence: Mapped[Decimal] = mapped_column(nullable=True)
+    confidence: Mapped[Decimal] = mapped_column(Numeric(10, 2), nullable=True)
     
     status: Mapped[LLMDiagnosisStatus] = mapped_column(
         Enum(
