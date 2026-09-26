@@ -1,39 +1,16 @@
-from typing import Annotated 
+from fastapi import APIRouter, Response, status
 
-from fastapi import (
-    APIRouter, 
-    Depends, 
-    HTTPException, 
-    Response,
-    Cookie,
-    status
+from app.modules.auth.schema import AuthResponse, LoginRequest, TokenResponse
+from app.modules.auth.dependency import (
+    RefreshTokenService,
+    ValidateCSRF,
+    RefreshToken,
+    AuthService,
+    CurrentUser
 )
 
-from app.modules.auth.service.refresh_token import RefreshTokenService
-from app.modules.auth.service.auth import AuthService
-from app.modules.auth.schema import (
-    AuthResponse,
-    LoginRequest,
-    TokenResponse,
-)
-
-from app.shared.dependencies.auth import get_auth_service, get_current_user
-from app.shared.dependencies.refresh_token import get_refresh_token_service
-from app.shared.security.csrf import generate_csrf_token, validate_csrf 
-from app.shared.security.jwt import create_access_token
+from app.shared.exception import NoRefreshTokenError
 from app.shared.config import settings 
-from app.shared.exception import (
-    EmailAlreadyExistsError, 
-    InvalidCredentialsError,
-    InvalidEmailAddressError,
-    InvalidNameError,
-    NameMustBeTwoToFiftyCharacterError,
-    NameOnlyContainAlphabeticCharacterError,
-    InvalidRefreshTokenError,
-    ExpiredRefreshTokenError
-)
-
-from app.modules.user import User
 
 
 router = APIRouter(
@@ -47,12 +24,7 @@ router = APIRouter(
     response_model=AuthResponse,
     status_code=status.HTTP_200_OK   
 )
-def get_me(
-    current_user: Annotated[
-        User,
-        Depends(get_current_user)
-    ]
-):
+def get_me(current_user: CurrentUser):
 
     return current_user
 
@@ -87,43 +59,28 @@ def get_csrf_token(response: Response):
 def login(
     response: Response,
     form_data: LoginRequest,
-    service: Annotated[
-        AuthService,
-        Depends(get_auth_service)
-    ],
-    refresh_token_service: Annotated[
-        RefreshTokenService,
-        Depends(get_refresh_token_service)
-    ],
-    _: Annotated[None, Depends(validate_csrf)] = None
+    service: AuthService,
+    refresh_token_service: RefreshTokenService,
+    _: ValidateCSRF
 ):
 
-    try:
+    user = service.authenticate_user(form_data.email, form_data.password)
+    access_token = create_access_token(user.id, user.role)
+    refresh_token = refresh_token_service.create_token(user.id)
 
-        user = service.authenticate_user(form_data.email, form_data.password)
-        access_token = create_access_token(user.id, user.role)
-        refresh_token = refresh_token_service.create_token(user.id)
+    response.set_cookie(
+        key="refresh_token",
+        value=refresh_token,
+        httponly=settings.cookie.allowed_refresh_httponly,
+        secure=settings.cookie.allowed_secure,
+        samesite=settings.cookie.allowed_samesite,
+        path="/auth"
+    )
 
-        response.set_cookie(
-            key="refresh_token",
-            value=refresh_token,
-            httponly=settings.cookie.allowed_refresh_httponly,
-            secure=settings.cookie.allowed_secure,
-            samesite=settings.cookie.allowed_samesite,
-            path="/auth"
-        )
-
-        return TokenResponse(
-            access_token=access_token,
-            token_type="bearer"
-        )
-
-    except InvalidCredentialsError:
-
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid credentials"
-        )
+    return TokenResponse(
+        access_token=access_token,
+        token_type="bearer"
+    )
 
 
 @router.post(
@@ -133,55 +90,32 @@ def login(
 )
 def refresh(
     response: Response,
-    service: Annotated[
-        AuthService,
-        Depends(get_auth_service)
-    ],
-    refresh_token_service: Annotated[
-        RefreshTokenService,
-        Depends(get_refresh_token_service)
-    ] = None,
-    refresh_token: Annotated[str | None, Cookie()] = None,
-    _: Annotated[None, Depends(validate_csrf)] = None
+    service: AuthService,
+    refresh_token_service: RefreshTokenService,
+    refresh_token: RefreshToken,
+    _: ValidateCSRF
 ):
 
     if refresh_token is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="No cookie received"
-        )
-
-    try:
+        raise NoRefreshTokenError()
         
-        user_id, new_refresh_token = refresh_token_service.rotate_token(refresh_token)
-        user = service.auth_get_user_by_id(user_id);
-        new_access_token = create_access_token(user.id, user.role)
+    user_id, new_refresh_token = refresh_token_service.rotate_token(refresh_token)
+    user = service.auth_get_user_by_id(user_id);
+    new_access_token = create_access_token(user.id, user.role)
 
-        response.set_cookie(
-            key="refresh_token",
-            value=new_refresh_token,
-            httponly=settings.cookie.allowed_refresh_httponly,
-            secure=settings.cookie.allowed_secure,
-            samesite=settings.cookie.allowed_samesite,
-            path="/auth"
-        )
+    response.set_cookie(
+        key="refresh_token",
+        value=new_refresh_token,
+        httponly=settings.cookie.allowed_refresh_httponly,
+        secure=settings.cookie.allowed_secure,
+        samesite=settings.cookie.allowed_samesite,
+        path="/auth"
+    )
 
-        return TokenResponse(
-            access_token=new_access_token,
-            token_type="bearer"
-        ) 
-
-    except InvalidRefreshTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token"
-        )
-
-    except ExpiredRefreshTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Expired refresh token"
-        )
+    return TokenResponse(
+        access_token=new_access_token,
+        token_type="bearer"
+    )
 
 
 @router.post(
@@ -190,12 +124,9 @@ def refresh(
 )
 def revoke(
     response: Response,
-    refresh_token_service: Annotated[
-        RefreshTokenService,
-        Depends(get_refresh_token_service)
-    ] = None,
-    refresh_token: Annotated[str | None, Cookie()] = None,
-    _: Annotated[None, Depends(validate_csrf)] = None
+    refresh_token_service: RefreshTokenService,
+    refresh_token: RefreshToken,
+    _: ValidateCSRF
 ):
 
     if not refresh_token:
@@ -211,18 +142,6 @@ def revoke(
     try:
 
         refresh_token_service.revoke_token(refresh_token)
-
-    except InvalidRefreshToken:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Invalid refresh token"
-        )
-
-    except ExpiredRefreshTokenError:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Expired refresh token"
-        )
 
     finally:
         response.delete_cookie(
