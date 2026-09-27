@@ -6,9 +6,10 @@ from app.modules.user.repository import UserRepository
 from app.modules.user.schema import UserRole, UserCreate
 from app.modules.user.model import User
 
-from app.shared.value_object.name import Name
-from app.shared.value_object.email import Email
 from app.shared.security.password import hash_password
+from app.shared.email.provider import EmailService
+from app.shared.value_object.email import Email
+from app.shared.value_object.name import Name
 from app.shared.exception import (
     EmailAlreadyExistsError, 
     InvalidCredentialsError
@@ -20,10 +21,12 @@ class UserService:
     def __init__(
         self,
         repository: UserRepository,
+        email_service: EmailService,
         db: Session
     ):
 
         self.repository = repository
+        self.email_service = email_service
         self.db = db
 
     

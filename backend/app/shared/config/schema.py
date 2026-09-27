@@ -20,6 +20,15 @@ class DatabaseSettings(BaseModel):
         return f"{self.driver}://{self.username}:{self.password}@{self.host}:{self.port}/{self.name}"
 
 
+class EmailServiceSettings(BaseModel):
+
+    host: str
+    port: int
+    username: str
+    password: str
+    sender: str
+    use_tls: bool
+
 class AuthSettings(BaseModel):
 
     jwt_secret_key: str
