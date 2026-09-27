@@ -21,6 +21,7 @@ class SparePart(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     part_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    part_code: Mapped[str] = mapped_column(String(255), nullable=False)
     device_model: Mapped[str] = mapped_column(Text, nullable=True)
     device_brand: Mapped[str] = mapped_column(Text, nullable=True)
     specifications: Mapped[str] = mapped_column(Text, nullable=True)

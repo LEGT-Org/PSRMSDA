@@ -41,3 +41,12 @@ class NameOnlyContainAlphabeticCharacterError(Exception):
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Name can only contain alphabetic characters, spaces, hypens, and apostrophes"
         )
+
+
+class EmailServiceFailedError(Exception):
+    
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Email Service Failed"
+        )

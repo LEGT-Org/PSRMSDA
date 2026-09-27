@@ -1,8 +1,8 @@
-"""Creating Tables from Each Modules
+"""Create essentials table
 
-Revision ID: 5a218c8c3c9f
+Revision ID: a9eefc9859fe
 Revises: 
-Create Date: 2026-09-25 23:30:29.514105
+Create Date: 2026-09-27 21:32:19.501952
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '5a218c8c3c9f'
+revision: str = 'a9eefc9859fe'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -47,8 +47,12 @@ def upgrade() -> None:
     sa.Column('first_name', sa.String(length=50), nullable=False),
     sa.Column('last_name', sa.String(length=50), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('password_hash', sa.String(length=255), nullable=False),
+    sa.Column('password_hash', sa.String(length=255), nullable=True),
     sa.Column('role', sa.String(length=20), server_default='user', nullable=False),
+    sa.Column('token_hash', sa.String(length=255), nullable=True),
+    sa.Column('email_verified', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('token_expire', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
@@ -87,6 +91,7 @@ def upgrade() -> None:
     op.create_table('spare_parts',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('part_name', sa.String(length=255), nullable=False),
+    sa.Column('part_code', sa.String(length=255), nullable=False),
     sa.Column('device_model', sa.Text(), nullable=True),
     sa.Column('device_brand', sa.Text(), nullable=True),
     sa.Column('specifications', sa.Text(), nullable=True),
