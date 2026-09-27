@@ -3,9 +3,9 @@ import re
 from dataclasses import dataclass
 
 from app.shared.exception import (
-    InvalidNameError,
+    NameOnlyContainAlphabeticCharacterError,
     NameMustBeTwoToFiftyCharacterError,
-    NameOnlyContainAlphabeticCharacterError
+    NoNameError
 )
 
 
@@ -23,7 +23,7 @@ class Name:
         cleaned_value = self.value.strip()
 
         if not cleaned_value:
-            raise InvalidNameError()
+            raise NoNameError()
 
         if len(cleaned_value) < 2 or len(cleaned_value) > 50:
             raise NameMustBeTwoToFiftyCharacterError()

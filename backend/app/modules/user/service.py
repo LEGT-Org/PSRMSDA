@@ -6,12 +6,14 @@ from app.modules.user.repository import UserRepository
 from app.modules.user.schema import UserRole, UserCreate
 from app.modules.user.model import User
 
-from app.shared.value_object.name import Name
-from app.shared.value_object.email import Email
 from app.shared.security.password import hash_password
+from app.shared.email.provider import EmailService
+from app.shared.value_object.email import Email
+from app.shared.value_object.name import Name
 from app.shared.exception import (
     EmailAlreadyExistsError, 
-    InvalidCredentialsError
+    InvalidCredentialsError,
+    EmailServiceFailedError
 )
 
 
@@ -20,10 +22,12 @@ class UserService:
     def __init__(
         self,
         repository: UserRepository,
+        email_service: EmailService,
         db: Session
     ):
 
         self.repository = repository
+        self.email_service = email_service
         self.db = db
 
     
@@ -56,8 +60,24 @@ class UserService:
 
         self.repository.create(user)
 
-        self.db.commit()
-        self.db.refresh(user)
+        try:
+
+            self.email_service.send(
+                to=user.email,
+                subject="Welcome to PSRMSDA",
+                body=(
+                    f"Hello {user.username},\n\n"
+                    "Your account has been successfully created."
+                )
+            )
+
+            self.db.commit()
+            self.db.refresh(user)
+
+        except EmailServiceFailedError:
+
+            self.db.rollback()
+            raise EmailServiceFailedError()
 
         return user
 
