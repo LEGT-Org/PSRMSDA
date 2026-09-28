@@ -3,6 +3,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from app.shared.config.schema import (
     EmailServiceSettings,
     DatabaseSettings,
+    FrontendSettings,
     CookieSettings,
     DomainSettings,
     AuthSettings, 
@@ -13,6 +14,7 @@ from app.shared.config.schema import (
 class Settings(BaseSettings):
 
     domain: DomainSettings
+    frontend: FrontendSettings
     database: DatabaseSettings
     email: EmailServiceSettings
     auth: AuthSettings

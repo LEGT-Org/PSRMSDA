@@ -1,3 +1,4 @@
+from typing import Any
 from dataclasses import dataclass
 from datetime import datetime
 
@@ -18,11 +19,28 @@ class StoredToken:
 
     def __post_init__(self):
 
-        if self.value is None:
+        self._validate_stored_token(self.value)
+
+    
+    @staticmethod
+    def _validate_stored_token(stored_token: StoredToken) -> None:
+
+        if stored_token is None:
             raise InvalidRefreshTokenError()
 
-        if self.value.revoked_at is not None:
+        if stored_token.revoked_at is not None:
             raise InvalidRefreshTokenError()
 
-        if self.value.expires_at <= self.now:
+        if stored_token.expires_at <= self.now:
             raise ExpiredRefreshTokenError()
+
+
+    @property
+    def validated(self) -> dict[str, Any]:
+
+        return self.value.model_dump()
+
+    @property
+    def user_id(self) -> int:
+        
+        return self.value.user_id

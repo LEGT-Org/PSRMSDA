@@ -56,10 +56,12 @@ class RefreshTokenService:
         stored_token = (self.repository.get_by_hash(token_hash))
         stored_token_now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-        StoredToken(value=stored_token, now=stored_token_now)
+        token = StoredToken(
+            value=stored_token, 
+            now=stored_token_now
+        )
 
-        user_id = stored_token.user_id
-
+        user_id = token.user_id
         new_raw_token = generate_refresh_token()
         new_token_hash = hash_refresh_token(new_raw_token)
         now = datetime.now(timezone.utc)

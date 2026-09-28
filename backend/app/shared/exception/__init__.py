@@ -1,11 +1,23 @@
-from app.shared.exception.base import BaseHTTPException, InvalidCredentialsError
-from app.shared.exception.auth import ExpiredRefreshTokenError, InvalidRefreshTokenError, NoRefreshTokenError
+from app.shared.exception.base import (
+    EmailMustContainBodyOrHTML,
+    RecipientIsRequiredError, 
+    InvalidCredentialsError, 
+    SubjectIsRequiredError,
+    BaseHTTPException,  
+)
+
+from app.shared.exception.auth import (
+    ExpiredRefreshTokenError, 
+    InvalidRefreshTokenError, 
+    NoRefreshTokenError
+)
 
 from app.shared.exception.user import (
     NameOnlyContainAlphabeticCharacterError, 
     NameMustBeTwoToFiftyCharacterError, 
     InvalidEmailAddressError, 
-    EmailAlreadyExistsError, 
+    EmailAlreadyExistsError,
+    EmailServiceFailedError, 
     NoNameError
 )  
 
@@ -13,7 +25,13 @@ from app.shared.exception.user import (
 
 __all__ = [
 
+    # Global Exception
     "InvalidCredentialsError",
+
+    # Email Service Exception
+    "RecipientIsRequiredError", 
+    "SubjectIsRequiredError", 
+    "EmailMustContainBoryOrHTML",
 
     # Auth Exception
     "ExpiredRefreshTokenError",
@@ -24,6 +42,7 @@ __all__ = [
     "NameOnlyContainAlphabeticCharacterError", 
     "NameMustBeTwoToFiftyCharacterError", 
     "InvalidEmailAddressError", 
-    "EmailAlreadyExistsError", 
+    "EmailAlreadyExistsError",
+    "EmailServiceFailedError", 
     "NoNameError",
 ]
