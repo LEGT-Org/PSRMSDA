@@ -2,6 +2,7 @@ from datetime import datetime
 from pydantic import (
     BaseModel, 
     EmailStr,
+    SecretStr,
     ConfigDict,
     Field
 )
@@ -10,7 +11,7 @@ from pydantic import (
 class LoginRequest(BaseModel):
 
     email: str
-    password: str
+    password: SecretStr
 
 
 class TokenResponse(BaseModel):

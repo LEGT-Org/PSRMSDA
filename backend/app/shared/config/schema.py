@@ -5,6 +5,9 @@ class DomainSettings(BaseModel):
 
     allowed: set[str]
 
+class FrontendSettings(BaseModel):
+
+    url: set[str]
 
 class DatabaseSettings(BaseModel):
 
@@ -33,8 +36,10 @@ class AuthSettings(BaseModel):
 
     jwt_secret_key: str
     algorithm: str
+    password_setup_token_expire_hours: int
     access_token_expire_minutes: int
     refresh_token_expire_days: int
+    registration_token_bytes:int
     refresh_token_bytes: int
     csrf_token_bytes: int
 

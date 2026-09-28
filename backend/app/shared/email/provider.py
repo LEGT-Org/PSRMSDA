@@ -1,12 +1,12 @@
 from typing import Protocol
 
-from app.shared.email.schema import EmailServiceSchema
+from app.shared.email.message import EmailMessage
 
 class EmailService(Protocol):
 
     def send(
         self, 
-        email_service: EmailServiceSchema
+        email_service: EmailMessage
     ) -> None:
     
         pass
