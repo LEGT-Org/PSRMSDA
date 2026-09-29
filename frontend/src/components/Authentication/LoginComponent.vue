@@ -3,7 +3,7 @@
     import { useRouter } from 'vue-router';
 
     import { login } from '@/services/useAuth';
-    import { Error, currentUser } from '@/services/state/Auth';
+    import { Error, currentUser, isLoading } from '@/services/state/Auth';
 
     const Email         = ref<string>('');
     const Password      = ref<string>('');
@@ -13,9 +13,9 @@
     
     const Login = async () => {
 
-        const loginResult = await login(Email.value, Password.value);
+        const success = await login(Email.value, Password.value);
 
-        if (loginResult) {
+        if (success) {
 
             await Router.push(currentUser.value?.role === 'admin' ? '/admin' : '/dashboard');
 
@@ -28,9 +28,9 @@
 </script>
 
 <template>
-    <div class="Login-Form">
+    <div class="Auth-Form">
         <form @submit.prevent="Login">
-            <div class="Login-Input">
+            <div class="Auth-Input">
                 <label for="Email">Email</label>
                 <input 
                     v-model="Email" 
@@ -41,7 +41,7 @@
                 />
             </div>
 
-            <div class="Login-Input">
+            <div class="Auth-Input">
                 <label for="Password">Password</label>
                 <input 
                     v-model="Password" 
@@ -52,9 +52,12 @@
                 />
             </div>
 
-            <div class="Login-Handler">
+            <div class="Auth-Handler">
                 <p v-if="ErrorMessage">{{ ErrorMessage }}</p>
-                <button type="submit">Login</button>
+                
+                <button type="submit" :disabled="isLoading">
+                    {{ isLoading ? 'Login...' : 'Login' }}
+                </button>
             </div>
         </form>
     </div>

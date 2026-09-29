@@ -10,15 +10,15 @@ from app.shared.database import Base
 from app.shared.config import settings
 
 # Models Configuration
-from app.modules.procurement_alert import ProcurementAlert
-from app.modules.service_request import ServiceRequest
-from app.modules.llm_diagnosis import LLMDiagnosis
-from app.modules.request_part import RequestPart
-from app.modules.spare_part import SparePart
-from app.modules.customer import Customer
-from app.modules.category import Category
-from app.modules.auth import RefreshToken
-from app.modules.user import User
+from app.modules.procurement_alert.model import ProcurementAlert
+from app.modules.service_request.model import ServiceRequest
+from app.modules.llm_diagnosis.model import LLMDiagnosis
+from app.modules.request_part.model import RequestPart
+from app.modules.spare_part.model import SparePart
+from app.modules.customer.model import Customer
+from app.modules.category.model import Category
+from app.modules.auth.model import RefreshToken
+from app.modules.user.model import User   
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

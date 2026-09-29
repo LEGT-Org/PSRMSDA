@@ -57,6 +57,17 @@ router.beforeEach( async (to) =>
         // Allowed Routes Middleware
         
         const user = currentUser.value;
+
+        if (to.meta.requiresToken) {
+            const token = to.query.token;
+
+            if (!token || typeof token !== 'string') {
+                return { name: "NotFound" };
+            }
+
+            return true  
+        }
+
         
         if (to.meta.requiresAuth && !user) {
 

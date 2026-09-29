@@ -5,6 +5,7 @@ declare module 'vue-router' {
         requiresGuest?: boolean;
         requiresAdmin?: boolean;
         requiresStaff?: boolean;
+        requiresToken?: boolean;
     }
 }
 
@@ -19,15 +20,36 @@ const routes = [
     
     {
         path: '/',
-        name: 'Login',
-        component: () => import('@/views/LoginView.vue'),
-        meta: {
-            requiresGuest: true,
-            requiresAuth: false,
-            requiresAdmin: false,
-            requiresStaff: false,
-            title: 'Lightyear Electrical Goods Trading'
-        }
+        name: 'Authentication',
+        component: () => import('@/views/AuthenticationView.vue'),
+        children: [
+            {
+                path: '',
+                name: 'Login View',
+                component: () => import('@/components/Authentication/LoginComponent.vue'),
+                meta: {
+                    requiresGuest: true,
+                    requiresToken: false,
+                    requiresAuth: false,
+                    requiresAdmin: false,
+                    requiresStaff: false,
+                    title: 'Lightyear Electrical Goods Trading'
+                }
+            },
+            {
+                path: 'password/set',
+                name: 'Set Password View',
+                component: () => import('@/components/Authentication/SetPasswordComponent.vue'),
+                meta: {
+                    requiresGuest: true,
+                    requiresToken: true,
+                    requiresAuth: false,
+                    requiresAdmin: false,
+                    requiresStaff: false,
+                    title: 'Set My Password'
+                }
+            }
+        ]
     },
 
     
@@ -46,6 +68,7 @@ const routes = [
                 component: () => import('@/components/Staff/DashboardComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: false,
                     requiresStaff: true,
                     title: 'Dashboard'
@@ -57,6 +80,7 @@ const routes = [
                 component: () => import('@/components/Staff/ServReqComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: false,
                     requiresStaff: true,
                     title: 'Service Request'
@@ -68,6 +92,7 @@ const routes = [
                 component: () => import('@/components/Staff/NewServReqComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: false,
                     requiresStaff: true,
                     title: 'New Service Request'
@@ -92,6 +117,7 @@ const routes = [
                 component: () => import('@/components/Admin/DashboardComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'Dashboard'
@@ -103,6 +129,7 @@ const routes = [
                 component: () => import('@/components/Admin/ServReqComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'Service Request'
@@ -114,6 +141,7 @@ const routes = [
                 component: () => import('@/components/Admin/NewServReqComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'New Service Request'
@@ -125,6 +153,7 @@ const routes = [
                 component: () => import('@/components/Admin/DiagRulesComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'Diagnostic Rules'
@@ -136,6 +165,7 @@ const routes = [
                 component: () => import('@/components/Admin/StanOpeProdComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'Standard Operational Procedure'
@@ -147,6 +177,7 @@ const routes = [
                 component: () => import('@/components/Admin/AlertsComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'Procurement Alerts'
@@ -158,6 +189,7 @@ const routes = [
                 component: () => import('@/components/Admin/InvRefComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'Inventory Reference'
@@ -169,6 +201,7 @@ const routes = [
                 component: () => import('@/components/Admin/ReportsComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'Reports'
@@ -180,6 +213,7 @@ const routes = [
                 component: () => import('@/components/Admin/UsersComponent.vue'),
                 meta: {
                     requiresAuth: true,
+                    requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'Users'

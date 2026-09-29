@@ -44,7 +44,7 @@ class ServiceRequest(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationship
-    users: Mapped["User"] = relationship(back_populates="users")
+    users: Mapped["User"] = relationship(back_populates="service_requests")
     customers: Mapped["Customer"] = relationship(back_populates="service_requests")
     request_parts: Mapped[list["RequestPart"]] = relationship(back_populates="service_requests")
     llm_diagnosis: Mapped[list["LLMDiagnosis"]] = relationship(back_populates="service_requests")

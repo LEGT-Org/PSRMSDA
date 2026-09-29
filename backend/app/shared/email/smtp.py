@@ -4,8 +4,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 
-from src.shared.email.message import EmailMessage
-from src.shared.config import settings
+from app.shared.email.message import EmailMessage
+from app.shared.config import settings
 
 
 class SMTPEmailService:

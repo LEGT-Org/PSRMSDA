@@ -1,10 +1,10 @@
 from enum import StrEnum
+from datetime import datetime
 from pydantic import (
     BaseModel,
     ConfigDict,
     Field,
-    EmailStr,
-    SecretStr
+    EmailStr
 )
 
 
@@ -27,6 +27,14 @@ class UserCreate(BaseModel):
     )
 
     email: EmailStr
+
+
+class RegistrationStoredUser(BaseModel):
+
+    password_hash: str
+    token_expire: datetime
+    token_hash: str
+    email_verified: bool
     
 
 class UserResponse(BaseModel):

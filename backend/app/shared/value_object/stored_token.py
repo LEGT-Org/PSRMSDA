@@ -8,22 +8,22 @@ from app.shared.exception import (
     ExpiredRefreshTokenError
 )
 
-from app.modules.auth.schema import StoredToken
+from app.modules.auth.schema import StoredTokenRequest
 
 @dataclass(frozen=True)
-class StoredToken:
+class StoredRefreshToken:
 
-    value: StoredToken
+    value: StoredTokenRequest
     now: datetime
 
 
     def __post_init__(self):
 
-        self._validate_stored_token(self.value)
+        self._validate_stored_token(self.value, self.now)
 
     
     @staticmethod
-    def _validate_stored_token(stored_token: StoredToken) -> None:
+    def _validate_stored_token(stored_token: StoredTokenRequest, now: datetime) -> None:
 
         if stored_token is None:
             raise InvalidRefreshTokenError()
@@ -31,7 +31,7 @@ class StoredToken:
         if stored_token.revoked_at is not None:
             raise InvalidRefreshTokenError()
 
-        if stored_token.expires_at <= self.now:
+        if stored_token.expires_at <= now:
             raise ExpiredRefreshTokenError()
 
 

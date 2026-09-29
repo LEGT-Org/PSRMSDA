@@ -10,38 +10,19 @@ from app.shared.exception import (
     NoNameError
 )
 
-
 name_regex = re.compile(r"^[A-Za-z\s'-]+$")
 email_regex = re.compile(r"^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$")
-
 
 @dataclass(frozen=True)
 class User:
 
     first_name: str
     last_name: str
-    email: str
-
 
     def __post_init__(self):
 
         self._validate_name_field(self.first_name)
         self._validate_name_field(self.last_name)
-        self._validate_email_field(self.email)
-
-    
-    @staticmethod
-    def _validate_email_field(email: str) -> None:
-        
-        match = email_regex.match(email)
-
-        if not match:
-            raise InvalidCredentialsError()
-
-        domain = email.split("@")[-1].lower()
-
-        if domain not in settings.domain.allowed:
-            raise InvalidCredentialsError()
 
     @staticmethod
     def _validate_name_field(name: str) -> None:
@@ -57,7 +38,6 @@ class User:
         if not name_regex.match(cleaned_name):
             raise NameOnlyContainAlphabeticCharacterError()
 
-
     @property
     def validated_first_name(self) -> str:
 
@@ -68,9 +48,30 @@ class User:
 
         return self.last_name
 
+
+@dataclass(frozen=True)
+class Email:
+
+    email: str
+
+    def __post_init__(self):
+
+        self._validate_email_field(self.email)
+
+    @staticmethod
+    def _validate_email_field(email: str) -> None:
+        
+        match = email_regex.match(email)
+
+        if not match:
+            raise InvalidCredentialsError()
+
+        domain = email.split("@")[-1].lower()
+
+        if domain not in settings.domain.allowed:
+            raise InvalidCredentialsError()
+
     @property
     def validated_email(self) -> str:
 
         return self.email
-
-

@@ -4,8 +4,8 @@ from sqlalchemy.orm import Session
 from app.modules.auth.model import RefreshToken
 from app.modules.auth.repository import RefreshTokenRepository
 
+from app.shared.value_object.stored_token import StoredRefreshToken as StoredRefreshTokenValidation 
 from app.shared.config import settings
-from app.shared.value_object.stored_token import StoredToken
 from app.shared.security.refresh_token import (
     generate_refresh_token, 
     hash_refresh_token
@@ -56,12 +56,12 @@ class RefreshTokenService:
         stored_token = (self.repository.get_by_hash(token_hash))
         stored_token_now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-        token = StoredToken(
+        stored_refresh_token = StoredRefreshTokenValidation(
             value=stored_token, 
             now=stored_token_now
         )
 
-        user_id = token.user_id
+        user_id = stored_refresh_token.user_id
         new_raw_token = generate_refresh_token()
         new_token_hash = hash_refresh_token(new_raw_token)
         now = datetime.now(timezone.utc)
@@ -86,7 +86,10 @@ class RefreshTokenService:
         stored_token = self.repository.get_by_hash(token_hash)
         now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-        StoredToken(value=stored_token, now=now)
+        StoredRefreshTokenValidation(
+            value=stored_token, 
+            now=now
+        )
 
         self.repository.revoke(stored_token)
         self.db.commit()

@@ -4,7 +4,7 @@ from fastapi import Depends, Cookie
 
 from app.modules.auth.service.refresh_token import RefreshTokenService
 from app.modules.auth.service.auth import AuthService
-from app.modules.user import User
+from app.modules.user.model import User
 
 from app.shared.dependencies.auth import get_auth_service, get_current_user
 from app.shared.dependencies.refresh_token import get_refresh_token_service

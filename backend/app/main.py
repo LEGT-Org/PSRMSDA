@@ -1,10 +1,25 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.shared.config import settings
+
+# Models Configuration
+
+from app.modules.procurement_alert.model import ProcurementAlert
+from app.modules.service_request.model import ServiceRequest
+from app.modules.llm_diagnosis.model import LLMDiagnosis
+from app.modules.request_part.model import RequestPart
+from app.modules.spare_part.model import SparePart
+from app.modules.customer.model import Customer
+from app.modules.category.model import Category
+from app.modules.auth.model import RefreshToken
+from app.modules.user.model import User   
+
+# Router Configuration
+
 from app.modules.auth.router import router as auth_router
 from app.modules.user.router import router as user_router
 
-from app.shared.config import settings
 
 app = FastAPI(title="Server API")
 
