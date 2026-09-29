@@ -2,7 +2,6 @@ from datetime import datetime
 from pydantic import (
     BaseModel, 
     EmailStr,
-    SecretStr,
     ConfigDict,
     Field
 )
@@ -11,7 +10,7 @@ from pydantic import (
 class LoginRequest(BaseModel):
 
     email: str
-    password: SecretStr
+    password: str
 
 
 class TokenResponse(BaseModel):
@@ -20,7 +19,7 @@ class TokenResponse(BaseModel):
     token_type: str
 
 
-class StoredToken(BaseModel):
+class StoredTokenRequest(BaseModel):
 
     id: int
     user_id: int
@@ -28,6 +27,22 @@ class StoredToken(BaseModel):
     expires_at: datetime
     revoked_at: datetime
     created_at: datetime
+
+
+class SetPasswordRequest(BaseModel):
+
+    token: str
+
+    password: str = Field(
+        min_length=8,
+        max_length=128
+    )
+
+    confirm_password: str = Field(
+        min_length=8,
+        max_length=128
+    )
+
 
 
 class AuthResponse(BaseModel):

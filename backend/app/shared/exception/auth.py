@@ -1,3 +1,5 @@
+from fastapi import status
+
 from app.shared.exception.base import BaseHTTPException
 
 

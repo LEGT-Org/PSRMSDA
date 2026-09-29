@@ -14,10 +14,16 @@ from app.shared.exception.auth import (
 
 from app.shared.exception.user import (
     NameOnlyContainAlphabeticCharacterError, 
-    NameMustBeTwoToFiftyCharacterError, 
+    NameMustBeTwoToFiftyCharacterError,
+    PasswordMustContainLowercaseError,
+    PasswordMustContainUppercaseError,
+    PasswordMustContainNumberError, 
+    InvalidRegistrationTokenError, 
+    PasswordDoesNotMatchError,
     InvalidEmailAddressError, 
     EmailAlreadyExistsError,
-    EmailServiceFailedError, 
+    EmailServiceFailedError,
+    SetupNewPasswordError,
     NoNameError
 )  
 
@@ -27,6 +33,14 @@ __all__ = [
 
     # Global Exception
     "InvalidCredentialsError",
+
+    # Registration Exception
+    "PasswordMustContainLowercaseError",
+    "PasswordMustContainUppercaseError",
+    "PasswordMustContainNumberError",
+    "InvalidRegistrationTokenError",
+    "SetupNewPasswordError",
+    "PasswordDoesNotMatch",
 
     # Email Service Exception
     "RecipientIsRequiredError", 

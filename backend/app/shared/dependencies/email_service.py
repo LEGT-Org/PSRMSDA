@@ -1,3 +1,5 @@
+from pathlib import Path
+
 from app.shared.email import SMTPEmailService, JinjaEmailRendered
 
 

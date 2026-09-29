@@ -1,6 +1,12 @@
 from fastapi import APIRouter, Response, status
 
-from app.modules.auth.schema import AuthResponse, LoginRequest, TokenResponse
+from app.modules.auth.schema import (
+    SetPasswordRequest,
+    TokenResponse, 
+    AuthResponse, 
+    LoginRequest
+)
+
 from app.modules.auth.dependency import (
     RefreshTokenService,
     ValidateCSRF,
@@ -9,6 +15,8 @@ from app.modules.auth.dependency import (
     CurrentUser
 )
 
+from app.shared.security.csrf import generate_csrf_token
+from app.shared.security.jwt import create_access_token
 from app.shared.exception import NoRefreshTokenError
 from app.shared.config import settings 
 
@@ -50,6 +58,23 @@ def get_csrf_token(response: Response):
         "csrf_token": csrf_token
     }
 
+
+@router.post(
+    "/set-password",
+    status_code=status.HTTP_200_OK
+)
+def set_password(
+    data: SetPasswordRequest,
+    service: AuthService,
+    _: ValidateCSRF
+):
+
+    service.auth_set_password(data)
+
+    return {
+        "message": "Registration successful"
+    }
+    
 
 @router.post(
     "/login",

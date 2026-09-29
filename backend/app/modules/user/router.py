@@ -18,7 +18,6 @@ router = APIRouter(
 def register(
     data: UserCreate,
     service: UserService,
-    current_user: AdminUser, 
     _: ValidateCSRF
 ):
 

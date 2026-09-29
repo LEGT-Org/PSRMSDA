@@ -7,7 +7,7 @@ class DomainSettings(BaseModel):
 
 class FrontendSettings(BaseModel):
 
-    url: set[str]
+    url: str
 
 class DatabaseSettings(BaseModel):
 

@@ -6,19 +6,30 @@ from app.modules.user.repository import UserRepository
 from app.modules.user.schema import UserRole, UserCreate
 from app.modules.user.model import User
 
-from app.shared.email import EmailService, EmailMessage, JinjaEmailRendered
-from app.shared.value_object.user import User
 from app.shared.config import settings
+from app.shared.email import (
+    JinjaEmailRendered,
+    EmailService, 
+    EmailMessage
+)
+
+from app.shared.value_object.user import (
+    Email as EmailValidation,
+    User as UserValidation
+)
+
 from app.shared.security.password import (
     generate_registration_token,
-    hash_registration_token, 
+    hash_registration_token,
     hash_password
 )
 
 from app.shared.exception import (
+    InvalidRegistrationTokenError,
     EmailAlreadyExistsError, 
     InvalidCredentialsError,
-    EmailServiceFailedError
+    EmailServiceFailedError,
+    SetupNewPasswordError
 )
 
 
@@ -43,25 +54,26 @@ class UserService:
         data: UserCreate
     ) -> User:
 
-        user = User(
+        validate_user = UserValidation(
             first_name=data.first_name,
             last_name=data.last_name,
-            email=data.email
         )
 
-        if self.repository.get_by_email(user.validated_email):
+        validate_email = EmailValidation(email=data.email)
+
+        if self.repository.get_by_email(validate_email.validated_email):
             raise EmailAlreadyExistsError()
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
 
         raw_token = generate_registration_token()
         token_hash = hash_registration_token(raw_token)
         token_expire = now + timedelta(hours=settings.auth.password_setup_token_expire_hours)
         
         user = User(
-            first_name=user.validated_first_name,
-            last_name=user.validated_last_name,
-            email=user.validated_email,
+            first_name=validate_user.validated_first_name,
+            last_name=validate_user.validated_last_name,
+            email=validate_email.validated_email,
             password_hash=None,
             role=UserRole.USER,
             token_hash=token_hash,
@@ -78,7 +90,7 @@ class UserService:
         try:
 
             action_url = (
-                f"{settings.frontend.url}/set-password"
+                f"{settings.frontend.url}/password/set"
                 f"?token={raw_token}"
             )
 
@@ -86,7 +98,6 @@ class UserService:
                 "set_your_password.html",
 
                 title="Set Your Password",
-                logo_url="/app/shared/email/template/LEGT-Logo.png",
                 preheader="Set your password to activate your account.",
                 company_name="Lightyear Electrical Goods Trading",
                 address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
@@ -120,7 +131,7 @@ class UserService:
 
             return user
 
-        except EmailServiceFailedError:
+        except Exception:
 
             self.db.rollback()
             raise EmailServiceFailedError()
@@ -131,7 +142,7 @@ class UserService:
         email: EmailStr
     ) -> User:
 
-        email = Email(email)
+        email = EmailValidation(email=email)
         user = self.repository.get_by_email(email.validated_email)
 
         if user is None:
@@ -148,3 +159,37 @@ class UserService:
         user = self.repository.get_by_id(user_id)
 
         return user
+
+    
+    def set_user_new_password(
+        self,
+        token_hash: str,
+        new_password: str 
+    ) -> None:
+
+        hash_token = hash_registration_token(token_hash)
+        user = self.repository.get_user_by_token_hash(hash_token)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        if user is None:
+            raise InvalidRegistrationTokenError()
+
+        if user.email_verified is True:
+            raise InvalidRegistrationTokenError()
+
+        if user.token_expire is None or user.token_expire <= now:
+            raise InvalidRegistrationTokenError()
+    
+        try:
+
+            self.repository.set_hash_password(
+                stored_user=user,
+                new_hash_password=new_password
+            )
+
+            self.db.commit()
+
+        except Exception as exc:
+        
+            self.db.rollback()
+            raise SetupNewPasswordError()

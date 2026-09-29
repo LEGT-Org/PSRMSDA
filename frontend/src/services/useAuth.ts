@@ -91,15 +91,71 @@ export async function login(Email: string, Password: string) {
 
         return true;
 
-    } catch(err) {
+    } catch(error) {
 
-        console.error('Login error', err);
         alert('Unable to connect to the server. Please try again later');
+        return;
 
     } finally {
 
         isLoading.value = false;
     
+    }
+}
+
+
+// Registration Set My Password
+
+export async function setPassword(
+    Token: string | null,
+    Password: string,
+    ConfirmPassword: string
+) {
+
+    isLoading.value = true;
+
+    try {
+
+        if (Password !== ConfirmPassword) {
+
+            Error.value = 'Passwords do not match';
+            return Error.value;
+
+        }
+
+        const res = await ApiFetch('/auth/set-password', {
+
+            method: 'POST',
+            body: JSON.stringify(
+                {
+                    token: Token,
+                    password: Password,
+                    confirm_password: ConfirmPassword,
+                }
+            ),
+
+        });
+
+        const data = await res.json();
+
+        if (!res.ok) {
+
+            Error.value = data.detail ?? 'Unable to set password';
+            return Error.value;
+
+        }
+
+        return null;
+
+    } catch (error) {
+
+        alert('Unable to connect to the server. Please try again later');
+        return;
+
+    } finally {
+
+        isLoading.value = false;
+
     }
 }
 
