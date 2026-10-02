@@ -6,7 +6,11 @@ from email.mime.image import MIMEImage
 
 from app.shared.email.message import EmailMessage
 from app.shared.config import settings
-
+from app.shared.exception import (
+    EmailServiceAuthenticationError,
+    EmailServiceUnavailableError,
+    EmailServiceFailedError
+)
 
 class SMTPEmailService:
 
@@ -56,21 +60,32 @@ class SMTPEmailService:
 
         # 4. Send
         
-        with smtplib.SMTP(
-            settings.email.host,
-            settings.email.port
-        ) as smtp:
+        try:
 
-            if settings.email.use_tls:
-                smtp.starttls()
+            with smtplib.SMTP(
+                settings.email.host,
+                settings.email.port
+            ) as smtp:
 
-            smtp.login(
-                settings.email.username,
-                settings.email.password
-            )
+                if settings.email.use_tls:
+                    smtp.starttls()
 
-            smtp.sendmail(
-                settings.email.sender,
-                message.to,
-                smtp_message.as_string()
-            )
+                smtp.login(
+                    settings.email.username,
+                    settings.email.password
+                )
+
+                smtp.sendmail(
+                    settings.email.sender,
+                    message.to,
+                    smtp_message.as_string()
+                )
+
+        except smtplib.SMTPAuthenticationError as exc:
+            raise EmailAuthenticationError() from exc
+
+        except smtplib.SMTPConnectError as exc:
+            raise EmailServiceUnavailableError() from exc
+
+        except smtplib.SMTPException as exc:
+            raise EmailServiceFailedError() from exc
