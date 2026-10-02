@@ -13,6 +13,8 @@ from app.shared.exception.email_service import (
 )
 
 from app.shared.exception.llm_service import (
+    LLMDiagnosticFaultsMustStartWithOneError,
+    LLMDiagnosticHypothesesNonExistentError,
     LLMDiagnosisInvalidListOfStringError,
     LLMDiagnosisInvalidStringError,
     LLMServiceAuthenticationError,
@@ -85,6 +87,9 @@ __all__ = [
     "NoNameError",
 
     # LLM Diagnosis Exception
+    "LLMDiagnosticFaultsMustStartWithOneError",
+    "LLMDiagnosticHypothesesNonExistentError",
     "LLMDiagnosisInvalidListOfStringError",
     "LLMDiagnosisInvalidStringError",
+    
 ]

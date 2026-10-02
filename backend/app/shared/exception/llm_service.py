@@ -55,3 +55,28 @@ class LLMDiagnosisInvalidListOfStringError(BaseHTTPException):
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Fault descriptions cannot be empty"
         )
+
+
+class LLMDiagnosticFaultsMustStartWithOneError(BaseHTTPException):
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                "Supporting fault numbers must "
+                "start at 1."
+            )
+        )
+
+
+class LLMDiagnosticHypothesesNonExistentError(BaseHTTPException):
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=(
+                "A hypothesis references a "
+                "non-existent fault."
+            )
+        )
+

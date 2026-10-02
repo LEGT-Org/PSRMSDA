@@ -9,7 +9,7 @@ class LLMDiagnosisStatus(StrEnum):
     REJECTED = "Rejected"
 
 
-class LLMDiagnosisRequest(BaseModel):
+class LLMDiagnosticRequest(BaseModel):
     
     device_type: str
     device_brand: str

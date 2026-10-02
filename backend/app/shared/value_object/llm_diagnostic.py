@@ -1,10 +1,16 @@
 from dataclasses import dataclass
 
+from app.modules.llm_diagnosis.schema import LLMDiagnosticResponse
+
 from app.shared.exception import (
+    LLMDiagnosticFaultsMustStartWithOneError,
+    LLMDiagnosticHypothesesNonExistentError,
     LLMDiagnosisInvalidListOfStringError, 
     LLMDiagnosisInvalidStringError
 )
 
+
+# LLM Request Validation
 
 @dataclass(frozen=True)
 class LLMDiagnosticRequest:
@@ -57,3 +63,42 @@ class LLMDiagnosticRequest:
     @property
     def validated_fault_descriptions(self) -> list[str]:
         return self.fault_descriptions
+
+
+# LLM Response Validation
+
+@dataclass(frozen=True)
+class LLMDiagnosticResponse:
+
+    response: LLMDiagnosticResponse
+    fault_count: int
+
+
+    def __post_init__(self):
+
+        self._validate_supporting_faults(
+            self.response,
+            self.fault_count
+        )
+
+    
+    @staticmethod
+    def _validate_supporting_faults(
+        self,
+        response: LLMDiagnosticResponse,
+        fault_count: int,
+    ) -> None:
+
+        for hypothesis in response.diagnostic_hypotheses:
+            for fault_number in hypothesis.supporting_faults:
+
+                if fault_number < 1:
+                    raise LLMDiagnosticFaultsMustStartWithOneError()
+
+                if fault_number > fault_count:
+                    raise LLMDiagnosticHypothesesNonExistentError()
+
+
+    @property
+    def validated_response(self) -> LLMDiagnosticResponse:
+        return self.response

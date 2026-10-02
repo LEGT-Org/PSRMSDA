@@ -3,9 +3,10 @@ from typing import Protocol
 
 class LLMProvider(Protocol):
 
-    def generate(
+    def analyze(
         self,
-        messages: list[dict[str, str]]
+        system_prompt: str,
+        user_prompt: str
     ) -> str:
 
         pass
