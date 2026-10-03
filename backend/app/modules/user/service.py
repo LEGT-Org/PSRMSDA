@@ -1,5 +1,4 @@
 from datetime import datetime, timedelta, timezone
-from pydantic import EmailStr
 from sqlalchemy.orm import Session
 
 from app.modules.user.repository import UserRepository
@@ -7,7 +6,7 @@ from app.modules.user.schema import UserRole, UserCreate
 from app.modules.user.model import User
 
 from app.shared.config import settings
-from app.shared.email import (
+from app.shared.infrastructure.email import (
     JinjaEmailRendered,
     EmailService, 
     EmailMessage
@@ -139,7 +138,7 @@ class UserService:
 
     def get_user_by_email(
         self, 
-        email: EmailStr
+        email: str
     ) -> User:
 
         email = EmailValidation(email=email)

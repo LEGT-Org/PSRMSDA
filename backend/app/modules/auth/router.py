@@ -11,8 +11,7 @@ from app.modules.auth.dependency import (
     RefreshTokenService,
     ValidateCSRF,
     RefreshToken,
-    AuthService,
-    CurrentUser
+    AuthService
 )
 
 from app.shared.security.csrf import generate_csrf_token
@@ -25,16 +24,6 @@ router = APIRouter(
     prefix="/auth",
     tags=["Authentication"]
 )
-
-
-@router.get(
-    "/me",
-    response_model=AuthResponse,
-    status_code=status.HTTP_200_OK   
-)
-def get_me(current_user: CurrentUser):
-
-    return current_user
 
 
 @router.get(

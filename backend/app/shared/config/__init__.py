@@ -2,6 +2,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from app.shared.config.schema import (
     EmailServiceSettings,
+    LLMServiceSettings,
     DatabaseSettings,
     FrontendSettings,
     CookieSettings,
@@ -17,6 +18,7 @@ class Settings(BaseSettings):
     frontend: FrontendSettings
     database: DatabaseSettings
     email: EmailServiceSettings
+    groq: LLMServiceSettings
     auth: AuthSettings
     cors: CORSSettings
     cookie: CookieSettings

@@ -1,10 +1,32 @@
 from app.shared.exception.base import (
-    EmailMustContainBodyOrHTML,
-    RecipientIsRequiredError, 
     InvalidCredentialsError, 
-    SubjectIsRequiredError,
     BaseHTTPException,  
 )
+
+from app.shared.exception.email_service import (
+    EmailServiceAuthenticationError,
+    EmailServiceUnavailableError,
+    EmailMustContainBodyOrHTML,
+    RecipientIsRequiredError,
+    EmailServiceFailedError,
+    SubjectIsRequiredError
+)
+
+from app.shared.exception.llm_service import (
+    LLMDiagnosticFaultsMustStartWithOneError,
+    LLMDiagnosticHypothesesNonExistentError,
+    LLMDiagnosisInvalidListOfStringError,
+    LLMDiagnosisInvalidStringError,
+    LLMServiceAuthenticationError,
+    LLMServiceUnavailableError,
+    LLMServiceRateLimitError,
+    LLMServiceTimeoutError
+)
+
+from app.shared.exception.customer import (
+    CustomerDoesNotExistError    
+)
+
 
 from app.shared.exception.auth import (
     ExpiredRefreshTokenError, 
@@ -21,6 +43,7 @@ from app.shared.exception.user import (
     InvalidRegistrationTokenError, 
     PasswordDoesNotMatchError,
     InvalidEmailAddressError, 
+    InvalidPhoneNumberError,
     EmailAlreadyExistsError,
     EmailServiceFailedError,
     SetupNewPasswordError,
@@ -43,9 +66,18 @@ __all__ = [
     "PasswordDoesNotMatch",
 
     # Email Service Exception
-    "RecipientIsRequiredError", 
-    "SubjectIsRequiredError", 
+    "EmailServiceAuthenticationError",
+    "EmailServiceUnavailableError",
     "EmailMustContainBoryOrHTML",
+    "RecipientIsRequiredError", 
+    "EmailServiceFailedError",
+    "SubjectIsRequiredError",
+
+    # LLM Service Exception
+    "LLMServiceAuthenticationError",
+    "LLMServiceUnavailableError",
+    "LLMServiceRateLimitError",
+    "LLMServiceTimeoutError", 
 
     # Auth Exception
     "ExpiredRefreshTokenError",
@@ -57,6 +89,17 @@ __all__ = [
     "NameMustBeTwoToFiftyCharacterError", 
     "InvalidEmailAddressError", 
     "EmailAlreadyExistsError",
-    "EmailServiceFailedError", 
+    "EmailServiceFailedError",
+    "InvalidPhoneNumberError", 
     "NoNameError",
+
+    # LLM Diagnosis Exception
+    "LLMDiagnosticFaultsMustStartWithOneError",
+    "LLMDiagnosticHypothesesNonExistentError",
+    "LLMDiagnosisInvalidListOfStringError",
+    "LLMDiagnosisInvalidStringError",
+
+    # Customer Exception
+    "CustomerDoesNotExistError",
+    
 ]

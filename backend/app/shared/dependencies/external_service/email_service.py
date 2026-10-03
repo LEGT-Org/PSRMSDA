@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from app.shared.email import SMTPEmailService, JinjaEmailRendered
+from app.shared.infrastructure.email import SMTPEmailService, JinjaEmailRendered
 
 
 def get_email_service() -> SMTPEmailService:

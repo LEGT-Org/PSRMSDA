@@ -7,7 +7,8 @@ from sqlalchemy import (
     DateTime, 
     String, 
     Text, 
-    Enum
+    Enum,
+    JSON
 )
 
 from app.shared.database import Base
@@ -22,9 +23,9 @@ class ServiceRequest(Base):
     device_type: Mapped[str] = mapped_column(String(255), nullable=False)
     device_model: Mapped[str] = mapped_column(String(255), nullable=False)
     device_brand: Mapped[str] = mapped_column(String(255), nullable=False)
-    fault_description: Mapped[str | None] = mapped_column(Text, nullable=True)
+    fault_description: Mapped[list[str]] = mapped_column(Text, nullable=False)
     technician_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
-    sop_instructions: Mapped[str | None] = mapped_column(Text, nullable=True)
+    sop_instructions: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     status: Mapped[ServiceRequestStatus] = mapped_column(
         Enum(

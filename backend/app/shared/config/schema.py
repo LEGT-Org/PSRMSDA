@@ -32,6 +32,14 @@ class EmailServiceSettings(BaseModel):
     sender: str
     use_tls: bool
 
+
+class LLMServiceSettings(BaseModel):
+
+    api_key: str
+    model: str
+    timeout: float
+
+
 class AuthSettings(BaseModel):
 
     jwt_secret_key: str

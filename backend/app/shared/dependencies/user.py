@@ -3,8 +3,8 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
-from app.shared.dependencies.email_service import get_email_service, get_email_renderer
-from app.shared.email import EmailService, JinjaEmailRendered
+from app.shared.dependencies.external_service.email_service import get_email_service, get_email_renderer
+from app.shared.infrastructure.email import EmailService, JinjaEmailRendered
 from app.shared.session import get_db
 
 from app.modules.user.repository import UserRepository

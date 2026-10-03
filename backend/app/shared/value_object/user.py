@@ -7,11 +7,14 @@ from app.shared.exception import (
     NameOnlyContainAlphabeticCharacterError,
     NameMustBeTwoToFiftyCharacterError,
     InvalidCredentialsError,
+    InvalidPhoneNumberError,
     NoNameError
 )
 
+
+# Name Validation
+
 name_regex = re.compile(r"^[A-Za-z\s'-]+$")
-email_regex = re.compile(r"^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$")
 
 @dataclass(frozen=True)
 class User:
@@ -49,6 +52,10 @@ class User:
         return self.last_name
 
 
+# Email Validation
+
+email_regex = re.compile(r"^[a-zA-Z0-9._%+-]+@([a-zA-Z0-9.-]+\.[a-zA-Z]{2,})$")
+
 @dataclass(frozen=True)
 class Email:
 
@@ -75,3 +82,43 @@ class Email:
     def validated_email(self) -> str:
 
         return self.email
+
+
+# Phone Number Validation
+
+e164 = re.compile(r"^\+[1-9]\d{6,14}$")
+digits_and_plus = re.compile(r"[^\d+]")
+
+@dataclass(frozen=True)
+class PhoneNumber:
+
+    phone_number: str
+
+
+    def __post_init__(self):
+
+        normalized = self.normalize(self.phone_number)
+
+        self._validate_phone_number(normalize)
+
+        object.__setattr__(self, "phone_number", normalized)
+        
+    
+    @staticmethod
+    def normalize(raw: str) -> str:
+        
+        normalized = digits_and_plus._STRIP.sub("", raw)
+        return "+" + normalized.lstrip("+")
+
+    @staticmethod
+    def _validate_phone_number(normalized: str) -> None:
+        
+        if not E164.match(normalized):
+            raise InvalidPhoneNumberError()
+
+
+    @property
+    def validated_phone_number(self) -> str:
+        return self.phone_number
+
+        

@@ -22,7 +22,8 @@ class UserRepository:
 
         statement = select(User).where(
             User.email == email,
-            User.is_active.is_(True)
+            User.is_active.is_(True),
+            User.password_hash.isnot(None)
         )
 
         return self.db.scalar(statement)
@@ -32,7 +33,8 @@ class UserRepository:
 
         statement = select(User).where(
             User.id == user_id,
-            User.is_active.is_(True)
+            User.is_active.is_(True),
+            User.password_hash.isnot(None)
         )
 
         return self.db.scalar(statement)
@@ -42,7 +44,8 @@ class UserRepository:
 
         statement = select(User).where(
             User.token_hash == hash_token,
-            User.email_verified.is_(False)
+            User.email_verified.is_(False),
+            User.password_hash.is_(None)    
         )
 
         return self.db.scalar(statement)
