@@ -23,6 +23,11 @@ from app.shared.exception.llm_service import (
     LLMServiceTimeoutError
 )
 
+from app.shared.exception.customer import (
+    CustomerDoesNotExistError    
+)
+
+
 from app.shared.exception.auth import (
     ExpiredRefreshTokenError, 
     InvalidRefreshTokenError, 
@@ -38,6 +43,7 @@ from app.shared.exception.user import (
     InvalidRegistrationTokenError, 
     PasswordDoesNotMatchError,
     InvalidEmailAddressError, 
+    InvalidPhoneNumberError,
     EmailAlreadyExistsError,
     EmailServiceFailedError,
     SetupNewPasswordError,
@@ -83,7 +89,8 @@ __all__ = [
     "NameMustBeTwoToFiftyCharacterError", 
     "InvalidEmailAddressError", 
     "EmailAlreadyExistsError",
-    "EmailServiceFailedError", 
+    "EmailServiceFailedError",
+    "InvalidPhoneNumberError", 
     "NoNameError",
 
     # LLM Diagnosis Exception
@@ -91,5 +98,8 @@ __all__ = [
     "LLMDiagnosticHypothesesNonExistentError",
     "LLMDiagnosisInvalidListOfStringError",
     "LLMDiagnosisInvalidStringError",
+
+    # Customer Exception
+    "CustomerDoesNotExistError",
     
 ]

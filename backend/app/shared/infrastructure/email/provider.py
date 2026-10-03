@@ -1,6 +1,6 @@
 from typing import Protocol
 
-from app.shared.email.message import EmailMessage
+from app.shared.infrastructure.email.message import EmailMessage
 
 class EmailService(Protocol):
 

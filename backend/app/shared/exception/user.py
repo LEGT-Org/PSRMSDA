@@ -53,6 +53,15 @@ class EmailServiceFailedError(BaseHTTPException):
         )
 
 
+class InvalidPhoneNumberError(BaseHTTPException):
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail="Invalid phone number"
+        )
+
+
 class InvalidRegistrationTokenError(BaseHTTPException):
 
     def __init__(self):

@@ -1,8 +1,8 @@
 """Create essential tables
 
-Revision ID: 1d4ff733af7d
+Revision ID: fa467eb3ef96
 Revises: 
-Create Date: 2026-09-29 01:57:44.588447
+Create Date: 2026-10-03 03:26:47.711853
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '1d4ff733af7d'
+revision: str = 'fa467eb3ef96'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -75,9 +75,9 @@ def upgrade() -> None:
     sa.Column('device_type', sa.String(length=255), nullable=False),
     sa.Column('device_model', sa.String(length=255), nullable=False),
     sa.Column('device_brand', sa.String(length=255), nullable=False),
-    sa.Column('fault_description', sa.Text(), nullable=True),
+    sa.Column('fault_description', sa.Text(), nullable=False),
     sa.Column('technician_notes', sa.Text(), nullable=True),
-    sa.Column('sop_instructions', sa.Text(), nullable=True),
+    sa.Column('sop_instructions', sa.JSON(), nullable=True),
     sa.Column('status', sa.Enum('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FOR_FURTHER_INSPECTION', 'UNSUCCESSFUL', name='service_request_status'), server_default='Pending', nullable=False),
     sa.Column('customer_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
@@ -108,11 +108,12 @@ def upgrade() -> None:
     )
     op.create_table('llm_diagnosis',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('model', sa.String(length=255), nullable=False),
+    sa.Column('model', sa.String(length=100), nullable=False),
     sa.Column('prompt', sa.Text(), nullable=True),
     sa.Column('raw_output', sa.Text(), nullable=True),
+    sa.Column('summary', sa.Text(), nullable=True),
+    sa.Column('confidence', sa.String(length=20), nullable=True),
     sa.Column('parsed_output', sa.JSON(), nullable=True),
-    sa.Column('confidence', sa.Numeric(precision=10, scale=2), nullable=True),
     sa.Column('status', sa.Enum('DRAFT', 'ACCEPTED', 'REJECTED', name='llm_diagnosis_status'), server_default='Draft', nullable=False),
     sa.Column('request_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),

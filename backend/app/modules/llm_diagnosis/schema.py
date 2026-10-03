@@ -1,5 +1,10 @@
-from pydantic import BaseModel, Field, field_validator
+from typing import Literal
 from enum import StrEnum
+from pydantic import (
+    BaseModel, 
+    Field,  
+    field_validator
+)
 
 
 class LLMDiagnosisStatus(StrEnum):
@@ -15,7 +20,7 @@ class LLMDiagnosticRequest(BaseModel):
     device_brand: str
     device_model: str
     fault_descriptions: list[str] = Field(
-        min_length=3.
+        min_length=3,
         max_length=10
     )
 

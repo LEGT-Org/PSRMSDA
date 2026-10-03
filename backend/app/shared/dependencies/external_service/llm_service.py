@@ -1,8 +1,15 @@
 from groq import AsyncGroq
 
-from src.shared.llm.groq import GroqLLMProvider
-from src.shared.llm.provider import LLMProvider
-from src.shared.config import settings
+from app.shared.config import settings
+from app.shared.infrastructure.llm import (
+    DiagnosticPromptBuilder,
+    GroqLLMProvider,
+    LLMProvider
+)
+
+
+def get_llm_builder() -> DiagnosticPromptBuilder:
+    return DiagnosticPromptBuilder()
 
 
 def get_llm_provider() -> LLMProvider:

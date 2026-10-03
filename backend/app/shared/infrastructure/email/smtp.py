@@ -4,7 +4,7 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from email.mime.image import MIMEImage
 
-from app.shared.email.message import EmailMessage
+from app.shared.infrastructure.email.message import EmailMessage
 from app.shared.config import settings
 from app.shared.exception import (
     EmailServiceAuthenticationError,
