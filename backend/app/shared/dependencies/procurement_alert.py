@@ -9,7 +9,7 @@ from app.modules.procurement_alert.repository import ProcurementAlertRepository
 from app.modules.procurement_alert.service import ProcurementAlertService
 
 
-def get_procurement_alert_provider(
+def get_procurement_alert_repository(
     db: Annotated[
         Session,
         Depends(get_db)
@@ -22,7 +22,7 @@ def get_procurement_alert_provider(
 def get_procurement_alert_service(
     repository: Annotated[
         ProcurementAlertRepository,
-        Depends(get_procurement_alert_provider)
+        Depends(get_procurement_alert_repository)
     ],
     db: Annotated[
         Session,

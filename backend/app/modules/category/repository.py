@@ -17,3 +17,16 @@ class CategoryRepository:
 
         self.db.add(category)
         return category
+
+
+    def get_by_name(
+        self,
+        category_name: str
+    ) -> Category | None:
+
+        statement = select(Category).where(
+            Category.name == category_name,
+            Category.is_active.is_(True)
+        )
+
+        return self.db.scalar(statement)

@@ -15,7 +15,13 @@ from sqlalchemy import (
 )
 
 from app.shared.database import Base
-from app.modules.llm_diagnosis.schema import LLMDiagnosisStatus
+
+from app.modules.llm_diagnosis.schema import (
+    ReplacementRecommendation,
+    LLMDiagnosticResponse,
+    LLMDiagnosisStatus
+)
+
 
 class LLMDiagnosis(Base):
 
@@ -39,7 +45,11 @@ class LLMDiagnosis(Base):
     )
 
     # Foreign Key
-    request_id: Mapped[int] = mapped_column(ForeignKey("service_requests.id"))
+    request_id: Mapped[int] = mapped_column(
+        ForeignKey("service_requests.id"),
+        unique=True,
+        nullable=False
+    )
 
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
@@ -48,3 +58,12 @@ class LLMDiagnosis(Base):
 
     # Relationship
     service_requests: Mapped["ServiceRequest"] = relationship(back_populates="llm_diagnosis")
+
+
+    @property
+    def response(self) -> LLMDiagnosticResponse:
+        return LLMDiagnosticResponse.model_validate(self.parsed_output)
+
+    @property
+    def llm_recommendation(self) -> ReplacementRecommendation | None:
+        return self.response.replacement_recommendation

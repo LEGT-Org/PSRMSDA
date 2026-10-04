@@ -8,7 +8,7 @@ from pydantic import (
     Field
 )
 
-from app.modules.llm_diagnosis.schema import LLMDiagnosticResponse
+from app.modules.llm_diagnosis.schema import LLMDiagnosticResponse, LLMDiagnosisStatus
 
 class ServiceRequestStatus(StrEnum):
 
@@ -17,6 +17,21 @@ class ServiceRequestStatus(StrEnum):
     COMPLETED = "Completed"
     FOR_FURTHER_INSPECTION = "For Further Inspection"
     UNSUCCESSFUL = "Unsuccessful"
+
+
+class SelectedPart(BaseModel):
+    
+    part_id: int | None = None          
+    part_name: str                       
+    quantity: int = Field(ge=1, default=1)
+
+
+class ConfirmServiceRequest(BaseModel):
+
+    selected_parts: list[SelectedPart] = Field(default_factory=list)
+    final_status: ServiceRequestStatus
+    diagnosis_verdict: LLMDiagnosisStatus = LLMDiagnosisStatus.ACCEPTED
+    technician_notes: str | None = None
 
 
 class LLMRecommendedSparePart(BaseModel):
@@ -84,3 +99,11 @@ class CustomerRequestPreview(BaseModel):
     email: EmailStr
     phone_number: str
 
+
+class UserSchema(BaseModel):
+
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    role: str

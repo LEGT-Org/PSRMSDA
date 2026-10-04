@@ -99,7 +99,7 @@ class PhoneNumber:
 
         normalized = self.normalize(self.phone_number)
 
-        self._validate_phone_number(normalize)
+        self._validate_phone_number(normalized)
 
         object.__setattr__(self, "phone_number", normalized)
         
@@ -107,13 +107,22 @@ class PhoneNumber:
     @staticmethod
     def normalize(raw: str) -> str:
         
-        normalized = digits_and_plus._STRIP.sub("", raw)
-        return "+" + normalized.lstrip("+")
+        normalized = digits_and_plus.sub("", raw)
+
+        if normalized.startswith("09") and len(normalized) == 11:
+            normalized = "+63" + normalized[1:]
+        elif normalized.startswith("9") and len(normalized) == 10:
+            normalized = "+63" + normalized
+
+        if not normalized.startswith("+") and normalized.isdigit():
+            normalized = "+" + normalized
+
+        return normalized
 
     @staticmethod
     def _validate_phone_number(normalized: str) -> None:
         
-        if not E164.match(normalized):
+        if not e164.match(normalized):
             raise InvalidPhoneNumberError()
 
 

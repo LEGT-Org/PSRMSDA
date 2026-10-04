@@ -1,5 +1,6 @@
 from __future__ import annotations
 from datetime import datetime
+from typing import Optional
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy import (
@@ -23,7 +24,7 @@ class ServiceRequest(Base):
     device_type: Mapped[str] = mapped_column(String(255), nullable=False)
     device_model: Mapped[str] = mapped_column(String(255), nullable=False)
     device_brand: Mapped[str] = mapped_column(String(255), nullable=False)
-    fault_description: Mapped[list[str]] = mapped_column(Text, nullable=False)
+    fault_description: Mapped[list[str]] = mapped_column(JSON, nullable=False)
     technician_notes: Mapped[str | None] = mapped_column(Text, nullable=True)
     sop_instructions: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
@@ -47,6 +48,6 @@ class ServiceRequest(Base):
     # Relationship
     users: Mapped["User"] = relationship(back_populates="service_requests")
     customers: Mapped["Customer"] = relationship(back_populates="service_requests")
+    llm_diagnosis: Mapped[Optional["LLMDiagnosis"]] = relationship(back_populates="service_requests", uselist=False)
     request_parts: Mapped[list["RequestPart"]] = relationship(back_populates="service_requests")
-    llm_diagnosis: Mapped[list["LLMDiagnosis"]] = relationship(back_populates="service_requests")
     procurement_alerts: Mapped[list["ProcurementAlert"]] = relationship(back_populates="service_requests")

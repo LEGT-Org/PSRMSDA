@@ -9,7 +9,7 @@ from app.modules.request_part.repository import RequestPartRepository
 from app.modules.request_part.service import RequestPartService
 
 
-def get_request_part_provider(
+def get_request_part_repository(
     db: Annotated[
         Session,
         Depends(get_db)
@@ -22,7 +22,7 @@ def get_request_part_provider(
 def get_request_part_service(
     repository: Annotated[
         RequestPartRepository,
-        Depends(get_request_part_provider)
+        Depends(get_request_part_repository)
     ],
     db: Annotated[
         Session,

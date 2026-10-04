@@ -44,7 +44,7 @@ class DiagnosticPromptBuilder:
         faults = "\n".join(
             f"{index}. {fault}"
             for index, fault in enumerate(
-                fault_description,
+                fault_descriptions,
                 start=1,
             )
         )

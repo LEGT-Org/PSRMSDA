@@ -20,13 +20,31 @@ from app.shared.exception.llm_service import (
     LLMServiceAuthenticationError,
     LLMServiceUnavailableError,
     LLMServiceRateLimitError,
+    LLMServiceContentError,
     LLMServiceTimeoutError
+)
+
+from app.shared.exception.service_request import (
+    ServiceRequestStatusIsNotPendingError,
+    ServiceRequestDoesNotExistError,
+    ServiceRequestFailedError
+)
+
+from app.shared.exception.procurement_alert import (
+    ProcurementAlertFailedError
+)
+
+from app.shared.exception.request_part import (
+    RequestPartFailedError
 )
 
 from app.shared.exception.customer import (
     CustomerDoesNotExistError    
 )
 
+from app.shared.exception.category import (
+    CategoryDoesNotExistError
+)
 
 from app.shared.exception.auth import (
     ExpiredRefreshTokenError, 
@@ -77,6 +95,7 @@ __all__ = [
     "LLMServiceAuthenticationError",
     "LLMServiceUnavailableError",
     "LLMServiceRateLimitError",
+    "LLMServiceContentError",
     "LLMServiceTimeoutError", 
 
     # Auth Exception
@@ -99,7 +118,21 @@ __all__ = [
     "LLMDiagnosisInvalidListOfStringError",
     "LLMDiagnosisInvalidStringError",
 
+    # Service Request Exception
+    "ServiceRequestStatusIsNotPendingError",
+    "ServiceRequestDoesNotExistError",
+    "ServiceRequestFailedError",
+
     # Customer Exception
     "CustomerDoesNotExistError",
+
+    # Category Exception
+    "CategoryDoesNotExistError",
+
+    # Request Part Exception
+    "RequestPartFailedError",
+
+    # Procurement Alert Exception
+    "ProcurementAlertFailedError",
     
 ]

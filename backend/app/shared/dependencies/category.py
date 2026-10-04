@@ -9,7 +9,7 @@ from app.modules.category.repository import CategoryRepository
 from app.modules.category.service import CategoryService
 
 
-def get_category_provider(
+def get_category_repository(
     db: Annotated[
         Session,
         Depends(get_db)
@@ -22,7 +22,7 @@ def get_category_provider(
 def get_category_service(
     repository: Annotated[
         CategoryRepository,
-        Depends(get_category_provider)
+        Depends(get_category_repository)
     ],
     db: Annotated[
         Session,
@@ -31,6 +31,6 @@ def get_category_service(
 ) -> CategoryService:
 
     return CategoryService(
-        repository=repository
+        repository=repository,
         db=db
     )

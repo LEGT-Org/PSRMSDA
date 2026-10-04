@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.shared.config import settings
@@ -16,7 +17,8 @@ from app.modules.llm_diagnosis.model import LLMDiagnosis
 from app.modules.llm_diagnosis.schema import (
     LLMDiagnosticResponse,
     LLMDiagnosticRequest,
-    LLMDiagnosisStatus
+    LLMDiagnosisStatus,
+    LLMServiceResult
 )
 
 
@@ -38,8 +40,8 @@ class LLMDiagnosisService:
     
     async def analyze(
         self,
-        service_request_id: int | None = None,
-        request: LLMDiagnosticRequest
+        request: LLMDiagnosticRequest,
+        service_request_id: int | None = None
     ) -> LLMDiagnosticResponse:
 
         user_request = LLMRequestValidation(
@@ -60,30 +62,32 @@ class LLMDiagnosisService:
             )
         )
 
-        raw_output = await self.llm_service.analyze(
+        result: LLMServiceResult = await self.llm_service.analyze(
             system_prompt=system_prompt,
             user_prompt=user_prompt
         )
 
         llm_response = LLMResponseValidation(
-            response=raw_output,
+            response=result.parsed,
             fault_count=len(user_request.validated_fault_descriptions)
         )
 
+        raw_output = result.raw
         parsed_output = llm_response.validated_response
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-        llm_diagnosis = LLMDiagnosis(
-            model=settings.groq.model
+        return LLMDiagnosis(
+            model=parsed_output.llm_model,
             prompt=user_prompt,
             raw_output=raw_output,
             summary=parsed_output.summary,
-            confidence=self._overall_confidence(parsed_ output),
             parsed_output=parsed_output.model_dump(mode="json"),
-            status=LLMDiagnosisStatus.DRAFT
-            request_id=service_request_id
+            confidence=parsed_output.overall_confidence,
+            status=LLMDiagnosisStatus.DRAFT,
+            request_id=service_request_id,
+            created_at=now,
+            updated_at=now
         )
-
-        return llm_diagnosis
 
 
     def stage(

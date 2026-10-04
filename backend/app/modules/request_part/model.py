@@ -12,6 +12,7 @@ class RequestPart(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     quantity: Mapped[int] = mapped_column(nullable=True)
+    part_name_snapshot: Mapped[str] = mapped_column(String(255), nullable=False)
     is_stock_validated: Mapped[bool] = mapped_column(server_default=text("0"))
 
     # Foreign Key

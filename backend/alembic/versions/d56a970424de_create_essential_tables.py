@@ -1,8 +1,8 @@
 """Create essential tables
 
-Revision ID: fa467eb3ef96
+Revision ID: d56a970424de
 Revises: 
-Create Date: 2026-10-03 03:26:47.711853
+Create Date: 2026-10-04 18:53:26.224951
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'fa467eb3ef96'
+revision: str = 'd56a970424de'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -75,7 +75,7 @@ def upgrade() -> None:
     sa.Column('device_type', sa.String(length=255), nullable=False),
     sa.Column('device_model', sa.String(length=255), nullable=False),
     sa.Column('device_brand', sa.String(length=255), nullable=False),
-    sa.Column('fault_description', sa.Text(), nullable=False),
+    sa.Column('fault_description', sa.JSON(), nullable=False),
     sa.Column('technician_notes', sa.Text(), nullable=True),
     sa.Column('sop_instructions', sa.JSON(), nullable=True),
     sa.Column('status', sa.Enum('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FOR_FURTHER_INSPECTION', 'UNSUCCESSFUL', name='service_request_status'), server_default='Pending', nullable=False),
@@ -120,14 +120,16 @@ def upgrade() -> None:
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
     sa.ForeignKeyConstraint(['request_id'], ['service_requests.id'], ),
-    sa.PrimaryKeyConstraint('id')
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('request_id')
     )
     op.create_table('procurement_alerts',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('alert_message', sa.String(length=255), nullable=True),
+    sa.Column('part_name_snapshot', sa.String(length=255), nullable=True),
     sa.Column('is_resolved', sa.Boolean(), server_default=sa.text('0'), nullable=False),
     sa.Column('request_id', sa.Integer(), nullable=False),
-    sa.Column('part_id', sa.Integer(), nullable=False),
+    sa.Column('part_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['part_id'], ['spare_parts.id'], ),
     sa.ForeignKeyConstraint(['request_id'], ['service_requests.id'], ),
@@ -136,6 +138,7 @@ def upgrade() -> None:
     op.create_table('request_parts',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('quantity', sa.Integer(), nullable=True),
+    sa.Column('part_name_snapshot', sa.String(length=255), nullable=False),
     sa.Column('is_stock_validated', sa.Boolean(), server_default=sa.text('0'), nullable=False),
     sa.Column('request_id', sa.Integer(), nullable=False),
     sa.Column('part_id', sa.Integer(), nullable=False),

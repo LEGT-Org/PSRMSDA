@@ -38,3 +38,55 @@ def register(
 ):
 
     return service.create_user(data)
+
+
+@router.patch(
+    "/admin/{user_id}/promote",
+    status_code=status.HTTP_200_OK
+)
+def promote_user(
+    user_id: int,
+    service: UserService,
+    current_user: AdminUser
+) -> None:
+
+    service.promote_user(user_id)
+
+
+@router.patch(
+    "/admin/{user_id}/demote",
+    status_code=status.HTTP_200_OK
+)
+def promote_user(
+    user_id: int,
+    service: UserService,
+    current_user: AdminUser
+) -> None:
+
+    service.demote_user(user_id)
+
+
+@router.patch(
+    "/admin/{user_id}/enable",
+    status_code=status.HTTP_200_OK
+)
+def disable_user(
+    user_id: int,
+    service: UserService,
+    current_user: AdminUser
+) -> None:
+
+    service.enable_user(user_id)
+
+
+@router.patch(
+    "/admin/{user_id}/disable",
+    status_code=status.HTTP_204_NO_CONTENT
+)
+def disable_user(
+    user_id: int,
+    service: UserService,
+    current_user: AdminUser
+) -> None:
+
+    service.disable_user(user_id)

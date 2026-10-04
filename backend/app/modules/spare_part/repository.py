@@ -17,3 +17,24 @@ class SparePartRepository:
 
         self.db.add(spare_part)
         return spare_part
+
+
+    def search_by_name(
+        self,
+        part_name: str
+    ) -> list[SparePart]:
+
+        pattern = f"%{part_name}%"
+        statement = select(SparePart).where(SparePart.part_name.ilike(pattern))
+
+        return list(self.db.execute(statement).scalars())
+
+
+    def get_by_id(
+        self,
+        part_id: int
+    ) -> SparePart:
+
+        statement = select(SparePart).where(SparePart.id == part_id)
+
+        return self.db.scalar(statement)

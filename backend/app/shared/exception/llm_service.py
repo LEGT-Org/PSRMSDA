@@ -3,6 +3,15 @@ from fastapi import status
 from app.shared.exception.base import BaseHTTPException
 
 
+class LLMServiceContentError(BaseHTTPException):
+
+    def __init__(self):
+        super().__init__(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="The LLM service return empty content"
+        )
+
+
 class LLMServiceAuthenticationError(BaseHTTPException):
     
     def __init__(self):
