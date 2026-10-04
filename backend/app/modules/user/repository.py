@@ -1,7 +1,8 @@
+from datetime import datetime
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.modules.user.schema import RegistrationStoredUser
+from app.modules.user.schema import RegistrationStoredUser, UserRole
 from app.modules.user.model import User
 
 
@@ -23,6 +24,7 @@ class UserRepository:
         statement = select(User).where(
             User.email == email,
             User.is_active.is_(True),
+            User.deleted_at.is_(None),
             User.password_hash.isnot(None)
         )
 
@@ -34,7 +36,8 @@ class UserRepository:
         statement = select(User).where(
             User.id == user_id,
             User.is_active.is_(True),
-            User.password_hash.isnot(None)
+            User.password_hash.isnot(None),
+            User.deleted_at.is_(None)
         )
 
         return self.db.scalar(statement)
@@ -45,7 +48,8 @@ class UserRepository:
         statement = select(User).where(
             User.token_hash == hash_token,
             User.email_verified.is_(False),
-            User.password_hash.is_(None)    
+            User.password_hash.is_(None),    
+            User.deleted_at.is_(None)
         )
 
         return self.db.scalar(statement)
@@ -61,5 +65,58 @@ class UserRepository:
         stored_user.email_verified = True
         stored_user.token_expire = None
         stored_user.token_hash = None
+
+    
+    def enable(
+        self,
+        stored_user: User,
+        now: datetime
+    ) -> None:
+
+        stored_user.is_active = True
+        stored_user.updated_at = now
+
+
+    def disable(
+        self,
+        stored_user: User,
+        now: datetime
+    ) -> None:
+
+        stored_user.is_active = False
+        stored_user.updated_at = now
+
+    
+    def delete(
+        self,
+        stored_user: User,
+        now: datetime
+    ) -> None:
+
+        stored_user.is_active = False
+        stored_user.deleted_at = now
+        stored_user.updated_at = now
+
+
+    def promote(
+        self,
+        stored_user: User,
+        now: datetime
+    ) -> None:
+
+        stored_user.role = UserRole.ADMIN
+        stored_user.updated_at = now
+
+
+    def demote(
+        self,
+        stored_user: User,
+        now: datetime
+    ) -> None:
+
+        stored_user.role = UserRole.USER
+        stored_user.updated_at = now
+
+
 
         

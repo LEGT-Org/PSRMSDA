@@ -17,6 +17,7 @@ from app.modules.user.model import User
 
 # Router Configuration
 
+from app.modules.service_request.router import router as service_request_router
 from app.modules.auth.router import router as auth_router
 from app.modules.user.router import router as user_router
 
@@ -35,6 +36,7 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(user_router)
+app.include_router(service_request_router)
 
 
 @app.get('/')

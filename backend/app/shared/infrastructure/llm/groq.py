@@ -1,13 +1,14 @@
 import groq
 from groq import AsyncGroq
 
-from app.modules.llm_diagnosis.schema import LLMDiagnosticResponse
+from app.modules.llm_diagnosis.schema import LLMDiagnosticResponse, LLMServiceResult
 
-from app.shared.llm.provider import LLMProvider
+from app.shared.infrastructure.llm.provider import LLMProvider
 from app.shared.exception import (
     LLMServiceAuthenticationError,
     LLMServiceUnavailableError,
     LLMServiceRateLimitError,
+    LLMServiceContentError,
     LLMServiceTimeoutError
 )
 
@@ -29,7 +30,7 @@ class GroqLLMProvider:
         self,
         system_prompt: str,
         user_prompt: str
-    ) -> str:
+    ) -> LLMServiceResult:
 
         try:
             
@@ -54,6 +55,18 @@ class GroqLLMProvider:
                     },
                 },
             )
+            
+            content = response.choices[0].message.content
+
+            if not content:
+                raise LLMServiceContentError()
+
+            parsed = LLMDiagnosticResponse.model_validate_json(content)
+
+            return LLMServiceResult(
+                raw=content,
+                parsed=parsed
+            )
 
         except groq.AuthenticationError as exc:
             raise LLMServiceAuthenticationError() from exc
@@ -67,6 +80,3 @@ class GroqLLMProvider:
         except groq.InternalServerError as exc:
             raise LLMServiceUnavailableError() from exc
 
-
-        content = response.choices[0].message.content
-        return DiagnosticResponse.model_validate_json(content)

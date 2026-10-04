@@ -11,7 +11,7 @@ from app.modules.spare_part.service import SparePartService
 from app.modules.category.service import CategoryService
 
 
-def get_spare_part_provider(
+def get_spare_part_repository(
     db: Annotated[
         Session,
         Depends(get_db)
@@ -24,7 +24,7 @@ def get_spare_part_provider(
 def get_spare_part_service(
     repository: Annotated[
         SparePartRepository,
-        Depends(get_spare_part_provider)
+        Depends(get_spare_part_repository)
     ],
     category_interface: Annotated[
         CategoryService,

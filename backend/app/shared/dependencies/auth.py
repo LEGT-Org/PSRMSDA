@@ -16,7 +16,10 @@ from app.modules.user.model import User
 
 
 def get_auth_service(
-    user_service: UserService = Depends(get_user_service)
+    user_service: Annotated[
+        UserService, 
+        Depends(get_user_service)
+    ]
 ) -> AuthService:
 
     return AuthService(user_service)

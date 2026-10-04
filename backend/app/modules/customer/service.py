@@ -14,7 +14,7 @@ from app.modules.customer.repository import CustomerRepository
 from app.modules.customer.model import Customer
 
 
-class CustomerService
+class CustomerService:
 
     def __init__(
         self,
@@ -50,7 +50,7 @@ class CustomerService
             first_name=customer_details.validated_first_name,
             last_name=customer_details.validated_last_name,
             email=email.validated_email,
-            phone_number=phone_number.validated_phone_number
+            phone_number=phone_number.validated_phone_number,
             created_at=now,
             updated_at=now,
             deleted_at=None

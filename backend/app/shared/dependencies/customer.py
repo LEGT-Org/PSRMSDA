@@ -9,7 +9,7 @@ from app.modules.customer.repository import CustomerRepository
 from app.modules.customer.service import CustomerService
 
 
-def get_customer_provider(
+def get_customer_repository(
     db: Annotated[
         Session,
         Depends(get_db)
@@ -22,7 +22,7 @@ def get_customer_provider(
 def get_customer_service(
     repository: Annotated[
         CustomerService,
-        Depends(get_customer_provider)
+        Depends(get_customer_repository)
     ],
     db: Annotated[
         Session,

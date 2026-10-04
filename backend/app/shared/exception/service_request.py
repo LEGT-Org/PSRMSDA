@@ -1,0 +1,28 @@
+from fastapi import status
+
+from app.shared.exception.base import BaseHTTPException
+
+
+class ServiceRequestDoesNotExistError(BaseHTTPException):
+
+    def __init__(self, detail: str):
+        super().__init__(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=detail
+        )
+
+class ServiceRequestStatusIsNotPendingError(BaseHTTPException):
+
+    def __init__(self, detail: str):
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=detail
+        )
+
+class ServiceRequestFailedError(BaseHTTPException):
+
+    def __init__():
+        super().__init__(
+            status_code=status.HTTP_503_BAD_GATEWAY,
+            detail="Service request confirmation has failed"
+        )

@@ -10,7 +10,8 @@ def get_email_service() -> SMTPEmailService:
 def get_email_renderer() -> JinjaEmailRendered:
 
     template_directory = (
-        Path(__file__).resolve().parents[1]
+        Path(__file__).resolve().parents[2]
+        / "infrastructure"
         / "email"
         / "template"
     )

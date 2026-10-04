@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
-from app.modules.user.repository import UserRepository
 from app.modules.user.schema import UserRole, UserCreate
+from app.modules.user.repository import UserRepository
 from app.modules.user.model import User
 
 from app.shared.config import settings
@@ -28,7 +28,7 @@ from app.shared.exception import (
     EmailAlreadyExistsError, 
     InvalidCredentialsError,
     EmailServiceFailedError,
-    SetupNewPasswordError
+    SetupNewPasswordError   
 )
 
 
@@ -157,6 +157,9 @@ class UserService:
 
         user = self.repository.get_by_id(user_id)
 
+        if user is None:
+            raise InvalidCredentialsError()
+
         return user
 
     
@@ -188,7 +191,115 @@ class UserService:
 
             self.db.commit()
 
-        except Exception as exc:
+        except Exception:
         
             self.db.rollback()
             raise SetupNewPasswordError()
+
+
+    def enable_user(
+        self,
+        user_id: int 
+    ) -> None:
+
+        user = self.repository.get_by_id(user_id)
+
+        if user is None:
+            raise InvalidCredentialsError()
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        try:
+            
+            self.repository.enable(
+                stored_user=user,
+                now=now
+            )
+
+            self.db.commit()
+        
+        except Exception:
+
+            self.db.rollback()
+            raise InvalidCredentialsError()
+
+
+    def disable_user(
+        self,
+        user_id: int 
+    ) -> None:
+
+        user = self.repository.get_by_id(user_id)
+
+        if user is None:
+            raise InvalidCredentialsError()
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        try:
+            
+            self.repository.disable(
+                stored_user=user,
+                now=now
+            )
+
+            self.db.commit()
+        
+        except Exception:
+
+            self.db.rollback()
+            raise InvalidCredentialsError()
+
+
+    def promote_user(
+        self,
+        user_id: int
+    ) -> None:
+
+        user = self.repository.get_by_id(user.id)
+
+        if user is None:
+            raise InvalidCredentialsError()
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        try:
+
+            self.repository.promote(
+                stored_user=user,
+                now=now
+            )
+
+            self.db.commit()
+
+        except Exception:
+
+            self.db.rollback()
+            raise InvalidCredentialsError()
+
+
+    def demote_user(
+        self,
+        user_id: int
+    ) -> None:
+
+        user = self.repository.get_by_id(user.id)
+
+        if user is None:
+            raise InvalidCredentialsError()
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        try:
+
+            self.repository.demote(
+                stored_user=user,
+                now=now
+            )
+
+            self.db.commit()
+
+        except Exception:
+
+            self.db.rollback()
+            raise InvalidCredentialsError()

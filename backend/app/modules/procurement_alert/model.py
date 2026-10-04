@@ -19,11 +19,12 @@ class ProcurementAlert(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
     alert_message: Mapped[str] = mapped_column(String(255), nullable=True)
+    part_name_snapshot: Mapped[str] = mapped_column(String(255), nullable=True)
     is_resolved: Mapped[bool] = mapped_column(server_default=text("0"))
 
     # Foreign Key
-    request_id: Mapped[int] = mapped_column(ForeignKey("service_requests.id"))
-    part_id: Mapped[int] = mapped_column(ForeignKey("spare_parts.id"))
+    request_id: Mapped[int] = mapped_column(ForeignKey("service_requests.id"), nullable=False)
+    part_id: Mapped[int] = mapped_column(ForeignKey("spare_parts.id"), nullable=True)
 
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)

@@ -23,10 +23,10 @@ class LLMDiagnosticRequest:
 
     def __post_init__(self):
 
-        self._validate_string_text(device_type)
-        self._validate_string_text(device_brand)
-        self._validate_string_text(device_model)
-        self._validate_list_of_string(fault_descriptions)
+        self._validate_string_text(self.device_type)
+        self._validate_string_text(self.device_brand)
+        self._validate_string_text(self.device_model)
+        self._validate_list_of_string(self.fault_descriptions)
 
     
     @staticmethod
@@ -84,7 +84,6 @@ class LLMDiagnosticResponse:
     
     @staticmethod
     def _validate_supporting_faults(
-        self,
         response: LLMDiagnosticResponse,
         fault_count: int,
     ) -> None:
