@@ -33,7 +33,6 @@ def get_me(current_user: CurrentUser):
 def register(
     data: UserCreate,
     service: UserService,
-    current_user: AdminUser,
     _: ValidateCSRF
 ):
 

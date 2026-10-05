@@ -41,7 +41,7 @@ class ProcurementAlertService:
 
             return procurement_alert
 
-        except Exception:
+        except Exception as error:
 
             self.db.rollback()
-            raise ProcurementAlertFailedError()
+            raise ProcurementAlertFailedError() from error

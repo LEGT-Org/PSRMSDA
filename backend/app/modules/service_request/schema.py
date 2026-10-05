@@ -66,8 +66,6 @@ class ServiceRequestResponse(BaseModel):
     customer_id: int
     status: ServiceRequestStatus
     diagnosis: LLMDiagnosticResponse
-    confidence: str
-    model: str
     llm_recommended_part: LLMRecommendedSparePart | None = None 
     matched_part: list[MatchedSparePartPreview] = []
     created_at: datetime

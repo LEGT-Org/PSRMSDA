@@ -26,43 +26,41 @@
     <div class="Admin-Navigation-Container">
 
         <div class="Admin-Navigation">
-            <button>
+            <!-- <button>
                 <img 
                     src="@/assets/Images/Icons/menu.png" 
                     alt="Menu" 
                 />
-            </button>
+            </button> -->
+
+            <p>Main Operations</p>
 
             <RouterLink to="/admin">
                 <img 
-                    src="@/assets/Images/Icons/dashboard.png" 
+                    src="@/assets/Images/Icons/White/dashboard-white.png" 
                     alt=" Dashboard"
                 />
                 <span>Dashboard</span>
             </RouterLink>
 
-            <RouterLink to="/admin/requests">
-                <img 
-                    src="@/assets/Images/Icons/request.png" 
-                    alt="Service Request"
-                />
-                <span>Requests</span>
-            </RouterLink>
+            
 
             <RouterLink to="/admin/request/new">
                 <img 
-                    src="@/assets/Images/Icons/create.png" 
+                    src="@/assets/Images/Icons/White/new-service-request-white.png" 
                     alt="New Request"
                 />
                 <span>New Request</span>
             </RouterLink>
 
-            <RouterLink to="/admin/diagnostics">
+            <p>Management</p>
+
+            <RouterLink to="/admin/requests">
                 <img 
-                    src="@/assets/Images/Icons/diagnostic.png" 
-                    alt="Diagnostic Rules"
+                    src="@/assets/Images/Icons/White/request-white.png" 
+                    alt="Service Request"
                 />
-                <span>Diagnostic Rules</span>
+                <span>Service Request</span>
             </RouterLink>
 
             <RouterLink to="/admin/sops">
@@ -70,15 +68,7 @@
                     src="@/assets/Images/Icons/sop.png" 
                     alt="Standard Operational Procedure"
                 />
-                <span>Standard Operational Procedure</span>
-            </RouterLink>
-
-            <RouterLink to="/admin/alerts">
-                <img 
-                    src="@/assets/Images/Icons/danger.png" 
-                    alt="Alerts"
-                />
-                <span>Alerts</span>
+                <span>SOP</span>
             </RouterLink>
 
             <RouterLink to="/admin/inventory">
@@ -122,9 +112,9 @@
             </button>
 
             <div v-if="showProfileMenu" class="Admin-Profile-Menu">
-                <RouterLink to="/settings" @click="showProfileMenu = false">
+                <!-- <RouterLink to="/settings" @click="showProfileMenu = false">
                     Settings
-                </RouterLink>
+                </RouterLink> -->
 
                 <button type="button" @click="Logout">Logout</button>
             </div>

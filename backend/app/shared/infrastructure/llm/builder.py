@@ -23,6 +23,8 @@ class DiagnosticPromptBuilder:
             - treat possible causes as hypotheses
             - support hypotheses using the provided faults
             - clearly indicate when information is insufficient
+            - return exactly ONE JSON object
+            - response must begin with { and end with }.
 
             You must not:
             - invent measurements
@@ -30,6 +32,10 @@ class DiagnosticPromptBuilder:
             - invent test results
             - claim that a cause is confirmed without sufficient evidence
             - introduce facts that were not provided
+            - wrap the object in an array
+            - return a JSON array
+            - return markdown
+            - return explanations outside the JSON object
 
         """.strip()
 

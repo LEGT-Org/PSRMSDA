@@ -148,18 +148,6 @@ const routes = [
                 }
             },
             {
-                path: 'diagnostics',
-                name: 'Admin Diagnostic Rules',
-                component: () => import('@/components/Admin/DiagRulesComponent.vue'),
-                meta: {
-                    requiresAuth: true,
-                    requiresToken: false,
-                    requiresAdmin: true,
-                    requiresStaff: false,
-                    title: 'Diagnostic Rules'
-                }
-            },
-            {
                 path: 'sops',
                 name: 'Admin Standard Operational Procedure',
                 component: () => import('@/components/Admin/StanOpeProdComponent.vue'),

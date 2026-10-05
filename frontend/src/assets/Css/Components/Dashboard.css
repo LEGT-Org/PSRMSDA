@@ -1,0 +1,594 @@
+/* =========================================
+   Dashboard
+========================================= */
+
+.Dashboard,
+.Admin-Dashboard {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+
+/* =========================================
+   Dashboard Header
+========================================= */
+
+.Dashboard-Header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.5rem;
+}
+
+.Dashboard-Header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.Dashboard-Header p {
+    margin: 0.35rem 0 0;
+    color: #777;
+    font-size: 0.9rem;
+}
+
+.Create-Request-Button {
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.7rem 1rem;
+    background: #00167a;
+    color: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+}
+
+.Create-Request-Button:hover {
+    opacity: 0.9;
+}
+
+
+/* =========================================
+   Statistics
+========================================= */
+
+.Statistics-Grid {
+    display: grid;
+    grid-template-columns:
+        repeat(4, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.Statistic-Card {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.1rem;
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 0.7rem;
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.Statistic-Icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    flex-shrink: 0;
+    border-radius: 0.6rem;
+    background: #f1f3ff;
+    font-size: 1.3rem;
+}
+
+.Statistic-Content {
+    display: flex;
+    flex-direction: column;
+}
+
+.Statistic-Label {
+    margin-bottom: 0.25rem;
+    color: #777;
+    font-size: 0.8rem;
+}
+
+.Statistic-Value {
+    font-size: 1.5rem;
+}
+
+
+/* =========================================
+   System Overview
+========================================= */
+
+.Overview-Grid {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.Overview-Card {
+    display: flex;
+    flex-direction: column;
+    padding: 1rem;
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 0.7rem;
+}
+
+.Overview-Label {
+    color: #777;
+    font-size: 0.8rem;
+}
+
+.Overview-Card strong {
+    margin-top: 0.25rem;
+    font-size: 1.5rem;
+}
+
+.Overview-Card small {
+    margin-top: 0.25rem;
+    color: #999;
+    font-size: 0.7rem;
+}
+
+
+/* =========================================
+   Main Dashboard Grid
+========================================= */
+
+.Dashboard-Grid {
+    display: grid;
+    grid-template-columns:
+        minmax(0, 2fr)
+        minmax(18rem, 1fr);
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.Dashboard-Card {
+    box-sizing: border-box;
+    padding: 1.2rem;
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    border-radius: 0.7rem;
+    box-shadow:
+        0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+
+/* =========================================
+   Card Header
+========================================= */
+
+.Card-Header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.Card-Header h2 {
+    margin: 0;
+    font-size: 1.05rem;
+}
+
+.Card-Header p {
+    margin: 0.3rem 0 0;
+    color: #777;
+    font-size: 0.8rem;
+}
+
+.View-All-Button {
+    border: none;
+    background: transparent;
+    color: #00167a;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
+/* =========================================
+   Request Table
+========================================= */
+
+.Request-Table {
+    width: 100%;
+}
+
+.Table-Header,
+.Table-Row {
+    display: grid;
+    grid-template-columns:
+        1.3fr
+        1.2fr
+        1.2fr
+        0.8fr;
+    gap: 1rem;
+    align-items: center;
+}
+
+.Table-Header {
+    padding: 0 0 0.7rem;
+    color: #999;
+    font-size: 0.7rem;
+    text-transform: uppercase;
+}
+
+.Table-Row {
+    padding: 0.8rem 0;
+    border-top: 1px solid #eeeeee;
+    font-size: 0.8rem;
+}
+
+.Request-Cell {
+    display: flex;
+    flex-direction: column;
+}
+
+.Request-Cell strong {
+    font-size: 0.8rem;
+}
+
+.Request-Cell small {
+    margin-top: 0.15rem;
+    color: #777;
+    font-size: 0.7rem;
+}
+
+
+/* =========================================
+   Request List
+========================================= */
+
+.Request-List {
+    display: flex;
+    flex-direction: column;
+}
+
+.Request-Item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.9rem 0;
+    border-top: 1px solid #eeeeee;
+}
+
+.Request-Information {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    min-width: 0;
+}
+
+.Request-Number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 3rem;
+    height: 2.5rem;
+    border-radius: 0.5rem;
+    background: #f4f4f4;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.Request-Details {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.Request-Details strong {
+    font-size: 0.9rem;
+}
+
+.Request-Details span {
+    margin-top: 0.15rem;
+    color: #666;
+    font-size: 0.8rem;
+}
+
+.Request-Details small {
+    margin-top: 0.15rem;
+    color: #999;
+    font-size: 0.7rem;
+}
+
+
+/* =========================================
+   Request Status
+========================================= */
+
+.Request-Action {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.Request-Status {
+    width: fit-content;
+    padding: 0.35rem 0.6rem;
+    border-radius: 1rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.Status-Pending {
+    background: #fff4d6;
+    color: #946c00;
+}
+
+.Status-Diagnosing {
+    background: #e8edff;
+    color: #00167a;
+}
+
+.Status-Ongoing {
+    background: #e9f1ff;
+    color: #23549a;
+}
+
+.Status-Completed {
+    background: #e3f7e8;
+    color: #247238;
+}
+
+.Open-Request-Button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 0.4rem;
+    background: #f4f4f4;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+
+/* =========================================
+   Quick Actions
+========================================= */
+
+.Action-List {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.Action-Button {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid #eeeeee;
+    border-radius: 0.5rem;
+    background: #fafafa;
+    text-align: left;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.Action-Button:hover {
+    background: #f1f3ff;
+}
+
+.Action-Icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 0.4rem;
+    background: #ffffff;
+    border: 1px solid #eeeeee;
+}
+
+
+/* =========================================
+   Recent Activity
+========================================= */
+
+.Activity-List {
+    display: flex;
+    flex-direction: column;
+}
+
+.Activity-Item {
+    display: flex;
+    gap: 0.8rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid #eeeeee;
+}
+
+.Activity-Dot {
+    flex-shrink: 0;
+    width: 0.5rem;
+    height: 0.5rem;
+    margin-top: 0.35rem;
+    border-radius: 50%;
+    background: #00167a;
+}
+
+.Activity-Content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.Activity-Content span {
+    font-size: 0.8rem;
+}
+
+.Activity-Content small {
+    color: #999;
+    font-size: 0.7rem;
+}
+
+
+/* =========================================
+   Bottom Grid
+========================================= */
+
+.Bottom-Grid {
+    display: grid;
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+
+/* =========================================
+   AI Diagnosis
+========================================= */
+
+.AI-Overview {
+    margin-bottom: 1rem;
+}
+
+.AI-Badge {
+    padding: 0.35rem 0.7rem;
+    border-radius: 1rem;
+    background: #f1f3ff;
+    color: #00167a;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.AI-Statistics {
+    display: grid;
+    grid-template-columns:
+        repeat(3, minmax(0, 1fr));
+    gap: 0.8rem;
+}
+
+.AI-Statistic {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    background: #fafafa;
+}
+
+.AI-Statistic span {
+    color: #777;
+    font-size: 0.8rem;
+}
+
+.AI-Statistic strong {
+    font-size: 1.4rem;
+}
+
+
+/* =========================================
+   Inventory
+========================================= */
+
+.Inventory-Overview {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+}
+
+.Inventory-Number {
+    display: flex;
+    flex-direction: column;
+}
+
+.Inventory-Number strong {
+    font-size: 2rem;
+}
+
+.Inventory-Number span {
+    color: #777;
+    font-size: 0.75rem;
+}
+
+.Inventory-Button {
+    padding: 0.65rem 0.8rem;
+    border: none;
+    border-radius: 0.5rem;
+    background: #00167a;
+    color: white;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+
+/* =========================================
+   Responsive
+========================================= */
+
+@media (max-width: 1100px) {
+
+    .Statistics-Grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+@media (max-width: 900px) {
+
+    .Dashboard-Grid,
+    .Bottom-Grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 700px) {
+
+    .Overview-Grid {
+        grid-template-columns: 1fr;
+    }
+
+    .AI-Statistics {
+        grid-template-columns: 1fr;
+    }
+
+    .Dashboard-Header {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .Table-Header {
+        display: none;
+    }
+
+    .Table-Row {
+        grid-template-columns: 1fr;
+        gap: 0.4rem;
+    }
+
+    .Statistics-Grid {
+        grid-template-columns: 1fr;
+    }
+
+}
+
+
+@media (max-width: 500px) {
+
+    .Request-Status {
+        display: none;
+    }
+
+    .Request-Details strong {
+        font-size: 0.8rem;
+    }
+
+}

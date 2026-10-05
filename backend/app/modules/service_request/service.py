@@ -6,6 +6,7 @@ from app.modules.service_request.repository import ServiceRequestRepository
 from app.modules.service_request.model import ServiceRequest
 from app.modules.service_request.schema import (
     LLMDiagnosticRequestPreview,
+    LLMRecommendedSparePart,
     ServiceRequestResponse,
     CustomerRequestPreview,
     ConfirmServiceRequest,
@@ -64,52 +65,67 @@ class ServiceRequestService:
         customer_data: CustomerRequestPreview
     ) -> ServiceRequestResponse:
             
-        customer = self.customer_interface.find_or_create_customer(customer_request=customer_data)
-        llm_diagnosis = await self.llm_diagnosis_interface.analyze(request=request)
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        try:
 
-        service_request = ServiceRequest(
-            customer_id=customer.id,
-            user_id=user.id,
-            device_type=request.device_type,
-            device_brand=request.device_brand,
-            device_model=request.device_model,
-            fault_description=request.fault_descriptions,
-            status=ServiceRequestStatus.PENDING,
-            created_at=now,
-            updated_at=now
-        )
+            customer = self.customer_interface.find_or_create_customer(customer_request=customer_data)
+            llm_diagnosis = await self.llm_diagnosis_interface.analyze(request=request)
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-        self.repository.create(service_request)
-        self.db.flush()
-
-        llm_diagnosis.request_id = service_request.id
-        self.llm_diagnosis_interface.stage(llm_diagnosis)
-
-        self.db.commit()
-        self.db.refresh(service_request)
-        self.db.refresh(llm_diagnosis)
-
-        llm_recommendation = llm_diagnosis.llm_recommendation
-        
-        matched_parts = []
-        if llm_recommendation is not None:
-            matched_parts = self.spare_part_interface.search_matched_spare_part(
-                llm_recommendation.component
+            service_request = ServiceRequest(
+                customer_id=customer.id,
+                user_id=user.id,
+                device_type=request.device_type,
+                device_brand=request.device_brand,
+                device_model=request.device_model,
+                fault_description=request.fault_descriptions,
+                sop_instructions=llm_diagnosis.parsed_output["standard_operating_procedure"],
+                status=ServiceRequestStatus.PENDING,
+                created_at=now,
+                updated_at=now
             )
 
-        return ServiceRequestResponse(
-            service_request_id=service_request.id,
-            diagnosis_id=llm_diagnosis.id,
-            customer_id=customer.id,
-            status=ServiceRequestStatus.PENDING,
-            diagnosis=llm_diagnosis.response,
-            confidence=llm_diagnosis.confidence,
-            model=llm_diagnosis.model,
-            llm_recommended_part=llm_recommendation,
-            matched_part=matched_parts,
-            created_at=service_request.created_at
-        )
+            self.repository.create(service_request)
+            self.db.flush()
+
+            llm_diagnosis.request_id = service_request.id
+            self.llm_diagnosis_interface.stage(llm_diagnosis)
+
+            self.db.commit()
+            self.db.refresh(service_request)
+            self.db.refresh(llm_diagnosis)
+
+            llm_recommendation = llm_diagnosis.llm_recommendation
+
+            matched_parts = []
+
+            if llm_recommendation is not None:
+                matched_parts = self.spare_part_interface.search_matched_spare_part(
+                    llm_recommendation.component
+                )
+
+                llm_recommended_part = LLMRecommendedSparePart(
+                    llm_component=llm_recommendation.component,
+                    llm_reason=llm_recommendation.reason,
+                    compatibility_requirements=llm_recommendation.compatibility_requirements
+                )
+            else:
+                llm_recommended_part = None
+
+            return ServiceRequestResponse(
+                service_request_id=service_request.id,
+                diagnosis_id=llm_diagnosis.id,
+                customer_id=customer.id,
+                status=ServiceRequestStatus.PENDING,
+                diagnosis=llm_diagnosis.response,
+                llm_recommended_part=llm_recommended_part,
+                matched_part=matched_parts,
+                created_at=service_request.created_at
+            )
+
+        except Exception as error:
+
+            self.db.rollback()
+            raise ServiceRequestFailedError() from error
 
 
     """  
@@ -231,10 +247,10 @@ class ServiceRequestService:
                 matched_parts=matched_parts    
             )
 
-        except Exception:
+        except Exception as error:
 
             self.db.roolback()
-            raise ServiceRequestFailedError()
+            raise ServiceRequestFailedError() from error
 
 
     """  
@@ -294,7 +310,7 @@ class ServiceRequestService:
 
             self.db.commit()
         
-        except Exception:
+        except Exception as error:
             
             self.db.rollback()
-            raise ServiceRequestFailedError()
+            raise ServiceRequestFailedError() from error

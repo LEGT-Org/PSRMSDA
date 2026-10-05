@@ -130,10 +130,10 @@ class UserService:
 
             return user
 
-        except Exception:
+        except Exception as error:
 
             self.db.rollback()
-            raise EmailServiceFailedError()
+            raise EmailServiceFailedError() from error
 
 
     def get_user_by_email(
@@ -218,10 +218,10 @@ class UserService:
 
             self.db.commit()
         
-        except Exception:
+        except Exception as error:
 
             self.db.rollback()
-            raise InvalidCredentialsError()
+            raise InvalidCredentialsError() from error
 
 
     def disable_user(
@@ -245,10 +245,10 @@ class UserService:
 
             self.db.commit()
         
-        except Exception:
+        except Exception as error:
 
             self.db.rollback()
-            raise InvalidCredentialsError()
+            raise InvalidCredentialsError() from error
 
 
     def promote_user(
@@ -272,10 +272,10 @@ class UserService:
 
             self.db.commit()
 
-        except Exception:
+        except Exception as error:
 
             self.db.rollback()
-            raise InvalidCredentialsError()
+            raise InvalidCredentialsError() from error
 
 
     def demote_user(
@@ -299,7 +299,7 @@ class UserService:
 
             self.db.commit()
 
-        except Exception:
+        except Exception as error:
 
             self.db.rollback()
-            raise InvalidCredentialsError()
+            raise InvalidCredentialsError() from error

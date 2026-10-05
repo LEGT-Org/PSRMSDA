@@ -1,0 +1,642 @@
+/* =========================================
+   SERVICE REQUEST
+========================================= */
+
+.Service-Request {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.Service-Request h1 {
+    margin: 0 0 0.75rem;
+    color: var(--main-color);
+}
+
+
+/* =========================================
+   CUSTOMER / DEVICE FORMS
+========================================= */
+
+.Service-Request-Forms {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 2rem;
+}
+
+.Service-Request-Card {
+    box-sizing: border-box;
+    background-color: var(--main-color);
+    border-radius: 0.25rem;
+    overflow: hidden;
+}
+
+.Service-Request-Card > h2 {
+    margin: 0;
+    padding: 0.5rem 0.75rem;
+    color: var(--normal-text-color);
+    font-size: 1.20rem;
+    border-bottom: 2px solid var(--fourth-color);
+}
+
+.Service-Request-Fields {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem;
+}
+
+.Service-Request-Fields label {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    color: var(--normal-text-color);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
+.Service-Request-Fields input,
+.Service-Request-Fields select,
+.Service-Request-Fields textarea {
+    box-sizing: border-box;
+    width: 100%;
+    border: 1px solid var(--secondary-color);
+    border-radius: 0.25rem;
+    padding: 0.55rem;
+    background-color: var(--normal-text-color);
+    color: var(--main-color);
+    font-family: inherit;
+}
+
+.Service-Request-Fields textarea {
+    min-height: 8rem;
+    resize: vertical;
+    padding: 0.55rem;
+    line-height: 1.4;
+    text-align: left;
+}
+
+/* =========================================
+   RUN DIAGNOSIS
+========================================= */
+
+.Run-Diagnosis-Button {
+    margin-top: 0.75rem;
+    padding: 0.85rem 0.90rem;
+    border: none;
+    border-radius: 0.25rem;
+    background-color: var(--secondary-color);
+    color: var(--normal-text-color);
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.Run-Diagnosis-Button:hover {
+    background-color: var(--secondary-hover-color);
+}
+
+.Run-Diagnosis-Button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+
+/* =========================================
+   DIAGNOSIS
+========================================= */
+
+.Diagnosis-Container {
+    margin-top: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+
+/* =========================================
+   DIAGNOSIS HEADER
+========================================= */
+
+.Diagnosis-Header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 1rem 0.90rem;
+    box-sizing: border-box;
+    background-color: var(--secondary-color);
+    border-radius: 0.25rem;
+    color: var(--normal-text-color);
+}
+
+.Diagnosis-Header h2 {
+    margin: 0;
+    font-size: 1.20rem;
+}
+
+.Diagnosis-Header p {
+    margin: 0.15rem 0 0;
+    font-size: 0.70rem;
+    opacity: 0.85;
+}
+
+.Diagnosis-Status {
+    padding: 0.25rem 0.65rem;
+    border-radius: 1rem;
+    background-color: #eab308;
+    color: var(--secondary-color);
+    font-size: 0.80rem;
+    font-weight: 700;
+}
+
+
+/* =========================================
+   DIAGNOSIS CARDS
+========================================= */
+
+.Diagnosis-Card {
+    box-sizing: border-box;
+    padding: 0.75rem;
+    background-color: var(--background-color);
+    border: 2px solid var(--secondary-color);
+    border-radius: 0.25rem;
+    color: var(--main-color);
+}
+
+.Diagnosis-Card h3 {
+    margin: 0 0 0.65rem;
+    font-size: 1.08rem;
+    color: var(--secondary-color);
+}
+
+
+/* =========================================
+   SUMMARY / MISSING INFORMATION
+========================================= */
+
+.Diagnosis-Top-Grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 0.75rem;
+}
+
+.Summary-Card {
+    min-height: 7rem;
+}
+
+.Summary-Card h3 {
+    margin: 0 0 0.65rem;
+    font-size: 1.08rem;
+    color: var(--secondary-color);
+}
+
+.Summary-Card p {
+    margin: 0;
+    font-size: 0.90rem;
+    line-height: 1.5;
+}
+
+.Diagnosis-Metadata {
+    display: flex;
+    gap: 1rem;
+    margin-top: 0.75rem;
+    padding-top: 0.5rem;
+    border-top: 1px solid #999;
+    font-size: 0.75rem;
+}
+
+.Diagnosis-Metadata strong {
+    text-transform: capitalize;
+}
+
+.Missing-Card {
+    border-color: #eab308;
+}
+
+.Missing-Card h3 {
+    margin: 0 0 0.65rem;
+    font-size: 1.08rem;
+    color: var(--fifth-color);
+}
+
+.Missing-Card ul,
+.Replacement-Card ul,
+.Part-Card ul {
+    margin: 0;
+    padding-left: 1.1rem;
+    font-size: 0.80rem;
+    line-height: 1.6;
+}
+
+
+/* =========================================
+   HYPOTHESES
+========================================= */
+
+.Hypothesis-List {
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+}
+
+.Hypothesis {
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.65rem;
+    border: 1px solid var(--secondary-color);
+    border-radius: 0.25rem;
+    background-color: rgba(255, 255, 255, 0.25);
+}
+
+.Hypothesis-Number {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background-color: var(--secondary-color);
+    color: var(--normal-text-color);
+    font-size: 0.8rem;
+    font-weight: 700;
+}
+
+.Hypothesis-Content {
+    flex: 1;
+    min-width: 0;
+}
+
+.Hypothesis-Title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--secondary-color);
+    gap: 1rem;
+}
+
+.Hypothesis-Title h4 {
+    margin: 0;
+    font-size: 0.90rem;
+}
+
+.Hypothesis-Content p {
+    margin: 0.35rem 0 0;
+    font-size: 0.85rem;
+    line-height: 1.45;
+}
+
+.Confidence-Badge {
+    flex-shrink: 0;
+    padding: 0.2rem 0.45rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.Confidence-low {
+    background-color: #fecaca;
+    color: #991b1b;
+}
+
+.Confidence-medium {
+    background-color: #fef08a;
+    color: #854d0e;
+}
+
+.Confidence-high {
+    background-color: #bbf7d0;
+    color: #166534;
+}
+
+.Fault-Tag {
+    display: inline-block;
+    margin-left: 0.25rem;
+    padding: 0.1rem 0.3rem;
+    border-radius: 0.2rem;
+    background-color: var(--secondary-color);
+    color: var(--normal-text-color);
+    font-size: 0.6rem;
+}
+
+
+/* =========================================
+   RECOMMENDED CHECKS
+========================================= */
+
+.Recommended-Checks {
+    border-color: #16805c;
+}
+
+.Recommended-Checks h3 {
+    margin: 0 0 0.65rem;
+    font-size: 1.08rem;
+    color: var(--sixth-color);
+}
+
+.Recommended-Checks ol {
+    margin: 0;
+    padding-left: 1.25rem;
+    font-size: 0.80rem;
+    line-height: 1.7;
+}
+
+
+/* =========================================
+   SOP
+========================================= */
+
+.SOP-Card {
+    border-color: var(--secondary-color);
+}
+
+.SOP-Step h3 {
+    margin: 0 0 0.65rem;
+    font-size: 1.08rem;
+    color: var(--secondary-color);
+}
+
+.SOP-Step {
+    display: flex;
+    gap: 0.65rem;
+    padding: 0.65rem 0;
+}
+
+.SOP-Step + .SOP-Step {
+    border-top: 1px solid #aaa;
+}
+
+.SOP-Step-Number {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    border-radius: 50%;
+    background-color: var(--secondary-color);
+    color: var(--normal-text-color);
+    font-size: 0.80rem;
+    font-weight: 700;
+}
+
+.SOP-Step-Content {
+    flex: 1;
+}
+
+.SOP-Step-Content h4 {
+    margin: 0;
+    font-size: 0.80rem;
+    color: var(--second-color);
+    line-height: 1.5;
+}
+
+.Safety-Note {
+    margin-top: 0.5rem;
+    padding: 0.45rem;
+    border-radius: 0.2rem;
+    background-color: #fff3cd;
+    color: #664d03;
+    font-size: 0.65rem;
+}
+
+
+/* =========================================
+   REPLACEMENT
+========================================= */
+
+.Replacement-Card {
+    border-color: #c24141;
+}
+
+.Replacement-Card h3 {
+    margin: 0 0 0.65rem;
+    font-size: 1.08rem;
+    color: var(--seventh-color);
+}
+
+.Replacement-Content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.70rem;
+}
+
+.Replacement-Content strong,
+.Recommended-Part strong {
+    font-size: 0.80rem;
+}
+
+.Replacement-Content p,
+.Recommended-Part p {
+    margin: 0.2rem 0 0;
+    font-size: 0.75rem;
+    line-height: 1.5;
+}
+
+
+/* =========================================
+   RECOMMENDED PART
+========================================= */
+
+.Part-Card {
+    border-color: var(--secondary-color);
+}
+
+.Part-Card h3 {
+    margin: 0 0 0.65rem;
+    font-size: 1.08rem;
+    color: var(--secondary-color)
+}
+
+.Recommended-Part {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+}
+
+.Matched-Part {
+    margin-top: 0.75rem;
+    padding: 0.65rem;
+    border: 1px solid #16805c;
+    border-radius: 0.25rem;
+    background-color: rgba(22, 128, 92, 0.08);
+}
+
+.Matched-Part h4 {
+    margin: 0 0 0.5rem;
+    font-size: 0.85rem;
+    color: #16805c;
+}
+
+.Matched-Part-Information {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+}
+
+.Matched-Part-Information div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.Matched-Part-Information span {
+    font-size: 0.80rem;
+}
+
+.Matched-Part-Information strong {
+    font-size: 0.80rem;
+}
+
+.Matched-Part-List {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.Matched-Part-Item {
+    display: grid;
+    grid-template-columns: 1fr 2fr 0.5fr;
+    gap: 1rem;
+
+    padding: 0.65rem;
+
+    border: 1px solid #16805c;
+    border-radius: 0.25rem;
+
+    background-color: rgba(22, 128, 92, 0.08);
+}
+
+.Matched-Part-Item div {
+    display: flex;
+    flex-direction: column;
+    gap: 0.2rem;
+}
+
+.Matched-Part-Item span {
+    font-size: 0.80rem;
+}
+
+.Matched-Part-Item strong {
+    font-size: 0.80rem;
+}
+
+
+/* ================================
+   Technician Notes
+   ================================ */
+
+.Technician-Notes {
+    margin-top: 2rem;
+}
+
+.Technician-Notes .Service-Request-Fields {
+    padding: 0.75rem;
+}
+
+.Technician-Notes textarea {
+    min-height: 6rem;
+    resize: vertical;
+}
+
+
+/* ================================
+   Service Request Actions
+   ================================ */
+
+.Service-Request-Actions {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    margin-top: 0.5rem;
+    padding: 0.75rem;
+
+    background-color: var(--background-color);
+}
+
+
+/* Status */
+
+.Service-Request-Actions select {
+    box-sizing: border-box;
+
+    min-width: 6rem;
+    padding: 0.45rem 0.6rem;
+
+    border: 1px solid var(--secondary-color);
+    border-radius: 0.25rem;
+
+    background-color: var(--normal-text-color);
+    color: var(--main-color);
+
+    font-family: inherit;
+    font-size: 1rem;
+}
+
+
+/* Action Buttons */
+
+.Service-Request-Action-Buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.Service-Request-Action-Buttons button {
+    min-width: 4rem;
+    padding: 0.45rem 0.75rem;
+
+    border-radius: 0.25rem;
+
+    font-family: inherit;
+    font-size: 1.08rem;
+    font-weight: 600;
+
+    cursor: pointer;
+}
+
+
+/* Confirm */
+
+.Confirm-Button {
+    border: 1px solid var(--secondary-color);
+    background-color: var(--secondary-color);
+    color: var(--normal-text-color);
+}
+
+.Confirm-Button:hover {
+    background-color: var(--secondary-hover-color);
+}
+
+
+/* Cancel */
+
+.Cancel-Button {
+    border: 1px solid var(--secondary-color);
+    background-color: transparent;
+    color: var(--secondary-color);
+}
+
+.Cancel-Button:hover {
+    background-color: var(--secondary-color);
+    color: var(--normal-text-color);
+}
+
+
+/* =========================================
+   RESPONSIVE
+========================================= */
+
+@media (max-width: 800px) {
+
+    .Service-Request-Forms,
+    .Diagnosis-Top-Grid {
+        grid-template-columns: 1fr;
+    }
+
+    .Matched-Part-Information {
+        grid-template-columns: 1fr;
+    }
+
+}
+

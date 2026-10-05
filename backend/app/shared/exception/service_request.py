@@ -21,8 +21,8 @@ class ServiceRequestStatusIsNotPendingError(BaseHTTPException):
 
 class ServiceRequestFailedError(BaseHTTPException):
 
-    def __init__():
+    def __init__(self):
         super().__init__(
-            status_code=status.HTTP_503_BAD_GATEWAY,
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="Service request confirmation has failed"
         )

@@ -31,7 +31,7 @@ export async function getCurrentUser(force: boolean = false): Promise<User | nul
 
     try {
 
-        const res = await ApiFetch('/auth/me', { method: 'GET' });
+        const res = await ApiFetch('/user/me', { method: 'GET' });
 
         if (!res.ok) {
 

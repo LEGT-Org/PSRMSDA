@@ -40,7 +40,7 @@ class RequestPartService:
 
             return request_part
 
-        except Exception:
+        except Exception as error:
             
             self.db.rollback()
-            raise RequestPartFailedError()
+            raise RequestPartFailedError() from error

@@ -63,8 +63,8 @@ class CustomerService:
 
             return customer
 
-        except Exception:
+        except Exception as error:
 
             self.db.rollback()
-            raise CustomerDoesNotExistError()
+            raise CustomerDoesNotExistError() from error
             
