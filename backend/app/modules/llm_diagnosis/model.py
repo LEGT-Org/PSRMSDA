@@ -38,9 +38,10 @@ class LLMDiagnosis(Base):
     status: Mapped[LLMDiagnosisStatus] = mapped_column(
         Enum(
             LLMDiagnosisStatus,
-            name="llm_diagnosis_status"
+            name="llm_diagnosis_status",
+            values_callable=lambda enum_class: [member.value for member in enum_class]
         ),
-        server_default=LLMDiagnosisStatus.DRAFT,
+        server_default=LLMDiagnosisStatus.DRAFT.value,
         nullable=False
     )
 

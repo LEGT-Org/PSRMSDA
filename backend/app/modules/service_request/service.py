@@ -6,6 +6,8 @@ from app.modules.service_request.repository import ServiceRequestRepository
 from app.modules.service_request.model import ServiceRequest
 from app.modules.service_request.schema import (
     LLMDiagnosticRequestPreview,
+    ProcurementAlertTypeReview,
+    LLMRecommendedSparePart,
     ServiceRequestResponse,
     CustomerRequestPreview,
     ConfirmServiceRequest,
@@ -64,52 +66,69 @@ class ServiceRequestService:
         customer_data: CustomerRequestPreview
     ) -> ServiceRequestResponse:
             
-        customer = self.customer_interface.find_or_create_customer(customer_request=customer_data)
-        llm_diagnosis = await self.llm_diagnosis_interface.analyze(request=request)
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        try:
 
-        service_request = ServiceRequest(
-            customer_id=customer.id,
-            user_id=user.id,
-            device_type=request.device_type,
-            device_brand=request.device_brand,
-            device_model=request.device_model,
-            fault_description=request.fault_descriptions,
-            status=ServiceRequestStatus.PENDING,
-            created_at=now,
-            updated_at=now
-        )
+            customer = self.customer_interface.find_or_create_customer(customer_request=customer_data)
+            llm_diagnosis = await self.llm_diagnosis_interface.analyze(request=request)
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-        self.repository.create(service_request)
-        self.db.flush()
-
-        llm_diagnosis.request_id = service_request.id
-        self.llm_diagnosis_interface.stage(llm_diagnosis)
-
-        self.db.commit()
-        self.db.refresh(service_request)
-        self.db.refresh(llm_diagnosis)
-
-        llm_recommendation = llm_diagnosis.llm_recommendation
-        
-        matched_parts = []
-        if llm_recommendation is not None:
-            matched_parts = self.spare_part_interface.search_matched_spare_part(
-                llm_recommendation.component
+            service_request = ServiceRequest(
+                customer_id=customer.id,
+                user_id=user.id,
+                device_type=request.device_type,
+                device_brand=request.device_brand,
+                device_model=request.device_model,
+                fault_description=request.fault_descriptions,
+                sop_instructions=llm_diagnosis.parsed_output["standard_operating_procedure"],
+                status=ServiceRequestStatus.PENDING,
+                created_at=now,
+                updated_at=now
             )
 
-        return ServiceRequestResponse(
-            service_request_id=service_request.id,
-            diagnosis_id=llm_diagnosis.id,
-            customer_id=customer.id,
-            status=ServiceRequestStatus.PENDING,
-            diagnosis=llm_diagnosis.response,
-            confidence=llm_diagnosis.confidence,
-            model=llm_diagnosis.model,
-            llm_recommended_part=llm_recommendation,
-            matched_part=matched_parts,
-            created_at=service_request.created_at
-        )
+            self.repository.create(service_request)
+            self.db.flush()
+
+            llm_diagnosis.request_id = service_request.id
+            self.llm_diagnosis_interface.stage(llm_diagnosis)
+
+            self.db.commit()
+            self.db.refresh(service_request)
+            self.db.refresh(llm_diagnosis)
+
+            llm_recommendation = llm_diagnosis.llm_recommendation
+
+            matched_parts = []
+
+            if llm_recommendation is not None:
+                matched_parts = self.spare_part_interface.search_matched_spare_part(
+                    llm_recommendation.component
+                )
+
+                llm_recommended_part = LLMRecommendedSparePart(
+                    llm_component=llm_recommendation.component,
+                    llm_reason=llm_recommendation.reason,
+                    compatibility_requirements=llm_recommendation.compatibility_requirements
+                )
+            else:
+                llm_recommended_part = None
+
+            return ServiceRequestResponse(
+                service_request_id=service_request.id,
+                diagnosis_id=llm_diagnosis.id,
+                customer_id=customer.id,
+                status=ServiceRequestStatus.PENDING,
+                diagnosis=llm_diagnosis.response,
+                llm_recommended_part=llm_recommended_part,
+                matched_part=matched_parts,
+                created_at=service_request.created_at
+            )
+
+        except Exception as error:
+
+            print(error)
+
+            self.db.rollback()
+            raise ServiceRequestFailedError() from error
 
 
     """  
@@ -126,28 +145,83 @@ class ServiceRequestService:
 
     def confirm_request(
         self,
-        service_request_id: int,
+        user_id: int,
         request: ConfirmServiceRequest
     ) -> ServiceRequestResponse:
 
         try:
-            
-            service_request = self.repository.get_by_id(service_request_id)
-
-            if service_request is None:
-                raise ServiceRequestDoesNotExistError(
-                    detail=f"Service request {service_request_id} not found"
-                )
-
-            if service_request.status != ServiceRequestStatus.PENDING:
-                raise ServiceRequestStatusIsNotPendingError(
-                    detail=f"Cannot confirm request in status {service_request.status}"
-                )
 
             now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-            if service_request.llm_diagnosis is not None:
-                service_request.llm_diagnosis.status = request.diagnosis_verdict
+            # --------------------------------
+            # Find existing staged request
+            # --------------------------------
+
+            service_request = None
+
+            if request.service_request_id is not None:
+
+                service_request = self.repository.get_by_id(request.service_request_id)
+
+                if service_request is None:
+
+                    raise ServiceRequestDoesNotExistError(
+                        detail=(
+                            f"Service request "
+                            f"{request.service_request_id} not found"
+                        )
+                    )
+
+                if service_request.status != ServiceRequestStatus.PENDING:
+
+                    raise ServiceRequestStatusIsNotPendingError(
+                        detail=(
+                            f"Cannot confirm request in "
+                            f"status {service_request.status}"
+                        )
+                    )
+
+            # --------------------------------
+            # Create request if it doesn't exist
+            # --------------------------------
+
+            if service_request is None:
+
+                customer = (
+                    self.customer_interface.find_or_create_customer(
+                        customer_request=request.customer_data
+                    )
+                )
+
+                service_request = ServiceRequest(
+                    customer_id=customer.id,
+                    user_id=user_id,
+                    device_type=request.device_type,
+                    device_brand=request.device_brand,
+                    device_model=request.device_model,
+                    fault_description=request.fault_descriptions,
+                    status=ServiceRequestStatus.PENDING,
+                    created_at=now,
+                    updated_at=now,
+                )
+
+                self.repository.create(service_request)
+                self.db.flush()
+
+            # --------------------------------
+            # Optional AI diagnosis
+            # --------------------------------
+
+            llm_diagnosis = service_request.llm_diagnosis
+
+            if llm_diagnosis is not None:
+
+                if request.diagnosis_verdict is not None:
+                    llm_diagnosis.status = request.diagnosis_verdict
+
+            # --------------------------------
+            # Selected parts
+            # --------------------------------
 
             for selection in request.selected_parts:
 
@@ -173,8 +247,9 @@ class ServiceRequestService:
                         part_name_snapshot=selection.part_name,
                         is_resolved=False,
                         created_at=now,
+                        alert_type=ProcurementAlertTypeReview.alert.NO_PART_MATCH,
                         alert_message=(
-                            f"Service Request #{service_request.id} created by "
+                            f"Service Request No. {service_request.id} created by "
                             f"{service_request.user_id} needs {selection.part_name} "
                             f"which does not exist in spare part stock."
                         ),
@@ -201,12 +276,17 @@ class ServiceRequestService:
                     part_name_snapshot=part.part_name,
                     is_resolved=False,
                     created_at=now,
+                    alert_type=ProcurementAlertTypeReview.alert.PART_SELECTED,
                     alert_message=(
-                        f"Service Request #{service_request.id} created by "
+                        f"Service Request No. {service_request.id} created by "
                         f"{service_request.user_id} needs {part.part_name} "
                         f"({part.part_code}) from {part.shelf_location}."
                     ),
                 )
+
+            # --------------------------------
+            # Finalize request
+            # --------------------------------
 
             self.repository.update_service_request(
                 now=now,
@@ -218,23 +298,36 @@ class ServiceRequestService:
             self.db.commit()
             self.db.refresh(service_request)
 
-            llm_recommendation = llm_diagnosis.llm_recommendation
-
+            llm_recommendation = None
             matched_parts = []
-            if llm_recommendation is not None:
-                matched_parts = spare_part_interface.search_matched_spare_part(
-                    llm_recommendation.component,
-                )
+
+            if llm_diagnosis is not None:
+                llm_recommendation = llm_diagnosis.llm_recommendation
+
+                if llm_recommendation is not None:
+                    matched_parts = self.spare_part_interface.search_matched_spare_part(
+                        llm_recommendation.component
+                    )
 
             return build_service_request_response(
                 service_request=service_request,
-                matched_parts=matched_parts    
+                matched_parts=matched_parts
             )
 
-        except Exception:
+        except (
+            ServiceRequestDoesNotExistError,
+            ServiceRequestStatusIsNotPendingError
+        ):
 
-            self.db.roolback()
-            raise ServiceRequestFailedError()
+            self.db.rollback()
+            raise
+
+        except Exception as error:
+            
+            print(error)
+
+            self.db.rollback()
+            raise ServiceRequestFailedError() from error
 
 
     """  
@@ -254,47 +347,68 @@ class ServiceRequestService:
     ) -> None:
 
         try:
-            
-            service_request = self.repository.get_by_id(service_request_id)
+
+            service_request = self.repository.get_by_id(
+                service_request_id
+            )
 
             if service_request is None:
                 raise ServiceRequestDoesNotExistError(
-                    detail=f"Service request {service_request_id} not found"
+                    detail=(
+                        f"Service request "
+                        f"{service_request_id} not found"
+                    )
                 )
-
 
             if service_request.status in (
                 ServiceRequestStatus.COMPLETED,
                 ServiceRequestStatus.UNSUCCESSFUL,
             ):
                 raise ServiceRequestStatusIsNotPendingError(
-                    detail=f"Cannot cancel request in status {service_request.status}"
+                    detail=(
+                        f"Cannot cancel request in "
+                        f"status {service_request.status}"
+                    )
                 )
 
             now = datetime.now(timezone.utc).replace(tzinfo=None)
 
+            diagnostic_status = "No AI diagnosis"
+
             if service_request.llm_diagnosis is not None:
-                service_request.llm_diagnosis.status = ConfirmServiceRequest.diagnosis_verdict.REJECTED
+                service_request.llm_diagnosis.status = (
+                    DiagnosisVerdict.REJECTED
+                )
+
+                diagnostic_status = str(
+                    service_request.llm_diagnosis.status
+                )
 
             self.procurement_alert_interface.cancel_by_request(
                 request_id=service_request.id,
                 alert_message=(
-                    f"Service Request #{service_request.id} created by "
+                    f"Service Request No. {service_request.id} created by "
                     f"{service_request.user_id} with a diagnostic status of "
-                    f"{service_request.llm_diagnosis.status} has been cancelled."
+                    f"{diagnostic_status} has been cancelled."
                 )
             )
 
             self.repository.update_service_request(
                 now=now,
                 stored_service_request=service_request,
-                final_status=ConfirmServiceRequest.final_status.UNSUCCESSFUL,
+                final_status=ServiceRequestStatus.UNSUCCESSFUL,
                 technician_notes=None
             )
 
             self.db.commit()
-        
-        except Exception:
-            
+
+        except (
+            ServiceRequestDoesNotExistError, 
+            ServiceRequestStatusIsNotPendingError
+        ):
             self.db.rollback()
-            raise ServiceRequestFailedError()
+            raise
+
+        except Exception as error:
+            self.db.rollback()
+            raise ServiceRequestFailedError() from error

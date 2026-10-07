@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Response, status
 
 from app.modules.auth.schema import (
+    ResetPasswordRequest,
     SetPasswordRequest,
     TokenResponse, 
     AuthResponse, 
@@ -62,6 +63,23 @@ def set_password(
 
     return {
         "message": "Registration successful"
+    }
+
+
+@router.post(
+    "/reset-password",
+    status_code=status.HTTP_200_OK
+)
+def reset_password(
+    email: ResetPasswordRequest,
+    service: AuthService,
+    _:ValidateCSRF
+):
+
+    service.auth_reset_password(email.reset_password_email)
+
+    return {
+        "message": "Reset password successful"
     }
     
 

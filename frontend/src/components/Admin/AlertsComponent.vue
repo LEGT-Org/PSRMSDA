@@ -1,5 +1,5 @@
 <script setup lang="ts"></script>
 
 <template>
-    <h1>Alerts</h1>
+    <h1>Procurement Alert</h1>
 </template>

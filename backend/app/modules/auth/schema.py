@@ -1,7 +1,6 @@
 from datetime import datetime
 from pydantic import (
     BaseModel, 
-    EmailStr,
     ConfigDict,
     Field
 )
@@ -11,6 +10,11 @@ class LoginRequest(BaseModel):
 
     email: str
     password: str
+
+
+class ResetPasswordRequest(BaseModel):
+
+    reset_password_email: str
 
 
 class TokenResponse(BaseModel):

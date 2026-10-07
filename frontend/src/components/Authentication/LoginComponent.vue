@@ -54,10 +54,16 @@
 
             <div class="Auth-Handler">
                 <p v-if="ErrorMessage">{{ ErrorMessage }}</p>
-                
-                <button type="submit" :disabled="isLoading">
-                    {{ isLoading ? 'Login...' : 'Login' }}
-                </button>
+
+                <div class="Auth-Actions">
+                    <a href="/password/reset" class="Forgot-Password">
+                        Forgot Password?
+                    </a>
+
+                    <button type="submit" :disabled="isLoading">
+                        {{ isLoading ? 'Login...' : 'Login' }}
+                    </button>
+                </div>
             </div>
         </form>
     </div>

@@ -12,5 +12,5 @@ class LLMDiagnosisRepository:
 
     def create(self, llm_diagnosis: LLMDiagnosis):
         
-        self.db.add(LLMDiagnosis)
-        return customer
+        self.db.add(llm_diagnosis)
+        return llm_diagnosis

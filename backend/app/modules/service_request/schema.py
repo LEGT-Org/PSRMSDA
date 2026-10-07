@@ -9,6 +9,7 @@ from pydantic import (
 )
 
 from app.modules.llm_diagnosis.schema import LLMDiagnosticResponse, LLMDiagnosisStatus
+from app.modules.procurement_alert.schema import ProcurementAlertType
 
 class ServiceRequestStatus(StrEnum):
 
@@ -19,6 +20,11 @@ class ServiceRequestStatus(StrEnum):
     UNSUCCESSFUL = "Unsuccessful"
 
 
+class ProcurementAlertTypeReview(StrEnum):
+
+    alert: ProcurementAlertType
+
+
 class SelectedPart(BaseModel):
     
     part_id: int | None = None          
@@ -26,12 +32,41 @@ class SelectedPart(BaseModel):
     quantity: int = Field(ge=1, default=1)
 
 
+class CustomerRequestPreview(BaseModel):
+
+    first_name: str = Field(
+        min_length=2,
+        max_length=50
+    )
+
+    last_name: str = Field(
+        min_length=2,
+        max_length=50
+    )
+
+    email: EmailStr
+    phone_number: str
+
+
 class ConfirmServiceRequest(BaseModel):
+
+    service_request_id: int | None = None
+
+    customer_data: CustomerRequestPreview
+    device_type: str
+    device_brand: str
+    device_model: str
+    fault_descriptions: list[str]
 
     selected_parts: list[SelectedPart] = Field(default_factory=list)
     final_status: ServiceRequestStatus
-    diagnosis_verdict: LLMDiagnosisStatus = LLMDiagnosisStatus.ACCEPTED
     technician_notes: str | None = None
+    diagnosis_verdict: LLMDiagnosisStatus = LLMDiagnosisStatus.ACCEPTED
+
+
+class CancelServiceRequest(BaseModel):
+
+    service_request_id: int
 
 
 class LLMRecommendedSparePart(BaseModel):
@@ -66,8 +101,6 @@ class ServiceRequestResponse(BaseModel):
     customer_id: int
     status: ServiceRequestStatus
     diagnosis: LLMDiagnosticResponse
-    confidence: str
-    model: str
     llm_recommended_part: LLMRecommendedSparePart | None = None 
     matched_part: list[MatchedSparePartPreview] = []
     created_at: datetime
@@ -82,22 +115,6 @@ class LLMDiagnosticRequestPreview(BaseModel):
         min_length=3,
         max_length=10
     )
-
-
-class CustomerRequestPreview(BaseModel):
-
-    first_name: str = Field(
-        min_length=2,
-        max_length=50
-    )
-
-    last_name: str = Field(
-        min_length=2,
-        max_length=50
-    )
-
-    email: EmailStr
-    phone_number: str
 
 
 class UserSchema(BaseModel):

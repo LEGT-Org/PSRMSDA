@@ -1,10 +1,19 @@
 <script setup lang="ts">
     import { ref } from 'vue';
+    import { useRoute } from 'vue-router';
 
     import { logout } from '@/services/useAuth';
     import { currentUser } from '@/services/state/Auth';
     import { capitalizeFirstLetter } from '@/helper/Capitalize';
+
+    import DashboardBlue from '@/assets/Images/Icons/Blue/dashboard-blue.png';
+    import DashboardWhite from '@/assets/Images/Icons/White/dashboard-white.png';
+    import RequestBlue from '@/assets/Images/Icons/Blue/service-request-blue.png';
+    import RequestWhite from '@/assets/Images/Icons/White/service-request-white.png';
+    import NewServiceRequestBlue from '@/assets/Images/Icons/Blue/new-service-request-blue.png';
+    import NewServiceRequestWhite from '@/assets/Images/Icons/White/new-service-request-white.png';
     
+    const Route = useRoute();
     const showProfileMenu = ref<boolean>(false);
 
     const ToggleProfileMenu = () => {
@@ -23,44 +32,71 @@
 </script>
 
 <template>
-    <div class="Staff-Navigation-Container">
+    <div class="Sidebar-Navigation-Container">
 
-        <div class="Staff-Navigation">
-            <button>
+        <div class="Sidebar-Navigation">
+            <!-- <button>
                 <img 
                     src="@/assets/Images/Icons/menu.png" 
                     alt="Menu" 
                 />
-            </button>
+            </button> -->
 
-            <RouterLink to="/dashboard">
+            <p>Main Operations</p>
+
+            <RouterLink 
+                to="/dashboard"
+                class="Navigation-Link"
+                exact-active-class="Navigation-Link-Active"
+            >
                 <img 
-                    src="@/assets/Images/Icons/dashboard.png" 
+                    :src="Route.path === '/dashboard'
+                        ? DashboardBlue
+                        : DashboardWhite
+                    "
                     alt="Dashboard"
                 />
                 <span>Dashboard</span>
             </RouterLink>
 
-            <RouterLink to="/requests">
+            <RouterLink 
+                to="/request/new"
+                class="Navigation-Link"
+                exact-active-class="Navigation-Link-Active"
+            >
                 <img 
-                    src="@/assets/Images/Icons/request.png" 
-                    alt="Request"
-                />
-                <span>Requests</span>
-            </RouterLink>
-
-            <RouterLink to="/request/new">
-                <img 
-                    src="@/assets/Images/Icons/create.png" 
+                    :src="Route.path === '/request/new'
+                        ? NewServiceRequestBlue
+                        : NewServiceRequestWhite
+                    "  
                     alt="New Request"
                 />
                 <span>New Request</span>
             </RouterLink>
+
+            <p>Management</p>
+
+            <RouterLink 
+                to="/requests"
+                class="Navigation-Link"
+                exact-active-class="Navigation-Link-Active"
+            >
+                <img 
+                    :src="Route.path === '/requests'
+                        ? RequestBlue
+                        : RequestWhite
+                    " 
+                    alt="Request"
+                />
+                <span>Service Request</span>
+            </RouterLink>
+
+
         </div>
 
-        <div class="Staff-Profile-Wrapper">
+        <div class="Sidebar-Profile-Wrapper">
 
-            <button type="button" class="Staff-Profile" @click="ToggleProfileMenu">
+            <button type="button" class="Sidebar-Profile" @click="ToggleProfileMenu">
                 <img src="@/assets/Images/Icons/user.png" alt="Profile">
                 <div v-if="currentUser">
                     <h4>{{ capitalizeFirstLetter(currentUser.first_name) }} {{ capitalizeFirstLetter(currentUser.last_name) }}</h4>
@@ -73,10 +109,10 @@
                 </div>
             </button>
 
-            <div v-if="showProfileMenu" class="Staff-Profile-Menu">
-                <RouterLink to="/settings" @click="showProfileMenu = false">
+            <div v-if="showProfileMenu" class="Sidebar-Profile-Menu">
+                <!-- <RouterLink to="/settings" @click="showProfileMenu = false">
                     Settings
-                </RouterLink>
+                </RouterLink> -->
 
                 <button type="button" @click="Logout">Logout</button>
             </div>

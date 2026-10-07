@@ -48,6 +48,19 @@ const routes = [
                     requiresStaff: false,
                     title: 'Set My Password'
                 }
+            },
+            {
+                path: 'password/reset',
+                name: 'Reset Password View',
+                component: () => import('@/components/Authentication/PasswordResetComponent.vue'),
+                meta: {
+                    requiresGuest: true,
+                    requiresToken: false,
+                    requiresAuth: false,
+                    requiresAdmin: false,
+                    requiresStaff: false,
+                    title: 'Reset My Password'
+                }
             }
         ]
     },
@@ -75,18 +88,6 @@ const routes = [
                 }
             },
             {
-                path: '/requests',
-                name: 'Staff Service Requests',
-                component: () => import('@/components/Staff/ServReqComponent.vue'),
-                meta: {
-                    requiresAuth: true,
-                    requiresToken: false,
-                    requiresAdmin: false,
-                    requiresStaff: true,
-                    title: 'Service Request'
-                }
-            },
-            {
                 path: '/request/new',
                 name: 'Staff New Service Request',
                 component: () => import('@/components/Staff/NewServReqComponent.vue'),
@@ -96,6 +97,18 @@ const routes = [
                     requiresAdmin: false,
                     requiresStaff: true,
                     title: 'New Service Request'
+                }
+            },
+            {
+                path: '/requests',
+                name: 'Staff Service Requests',
+                component: () => import('@/components/Staff/ServReqComponent.vue'),
+                meta: {
+                    requiresAuth: true,
+                    requiresToken: false,
+                    requiresAdmin: false,
+                    requiresStaff: true,
+                    title: 'Service Request Management'
                 }
             },
         ]
@@ -124,18 +137,6 @@ const routes = [
                 }
             },
             {
-                path: 'requests',
-                name: 'Admin Service Request',
-                component: () => import('@/components/Admin/ServReqComponent.vue'),
-                meta: {
-                    requiresAuth: true,
-                    requiresToken: false,
-                    requiresAdmin: true,
-                    requiresStaff: false,
-                    title: 'Service Request'
-                }
-            },
-            {
                 path: 'request/new',
                 name: 'Admin New Service Request',
                 component: () => import('@/components/Admin/NewServReqComponent.vue'),
@@ -148,15 +149,15 @@ const routes = [
                 }
             },
             {
-                path: 'diagnostics',
-                name: 'Admin Diagnostic Rules',
-                component: () => import('@/components/Admin/DiagRulesComponent.vue'),
+                path: 'requests',
+                name: 'Admin Service Request',
+                component: () => import('@/components/Admin/ServReqComponent.vue'),
                 meta: {
                     requiresAuth: true,
                     requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
-                    title: 'Diagnostic Rules'
+                    title: 'Service Request Management'
                 }
             },
             {
@@ -168,7 +169,7 @@ const routes = [
                     requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
-                    title: 'Standard Operational Procedure'
+                    title: 'Standard Operational Procedure Management'
                 }
             },
             {
@@ -180,7 +181,7 @@ const routes = [
                     requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
-                    title: 'Procurement Alerts'
+                    title: 'Procurement Alerts Management'
                 }
             },
             {
@@ -192,7 +193,7 @@ const routes = [
                     requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
-                    title: 'Inventory Reference'
+                    title: 'Inventory Reference Management'
                 }
             },
             {
@@ -204,19 +205,31 @@ const routes = [
                     requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
-                    title: 'Reports'
+                    title: 'Reports Management'
+                }
+            },
+            {
+                path: 'customers',
+                name: 'Admin Customers Management',
+                component: () => import('@/components/Admin/CustomerComponent.vue'),
+                meta: {
+                    requiresAuth: true,
+                    requiresToken: false,
+                    requiresAdmin: true,
+                    requiresStaff: false,
+                    title: 'Customers Management'
                 }
             },
             {
                 path: 'users',
-                name: 'Admin Users',
+                name: 'Admin Users Management',
                 component: () => import('@/components/Admin/UsersComponent.vue'),
                 meta: {
                     requiresAuth: true,
                     requiresToken: false,
                     requiresAdmin: true,
                     requiresStaff: false,
-                    title: 'Users'
+                    title: 'Users Management'
                 }
             },
         ]

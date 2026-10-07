@@ -31,7 +31,7 @@ export async function getCurrentUser(force: boolean = false): Promise<User | nul
 
     try {
 
-        const res = await ApiFetch('/auth/me', { method: 'GET' });
+        const res = await ApiFetch('/user/me', { method: 'GET' });
 
         if (!res.ok) {
 
@@ -101,6 +101,50 @@ export async function login(Email: string, Password: string) {
         isLoading.value = false;
     
     }
+}
+
+
+// Reset User Password
+
+export async function resetPassword(Email: string) {
+
+    isLoading.value = true;
+
+    try {
+
+        const res = await ApiFetch('/auth/reset-password', {
+
+            method: 'POST',
+            body: JSON.stringify(
+                {
+                    email: Email.trim()
+                }
+            )
+
+        });
+
+        const data = await res.json()
+
+        if (!res.ok) { 
+
+            Error.value = data.detail ?? 'Invalid email or password';
+            return Error.value;
+
+        }
+
+        return data;
+
+    } catch(error) {
+
+        alert('Unable to connect to the server. Please try again later');
+        return;
+
+    } finally {
+
+        isLoading.value = false;
+
+    }
+
 }
 
 

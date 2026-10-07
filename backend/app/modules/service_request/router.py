@@ -11,6 +11,7 @@ from app.modules.service_request.schema import (
     CustomerRequestPreview,
     ServiceRequestResponse,
     ConfirmServiceRequest,
+    CancelServiceRequest,
     UserSchema
 )
 
@@ -42,34 +43,33 @@ async def ai_diagnosis(
 
 
 @router.post(
-    "/{service_request_id}/confirm",
+    "/confirm",
     response_model=ServiceRequestResponse,
     status_code=status.HTTP_200_OK,
 )
 def confirm_request(
-    service_request_id: int,
-    body: ConfirmServiceRequest,
+    request: ConfirmServiceRequest,
     service: ServiceRequestService,
     current_user: CurrentUser,
     _: ValidateCSRF
 ) -> ServiceRequestResponse:
 
     return service.confirm_request(
-        service_request_id=service_request_id,
-        request=body
+        user_id=current_user.id,
+        request=request
     )
 
 
 @router.post(
-    "/{service_request_id}/cancel",
+    "/cancel",
     status_code=status.HTTP_204_NO_CONTENT,
 )
 def cancel_request(
-    service_request_id: int,
+    request: CancelServiceRequest,
     service: ServiceRequestService,
     current_user: CurrentUser,
     _: ValidateCSRF
 ) -> None:
 
-    service.cancel_request(service_request_id)
+    service.cancel_request(request.service_request_id)
 

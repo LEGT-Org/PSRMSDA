@@ -35,6 +35,26 @@ class RegistrationStoredUser(BaseModel):
     token_expire: datetime
     token_hash: str
     email_verified: bool
+
+
+class UserPageResponse(BaseModel):
+
+    id: int
+    first_name: str
+    last_name: str
+    email: str
+    role: str
+    is_active: bool
+    email_verified: bool
+
+
+class UserPageListResponse(BaseModel):
+
+    items: list[UserPageResponse]
+    page: int
+    limit: int
+    total: int
+    pages: int
     
 
 class UserResponse(BaseModel):

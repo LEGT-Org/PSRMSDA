@@ -1,9 +1,12 @@
 @import './Authentication/Auth.css';
-@import './Partial/Navigation/Staff.css';
-@import './Partial/Navigation/Admin.css';
+@import './Partial/Navigation.css';
 @import './Partial/Header.css';
 @import './Partial/Content.css';
 @import './Error/NotFound.css';
+@import './Components/NewServRequest.css';
+@import './Components/ServiceRequest.css';
+@import './Components/Dashboard.css';
+@import './Components/User.css';
 
 :root {
     --background-color: #c4c4c4;
@@ -12,6 +15,9 @@
     --secondary-color: #00167a;
     --third-color: #251b17;
     --fourth-color: #6e6050;
+    --fifth-color: #dc9207;
+    --sixth-color: #166534;
+    --seventh-color: #c24141;
     --placeholder-color: #9ca3af;
     --secondary-hover-color: #133eff;
     --error-handler-color: #921f1f;

@@ -1,5 +1,5 @@
 <script setup lang="ts"></script>
 
 <template>
-    <h1>Diagnostic Rules</h1>
+    <h1>Customer Management</h1>
 </template>

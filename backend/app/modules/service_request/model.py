@@ -31,9 +31,11 @@ class ServiceRequest(Base):
     status: Mapped[ServiceRequestStatus] = mapped_column(
         Enum(
             ServiceRequestStatus,
-            name="service_request_status"
+            name="service_request_status",
+            values_callable=lambda enum_class: [member.value for member in enum_class]
         ),
-        server_default=ServiceRequestStatus.PENDING
+        server_default=ServiceRequestStatus.PENDING.value,
+        nullable=False
     )
 
     # Foreign Key
