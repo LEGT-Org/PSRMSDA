@@ -1,4 +1,4 @@
-.Admin-Main {
+.Sidebar-Main {
     display: flex;
     flex-direction: row;
     gap: 3rem;
@@ -10,7 +10,7 @@
    Navigation Sidebar
 ================================ */
 
-.Admin-Navigation-Container {
+.Sidebar-Navigation-Container {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
@@ -34,7 +34,7 @@
 
 /* Navigation buttons */
 
-.Admin-Navigation-Container button {
+.Sidebar-Navigation-Container button {
     display: flex;
     align-items: center;
 
@@ -48,7 +48,7 @@
 
 /* Navigation icons */
 
-.Admin-Navigation-Container img {
+.Sidebar-Navigation-Container img {
     width: 1.9rem;
     height: 1.9rem;
     object-fit: contain;
@@ -57,13 +57,13 @@
 
 /* Navigation links */
 
-.Admin-Navigation {
+.Sidebar-Navigation {
     display: flex;
     flex-direction: column;
     gap: 0.25rem;
 }
 
-.Admin-Navigation p {
+.Sidebar-Navigation p {
     margin: 5px;
     padding-left: 10px;
     font-size: 0.75rem;
@@ -72,7 +72,7 @@
 }
 
 
-.Admin-Navigation a {
+.Sidebar-Navigation a {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -82,9 +82,10 @@
 
     color: var(--normal-text-color);
     text-decoration: none;
-    font-weight: 550;
 
     box-sizing: border-box;
+
+    border: 1.5px solid transparent;
 
     transition:
         background-color 0.15s ease,
@@ -92,16 +93,17 @@
 }
 
 
-.Admin-Navigation a.Navigation-Link-Active {
+.Sidebar-Navigation a.Navigation-Link-Active {
     background-color: white;
-    color: #00167a;
+    border-color: var(--normal-text-color);
+    color: var(--secondary-color);
 }
 
 /* ================================
    Profile
 ================================ */
 
-.Admin-Profile-Wrapper {
+.Sidebar-Profile-Wrapper {
     position: relative;
     display: flex;
     flex-direction: column;
@@ -111,7 +113,7 @@
 
 /* Profile button */
 
-.Admin-Profile {
+.Sidebar-Profile {
     display: flex;
     flex-direction: row;
     align-items: center;
@@ -133,18 +135,18 @@
     cursor: pointer;
 }
 
-.Admin-Profile:hover {
+.Sidebar-Profile:hover {
     background-color: rgba(255, 255, 255, 0.08);
 }
 
 
 /* Profile image */
 
-.Admin-Profile img {
+.Sidebar-Profile img {
     flex-shrink: 0;
 
-    width: 3rem;
-    height: 3rem;
+    width: 4rem;
+    height: 4rem;
 
     margin: 0;
 
@@ -156,12 +158,12 @@
 
 /* Profile information */
 
-.Admin-Profile div {
+.Sidebar-Profile div {
     min-width: 0;
 }
 
 
-.Admin-Profile h4 {
+.Sidebar-Profile h4 {
     margin: 0;
 
     font-size: 0.75rem;
@@ -173,7 +175,7 @@
 }
 
 
-.Admin-Profile p {
+.Sidebar-Profile p {
     margin: 0.25rem 0 0;
 
     font-size: 0.65rem;
@@ -190,7 +192,7 @@
    Profile Menu
 ================================ */
 
-.Admin-Profile-Menu {
+.Sidebar-Profile-Menu {
     position: absolute;
 
     left: 0;
@@ -217,8 +219,8 @@
 
 /* Menu links and buttons */
 
-.Admin-Profile-Menu a,
-.Admin-Profile-Menu button {
+.Sidebar-Profile-Menu a,
+.Sidebar-Profile-Menu button {
     display: block;
 
     width: 100%;
@@ -230,7 +232,7 @@
     color: var(--normal-text-color);
 
     background: transparent;
-    border: none;
+    border: 1.5px solid transparent;
     border-radius: 0.35rem;
 
     text-align: left;
@@ -239,7 +241,8 @@
     cursor: pointer;
 }
 
-.Admin-Profile-Menu a:hover,
-.Admin-Profile-Menu button:hover {
-    background-color: rgba(255, 255, 255, 0.1);
+.Sidebar-Profile-Menu a:hover,
+.Sidebar-Profile-Menu button:hover {
+    border-color: var(--normal-text-color);
+    background-color: var(--error-handler-color);
 }

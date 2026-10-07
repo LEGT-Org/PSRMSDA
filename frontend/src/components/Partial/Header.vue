@@ -14,21 +14,6 @@
             <h2>LEGT</h2>
         </div>
 
-        <div class="Header-Search">
-            <input 
-                v-model="Search"
-                type="text"
-                placeholder="Search..."    
-            />
-            <div class="Header-Search-Divider"></div>
-            <button>
-                <img 
-                    src="@/assets/Images/Icons/search.png" 
-                    alt="Search"
-                />
-            </button>
-        </div>
-
         <div class="Header-Notification">
             <img 
                 src="@/assets/Images/Icons/notification.png" 

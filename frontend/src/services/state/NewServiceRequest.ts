@@ -76,6 +76,25 @@ export interface DiagnosisResponse {
     created_at: string;
 }
 
+export interface SelectedPart {
+    part_id: number;
+    part_name: string;
+    quantity: number;
+}
+
+export interface ConfirmServiceRequest {
+    service_request_id: number | null;
+    customer_data: CustomerData;
+    device_type: string;
+    device_brand: string;
+    device_model: string;
+    fault_descriptions: string[];
+    diagnosis_verdict: string | null;
+    selected_parts: SelectedPart[];
+    final_status: string;
+    technician_notes: string | null;
+}
+
 export const isDiagnosing = ref<boolean>(false)
 export const showDiagnosis = ref<boolean>(false)
 export const diagnosis = ref<DiagnosisResponse | null>(null)

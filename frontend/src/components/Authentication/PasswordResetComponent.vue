@@ -1,73 +1,41 @@
 <script setup lang="ts">
-    import { ref, onMounted } from 'vue';
-    import { useRoute, useRouter } from 'vue-router';
+    import { ref } from 'vue';
+    import { useRouter } from 'vue-router';
 
-    import { setPassword } from '@/services/useAuth';
+    import { resetPassword } from '@/services/useAuth';
     import { Error, isLoading } from '@/services/state/Auth';
 
-    const Route     = useRoute();
-    const Router    = useRouter();
+    const Email          = ref<string>('');
+    const ErrorMessage   = ref<string>('');
 
-    const Token = ref<string | null>(
-        typeof Route.query.token === 'string'
-            ? Route.query.token
-            : null
-    );
+    const Router         = useRouter();
 
-    const Password          = ref<string>('');
-    const ConfirmPassword   = ref<string>('');
-    const ErrorMessage      = ref<string>('');
+    const ResetUserPassword = async () => {
 
+        const success = await resetPassword(Email.value);
 
-    const SetUserPassword = async () => {
+        if (success) {
 
-        const error = await setPassword(
-            Token.value,
-            Password.value,
-            ConfirmPassword.value
-        );
+            await Router.push('/');
+            alert(success.message)
 
-        ErrorMessage.value = error ?? '';
-
-        if (error) {
-
-            return;
-            
         }
 
-        await Router.push('/');
+        ErrorMessage.value = Error.value;
 
     };
-
-    onMounted(() => {
-        if (!Token.value) {
-
-            ErrorMessage.value = "Invalid Password Setup Link";
-            return;
-        }
-
-        if (Token.value) {
-
-            window.history.replaceState(
-                {},
-                '',
-                Route.path
-            );
-
-        }
-    })
     
 </script>
 
 <template>
 
     <div class="Auth-Form">
-        <form @submit.prevent="SetUserPassword">
+        <form @submit.prevent="ResetUserPassword">
 
             <div class="Auth-Input">
                 <label for="Email">Email</label>
                 <input 
-                    v-model="ConfirmPassword" 
+                    v-model="Email" 
                     type="email"
                     id="Email" 
                     placeholder="Email..." 
@@ -78,7 +46,7 @@
             <div class="Auth-Handler">
                 <p v-if="ErrorMessage">{{ ErrorMessage }}</p>
                 
-                <button type="submit" :disabled="isLoading">
+                <button type="submit" class="Password-Reset" :disabled="isLoading">
                     {{ isLoading ? 'Password Resetting...' : 'Password Reset' }}
                 </button>
             </div>

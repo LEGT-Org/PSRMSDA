@@ -2,6 +2,7 @@ from typing import Protocol
 
 from app.modules.user.model import User
 
+
 class UserInterface(Protocol):
     
     def get_user_by_email(
@@ -24,6 +25,14 @@ class UserInterface(Protocol):
         self, 
         token_hash: str, 
         new_password: str
-    ) -> User:
+    ) -> None:
     
+        pass
+
+
+    def password_reset(
+        self,
+        email: str
+    ) -> None:
+
         pass

@@ -1,12 +1,16 @@
 import { ApiFetch } from "@/api/Client";
+import { ParseApiError } from "@/api/Error";
 import { 
     showDiagnosis,
     isDiagnosing,
-    diagnosis, 
+    diagnosis,
     type DiagnosisRequest,
-    type DiagnosisResponse
+    type DiagnosisResponse,
+    type ConfirmServiceRequest 
 } from "./state/NewServiceRequest";
 
+
+// Run an AI Diagnosis
 
 export const runAIDiagnosis = async (payload: DiagnosisRequest): Promise<void> => {
 
@@ -14,47 +18,28 @@ export const runAIDiagnosis = async (payload: DiagnosisRequest): Promise<void> =
 
     try {
 
-        const response = await ApiFetch('/service-requests/diagnose', 
+        const response = await ApiFetch('/service-requests/diagnose',
             {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify(payload),
             }
         );
-        
-        
+
         if (!response.ok) {
-
-            if (!response.ok) {
-            const errorData = await response.json();
-
-            console.error('Backend Error:', errorData);
-
-            if (Array.isArray(errorData.detail)) {
-
-                const messages = errorData.detail
-                    .map((error: { msg?: string }) => error.msg)
-                    .filter(Boolean);
-
-                throw new Error(messages.join('\n'));
-                
-            }
-
-            throw new Error(errorData.detail ?? 'Failed to generate diagnosis.');
+            throw new Error(
+                await ParseApiError(
+                    response,
+                    'Failed to generate diagnosis.'
+                )
+            );
         }
 
-        }
-        
         const data: DiagnosisResponse = await response.json();
 
         diagnosis.value = data;
         showDiagnosis.value = true;
 
     } catch (error) {
-        
-        console.error('AI Diagnosis Error:', error);
 
         alert(
             error instanceof Error
@@ -67,4 +52,60 @@ export const runAIDiagnosis = async (payload: DiagnosisRequest): Promise<void> =
         isDiagnosing.value = false;
 
     }
+};
+
+
+// Confirm the Service Request
+
+export const confirmServiceRequest = async (payload: ConfirmServiceRequest): Promise<DiagnosisResponse> => {
+
+    const response = await ApiFetch('/service-requests/confirm',
+        {
+
+            method: 'POST',
+            body: JSON.stringify(payload),
+
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            await ParseApiError(
+                response,
+                'Failed to confirm service request.'
+            )
+        );
+    }
+
+    return await response.json();
+
+};
+
+
+// Cancel the Service Request
+
+export const cancelServiceRequest = async (serviceRequestId: number): Promise<void> => {
+
+    const response = await ApiFetch(`/service-requests/cancel`,
+        {
+
+            method: 'POST',
+            body: JSON.stringify(
+                {
+                    "service_request_id": serviceRequestId
+                }
+            )
+        }
+    );
+
+    if (!response.ok) {
+        throw new Error(
+            await ParseApiError(
+                response,
+                'Failed to cancel service request.'
+            )
+        );
+    }
+
+    return await response.json();
 };

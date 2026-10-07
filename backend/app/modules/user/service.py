@@ -1,3 +1,4 @@
+from math import ceil
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
@@ -25,6 +26,7 @@ from app.shared.security.password import (
 
 from app.shared.exception import (
     InvalidRegistrationTokenError,
+    InvalidEmailAddressError,
     EmailAlreadyExistsError, 
     InvalidCredentialsError,
     EmailServiceFailedError,
@@ -136,6 +138,106 @@ class UserService:
             raise EmailServiceFailedError() from error
 
 
+    def password_reset(
+        self,
+        email: str
+    ) -> None:
+
+        email = EmailValidation(email=email)
+
+        user = self.repository.get_by_email(email.validated_email)
+
+        if user is None:
+            raise InvalidEmailAddressError()
+
+        if user.email_verified is False:
+            raise InvalidEmailAddressError()
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        raw_token = generate_registration_token()
+        token_hash = hash_registration_token(raw_token)
+        token_expire = now + timedelta(hours=settings.auth.password_reset_token_expire_hours)
+
+        self.repository.set_token_hash(
+            stored_user=user,
+            token_expire=token_expire,
+            token_hash=token_hash
+        )
+
+        try:
+
+            action_url = (
+                f"{settings.frontend.url}/password/set"
+                f"?token={raw_token}"
+            )
+
+            html = self.email_renderer.render(
+                "reset_password.html",
+
+                preheader="Reset password to activate your account.",
+                company_name="Lightyear Electrical Goods Trading",
+                address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
+                first_name=user.first_name,
+                last_name=user.last_name,
+                first_intro="We received a request to reset the password for your Lightyear Electrical Goods Trading account.",
+                second_intro="Click the button below to choose a new password.",
+                invite_link=action_url,
+                button="RESET PASSWORD",
+                exp_notice="This link expires in 1 hour and can only be used once.",
+                ending_title="Didn't request this?",
+                ending_body="No action is needed — your password won't change. If you're concerned about your account security, please contact us at legt@gmail.com.",
+                regards="Thanks,",
+                team="The LEGT Team",
+                footer="For your security, Lighyear Electrical Goods Trading will never ask for your password by email."
+            )
+
+            message = EmailMessage(
+                to=user.email,
+                subject="Password Reset",
+                body=(f"Your password has been succesfully reset.\n\n"
+                    "Please set your new password using the link below."
+                ),
+                html=html
+            )
+
+            self.email_service.send(message)
+            self.db.commit()
+            
+        except Exception as error:
+
+            self.db.rollback()
+            raise EmailServiceFailedError() from error
+
+
+    def get_all_users(
+        self,
+        page: int,
+        limit: int,
+        search: str | None = None,
+        role: str | None = None,
+        status: str | None = None,
+    ):
+    
+        users, total = self.repository.get_all(
+            page=page,
+            limit=limit,
+            search=search,
+            role=role,
+            status=status,
+        )
+
+        pages = ceil(total / limit) if total else 0
+
+        return {
+            "items": users,
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "pages": pages,
+        }
+
+
     def get_user_by_email(
         self, 
         email: str
@@ -145,7 +247,7 @@ class UserService:
         user = self.repository.get_by_email(email.validated_email)
 
         if user is None:
-            raise InvalidCredentialsError()
+            raise InvalidEmailAddressError()
 
         return user
 
@@ -191,10 +293,10 @@ class UserService:
 
             self.db.commit()
 
-        except Exception:
+        except Exception as error:
         
             self.db.rollback()
-            raise SetupNewPasswordError()
+            raise SetupNewPasswordError() from error
 
 
     def enable_user(
@@ -256,7 +358,7 @@ class UserService:
         user_id: int
     ) -> None:
 
-        user = self.repository.get_by_id(user.id)
+        user = self.repository.get_by_id(user_id)
 
         if user is None:
             raise InvalidCredentialsError()
@@ -283,7 +385,7 @@ class UserService:
         user_id: int
     ) -> None:
 
-        user = self.repository.get_by_id(user.id)
+        user = self.repository.get_by_id(user_id)
 
         if user is None:
             raise InvalidCredentialsError()

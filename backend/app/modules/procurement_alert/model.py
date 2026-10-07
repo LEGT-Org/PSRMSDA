@@ -4,12 +4,14 @@ from datetime import datetime
 from sqlalchemy import (
     ForeignKey, 
     DateTime, 
-    String, 
+    String,
+    Enum, 
     text
 )
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
+from app.modules.procurement_alert.schema import ProcurementAlertType
 from app.shared.database import Base
 
 
@@ -21,6 +23,16 @@ class ProcurementAlert(Base):
     alert_message: Mapped[str] = mapped_column(String(255), nullable=True)
     part_name_snapshot: Mapped[str] = mapped_column(String(255), nullable=True)
     is_resolved: Mapped[bool] = mapped_column(server_default=text("0"))
+
+    alert_type: Mapped[ProcurementAlertType] = mapped_column(
+        Enum(
+            ProcurementAlertType,
+            name="procurement_alert_type",
+            values_callable=lambda enum_class: [member.value for member in enum_class]
+        ),
+        server_default=ProcurementAlertType.PART_SELECTED.value,
+        nullable=False
+    )
 
     # Foreign Key
     request_id: Mapped[int] = mapped_column(ForeignKey("service_requests.id"), nullable=False)

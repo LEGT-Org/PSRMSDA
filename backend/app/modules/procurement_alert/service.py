@@ -29,6 +29,7 @@ class ProcurementAlertService:
             part_id=data.part_id,
             part_name_snapshot=data.part_name_snapshot,
             alert_message=data.alert_message,
+            alert_type=data.alert_type,
             is_resolved=data.is_resolved,
             created_at=data.created_at
         )

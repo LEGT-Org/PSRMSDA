@@ -5,6 +5,7 @@ from app.modules.auth.interface import UserInterface
 
 from app.shared.value_object.password import Password as PasswordValidation
 from app.shared.security.password import hash_password, verify_password
+from app.shared.value_object.user import Email as EmailValidation
 from app.shared.exception import InvalidCredentialsError
 
 
@@ -45,3 +46,8 @@ class AuthService:
             token_hash=password_request.token,
             new_password=password
         )
+
+    
+    def auth_reset_password(self, email: EmailStr):
+        
+        self.interface.password_reset(email=email)

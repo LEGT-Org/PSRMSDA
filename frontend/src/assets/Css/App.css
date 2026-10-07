@@ -1,12 +1,12 @@
 @import './Authentication/Auth.css';
-@import './Partial/Navigation/Staff.css';
-@import './Partial/Navigation/Admin.css';
+@import './Partial/Navigation.css';
 @import './Partial/Header.css';
 @import './Partial/Content.css';
 @import './Error/NotFound.css';
 @import './Components/NewServRequest.css';
-@import './Components/Dashboard.css';
 @import './Components/ServiceRequest.css';
+@import './Components/Dashboard.css';
+@import './Components/User.css';
 
 :root {
     --background-color: #c4c4c4;

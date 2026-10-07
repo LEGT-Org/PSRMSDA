@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import select
+from sqlalchemy import select, func, or_
 from sqlalchemy.orm import Session
 
 from app.modules.user.schema import RegistrationStoredUser, UserRole
@@ -18,7 +18,52 @@ class UserRepository:
         self.db.add(user)
         return user
 
+
+    def get_all(
+        self,
+        page: int,
+        limit: int,
+        search: str | None = None,
+        role: str | None = None,
+        status: str | None = None,
+    ) -> tuple[list[User], int]:
+
+        statement = select(User)
+
+        if search:
+            search_value = f"%{search.strip()}%"
+
+            statement = statement.where(
+                or_(
+                    User.first_name.ilike(search_value),
+                    User.last_name.ilike(search_value),
+                    User.email.ilike(search_value),
+                )
+            )
+
+        if role:
+            statement = statement.where(User.role == role)
+
+        if status == "active":
+            statement = statement.where(User.is_active.is_(True))
+
+        elif status == "disabled":
+            statement = statement.where(User.is_active.is_(False))
+
+        count_statement = select(func.count()).select_from(statement.subquery())
+        total = self.db.scalar(count_statement) or 0
+
+        statement = (
+            statement
+            .offset((page - 1) * limit)
+            .limit(limit)
+        )
+
+        users = list(self.db.scalars(statement).all())
+
+        return users, total
     
+
     def get_by_email(self, email: str) -> User | None:
 
         statement = select(User).where(
@@ -35,7 +80,6 @@ class UserRepository:
 
         statement = select(User).where(
             User.id == user_id,
-            User.is_active.is_(True),
             User.password_hash.isnot(None),
             User.deleted_at.is_(None)
         )
@@ -65,6 +109,19 @@ class UserRepository:
         stored_user.email_verified = True
         stored_user.token_expire = None
         stored_user.token_hash = None
+
+
+    def set_token_hash(
+        self,
+        stored_user: RegistrationStoredUser,
+        token_expire: datetime,
+        token_hash: str
+    ) -> None:
+
+        stored_user.password_hash = None
+        stored_user.email_verified = False
+        stored_user.token_expire = token_expire
+        stored_user.token_hash = token_hash
 
     
     def enable(

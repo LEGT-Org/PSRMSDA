@@ -51,7 +51,6 @@
     gap: 0.25rem;
     color: var(--normal-text-color);
     font-size: 0.85rem;
-    font-weight: 600;
 }
 
 .Service-Request-Fields input,
@@ -59,12 +58,16 @@
 .Service-Request-Fields textarea {
     box-sizing: border-box;
     width: 100%;
-    border: 1px solid var(--secondary-color);
-    border-radius: 0.25rem;
+    height: 2.5rem;
+    border: 1.50px solid var(--secondary-color);
+    border-radius: 0.375rem;
     padding: 0.55rem;
     background-color: var(--normal-text-color);
     color: var(--main-color);
+    outline-color: var(--secondary-color);
+    caret-color: var(--secondary-color);
     font-family: inherit;
+    font-size: 0.85rem;
 }
 
 .Service-Request-Fields textarea {
@@ -82,16 +85,17 @@
 .Run-Diagnosis-Button {
     margin-top: 0.75rem;
     padding: 0.85rem 0.90rem;
-    border: none;
-    border-radius: 0.25rem;
+    border: 1.5px solid var(--secondary-color);
+    border-radius: 0.375rem;
     background-color: var(--secondary-color);
     color: var(--normal-text-color);
-    font-weight: 600;
+    font-weight: 550;
     cursor: pointer;
 }
 
 .Run-Diagnosis-Button:hover {
     background-color: var(--secondary-hover-color);
+    border: 1.5px solid var(--normal-text-color);
 }
 
 .Run-Diagnosis-Button:disabled {
@@ -586,11 +590,11 @@
     min-width: 4rem;
     padding: 0.45rem 0.75rem;
 
-    border-radius: 0.25rem;
+    border-radius: 0.375rem;
 
     font-family: inherit;
     font-size: 1.08rem;
-    font-weight: 600;
+    font-weight: 550;
 
     cursor: pointer;
 }
@@ -606,20 +610,36 @@
 
 .Confirm-Button:hover {
     background-color: var(--secondary-hover-color);
+    border: 1.5px solid var(--normal-text-color);
 }
 
 
 /* Cancel */
 
 .Cancel-Button {
-    border: 1px solid var(--secondary-color);
+    border: 1.50px solid var(--error-handler-color);
     background-color: transparent;
-    color: var(--secondary-color);
+    color: var(--error-handler-color);
 }
 
 .Cancel-Button:hover {
-    background-color: var(--secondary-color);
+    background-color: var(--error-handler-color);
     color: var(--normal-text-color);
+    border: 1.5px solid var(--normal-text-color);
+}
+
+
+.diagnostic-result-enter-active,
+.diagnostic-result-leave-active {
+    transition:
+        opacity 0.3s ease,
+        transform 0.3s ease;
+}
+
+.diagnostic-result-enter-from,
+.diagnostic-result-leave-to {
+    opacity: 0;
+    transform: translateY(-1rem);
 }
 
 

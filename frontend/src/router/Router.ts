@@ -2,7 +2,7 @@ import { ref } from 'vue';
 import { createRouter, createWebHistory } from 'vue-router';
 
 import routes from './Routes';
-import { RestoreSession } from '@/services/useAuth';
+import { RestoreSession, getCurrentUser } from '@/services/useAuth';
 import { currentUser, isFetched, isCSRFInitialized } from '@/services/state/Auth';
 import { getCSRFTokenFromServer } from '@/api/CSRF';
 

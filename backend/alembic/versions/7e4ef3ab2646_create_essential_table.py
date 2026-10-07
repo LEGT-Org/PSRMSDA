@@ -1,8 +1,8 @@
-"""Create essential tables
+"""Create Essential Table
 
-Revision ID: d56a970424de
+Revision ID: 7e4ef3ab2646
 Revises: 
-Create Date: 2026-10-04 18:53:26.224951
+Create Date: 2026-10-07 04:40:17.853438
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'd56a970424de'
+revision: str = '7e4ef3ab2646'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -48,10 +48,10 @@ def upgrade() -> None:
     sa.Column('last_name', sa.String(length=50), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('password_hash', sa.String(length=255), nullable=True),
-    sa.Column('role', sa.String(length=20), server_default='user', nullable=False),
     sa.Column('token_hash', sa.String(length=255), nullable=True),
     sa.Column('email_verified', sa.Boolean(), server_default=sa.text('0'), nullable=False),
     sa.Column('is_active', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('role', sa.Enum('user', 'admin', name='user_role'), server_default='user', nullable=False),
     sa.Column('token_expire', sa.DateTime(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
@@ -78,7 +78,7 @@ def upgrade() -> None:
     sa.Column('fault_description', sa.JSON(), nullable=False),
     sa.Column('technician_notes', sa.Text(), nullable=True),
     sa.Column('sop_instructions', sa.JSON(), nullable=True),
-    sa.Column('status', sa.Enum('PENDING', 'IN_PROGRESS', 'COMPLETED', 'FOR_FURTHER_INSPECTION', 'UNSUCCESSFUL', name='service_request_status'), server_default='Pending', nullable=False),
+    sa.Column('status', sa.Enum('Pending', 'In Progress', 'Completed', 'For Further Inspection', 'Unsuccessful', name='service_request_status'), server_default='Pending', nullable=False),
     sa.Column('customer_id', sa.Integer(), nullable=False),
     sa.Column('user_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
@@ -114,7 +114,7 @@ def upgrade() -> None:
     sa.Column('summary', sa.Text(), nullable=True),
     sa.Column('confidence', sa.String(length=20), nullable=True),
     sa.Column('parsed_output', sa.JSON(), nullable=True),
-    sa.Column('status', sa.Enum('DRAFT', 'ACCEPTED', 'REJECTED', name='llm_diagnosis_status'), server_default='Draft', nullable=False),
+    sa.Column('status', sa.Enum('Draft', 'Accepted', 'Rejected', name='llm_diagnosis_status'), server_default='Draft', nullable=False),
     sa.Column('request_id', sa.Integer(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
@@ -128,6 +128,7 @@ def upgrade() -> None:
     sa.Column('alert_message', sa.String(length=255), nullable=True),
     sa.Column('part_name_snapshot', sa.String(length=255), nullable=True),
     sa.Column('is_resolved', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('alert_type', sa.Enum('Part Selected', 'No Part Match', 'Part Not Found', 'Insufficient Stock', name='procurement_alert_type'), server_default='Part Selected', nullable=False),
     sa.Column('request_id', sa.Integer(), nullable=False),
     sa.Column('part_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),

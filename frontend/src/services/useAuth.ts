@@ -104,6 +104,50 @@ export async function login(Email: string, Password: string) {
 }
 
 
+// Reset User Password
+
+export async function resetPassword(Email: string) {
+
+    isLoading.value = true;
+
+    try {
+
+        const res = await ApiFetch('/auth/reset-password', {
+
+            method: 'POST',
+            body: JSON.stringify(
+                {
+                    email: Email.trim()
+                }
+            )
+
+        });
+
+        const data = await res.json()
+
+        if (!res.ok) { 
+
+            Error.value = data.detail ?? 'Invalid email or password';
+            return Error.value;
+
+        }
+
+        return data;
+
+    } catch(error) {
+
+        alert('Unable to connect to the server. Please try again later');
+        return;
+
+    } finally {
+
+        isLoading.value = false;
+
+    }
+
+}
+
+
 // Registration Set My Password
 
 export async function setPassword(

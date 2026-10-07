@@ -1,14 +1,22 @@
 <script setup lang="ts">
     import { ref } from 'vue';
     import { parseFaultDescriptions } from '@/helper/SymptomsParser';
-    import { runAIDiagnosis } from '@/services/useNewServiceRequest';
     import { validateDiagnosisForm } from '@/helper/ValidateServiceRequestForm';
+
+    import { 
+        runAIDiagnosis, 
+        confirmServiceRequest, 
+        cancelServiceRequest 
+    } from '@/services/useNewServiceRequest';
+
     import { 
         isDiagnosing,
         showDiagnosis,
         diagnosis,
-        type DiagnosisRequest 
+        type DiagnosisRequest,
+        type ConfirmServiceRequest, 
     } from '@/services/state/NewServiceRequest';
+
 
     const DeviceType = ref<string>('');
     const DeviceBrand = ref<string>('');
@@ -19,6 +27,10 @@
     const CustomerLastName = ref<string>('');
     const CustomerEmail = ref<string>('');
     const CustomerPhoneNumber = ref<string>('');
+
+    const TechnicianNotes = ref<string>('');
+    const FinalStatus = ref<string>('Pending');
+    const SelectedParts = ref([]);
 
 
     const BuildRequestPayload = (): DiagnosisRequest => {
@@ -41,11 +53,60 @@
             },
         };
 
-        console.log(payload);
 
         return payload;
     };
 
+
+    const BuildConfirmRequestPayload = (): ConfirmServiceRequest => {
+
+        const payload = {
+            service_request_id: diagnosis.value?.service_request_id ?? null,
+
+            customer_data: {
+                first_name: CustomerFirstName.value,
+                last_name: CustomerLastName.value,
+                email: CustomerEmail.value,
+                phone_number: CustomerPhoneNumber.value,
+            },
+
+            device_type: DeviceType.value,
+            device_brand: DeviceBrand.value,
+            device_model: DeviceModel.value,
+
+            fault_descriptions: parseFaultDescriptions(FaultDescription.value),
+            diagnosis_verdict: 'Accepted',
+            selected_parts: SelectedParts.value,
+            final_status: FinalStatus.value,
+            technician_notes: TechnicianNotes.value || null,
+        };
+
+        return payload;
+
+    };
+
+
+    const ResetServiceRequest = () => {
+        CustomerFirstName.value = '';
+        CustomerLastName.value = '';
+        CustomerEmail.value = '';
+        CustomerPhoneNumber.value = '';
+
+        DeviceType.value = '';
+        DeviceBrand.value = '';
+        DeviceModel.value = '';
+        FaultDescription.value = '';
+
+        TechnicianNotes.value = '';
+
+        FinalStatus.value = 'Pending';
+        SelectedParts.value = [];
+
+        diagnosis.value = null;
+        showDiagnosis.value = false;
+    };
+
+    
     const RunDiagnosis = async () => {
 
         const isValid = validateDiagnosisForm(
@@ -69,6 +130,58 @@
     }
 
 
+    const ConfirmRequest = async () => {
+
+        const payload = BuildConfirmRequestPayload();
+
+        try {
+
+            const response = await confirmServiceRequest(payload);
+
+            ResetServiceRequest();
+
+            alert('Service request confirmed successfully.');
+
+        } catch (error) {
+
+            console.error('Confirm Request Error:', error);
+
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to confirm service request.'
+            );
+        }
+    };
+
+
+    const CancelRequest = async () => {
+
+        if (diagnosis.value?.service_request_id == null) {
+
+            return;
+
+        }
+
+        try {
+
+            await cancelServiceRequest(diagnosis.value.service_request_id);
+            showDiagnosis.value = false;
+
+        } catch (error) {
+
+            console.error('Cancel Request Error:', error);
+
+            alert(
+                error instanceof Error
+                    ? error.message
+                    : 'Failed to cancel service request.'
+            );
+
+        }
+    };
+
+
 </script>
 
 <template>
@@ -84,22 +197,23 @@
 
             <!-- Customer Details -->
             <section class="Service-Request-Card">
-
                 <h2>Customer Details</h2>
 
                 <div class="Service-Request-Fields">
 
                     <label>
                         First Name:
-                        <input 
+
+                        <input
                             v-model="CustomerFirstName"
-                            type="text" 
+                            type="text"
                             placeholder="e.g. John"
                         />
                     </label>
 
                     <label>
                         Last Name:
+
                         <input
                             v-model="CustomerLastName"
                             type="text"
@@ -109,16 +223,18 @@
 
                     <label>
                         Contact:
-                        <input 
+
+                        <input
                             v-model="CustomerPhoneNumber"
-                            type="text" 
-                            placeholder="e.g. 09123456789 or +639123456789"    
+                            type="text"
+                            placeholder="e.g. 09123456789 or +639123456789"
                         />
                     </label>
 
                     <label>
                         Email:
-                        <input 
+
+                        <input
                             v-model="CustomerEmail"
                             type="email"
                             placeholder="e.g. johndoe@gmail.com"
@@ -126,13 +242,10 @@
                     </label>
 
                 </div>
-
             </section>
-
 
             <!-- Device Details -->
             <section class="Service-Request-Card">
-
                 <h2>Device Details</h2>
 
                 <div class="Service-Request-Fields">
@@ -173,8 +286,9 @@
                         <textarea
                             v-model="FaultDescription"
                             placeholder="Enter detailed hardware symptoms...
-                            
+
 Example:
+
 - Refrigerator is running but not cooling
 - Compressor is running continuously
 - Freezer is cold but lower compartment is warm
@@ -183,11 +297,9 @@ Example:
                     </label>
 
                 </div>
-
             </section>
 
         </div>
-
 
         <!-- ============================= -->
         <!-- Diagnosis Button               -->
@@ -199,9 +311,12 @@ Example:
             :disabled="isDiagnosing"
             @click="RunDiagnosis"
         >
-            {{ isDiagnosing ? 'Running AI-Diagnosis...' : 'Run AI-Diagnosis' }}
+            {{
+                isDiagnosing
+                    ? 'Running AI-Diagnosis...'
+                    : 'Run AI-Diagnosis'
+            }}
         </button>
-
 
         <!-- ============================= -->
         <!-- Diagnosis Result               -->
@@ -233,7 +348,6 @@ Example:
 
             </div>
 
-
             <!-- Summary + Missing Information -->
             <div class="Diagnosis-Top-Grid">
 
@@ -250,6 +364,7 @@ Example:
 
                         <span>
                             Confidence:
+
                             <strong>
                                 {{ diagnosis.diagnosis.overall_confidence }}
                             </strong>
@@ -257,6 +372,7 @@ Example:
 
                         <span>
                             Model:
+
                             <strong>
                                 {{ diagnosis.diagnosis.llm_model }}
                             </strong>
@@ -265,7 +381,6 @@ Example:
                     </div>
 
                 </section>
-
 
                 <!-- Missing Information -->
                 <section class="Diagnosis-Card Missing-Card">
@@ -284,7 +399,6 @@ Example:
                 </section>
 
             </div>
-
 
             <!-- ============================= -->
             <!-- Diagnostic Hypotheses          -->
@@ -350,7 +464,6 @@ Example:
 
             </section>
 
-
             <!-- ============================= -->
             <!-- Recommended Checks             -->
             <!-- ============================= -->
@@ -370,9 +483,8 @@ Example:
 
             </section>
 
-
             <!-- ============================= -->
-            <!-- SOP                            -->
+            <!-- SOP                             -->
             <!-- ============================= -->
 
             <section class="Diagnosis-Card SOP-Card">
@@ -408,7 +520,6 @@ Example:
 
             </section>
 
-
             <!-- ============================= -->
             <!-- Replacement Recommendation     -->
             <!-- ============================= -->
@@ -421,15 +532,21 @@ Example:
 
                     <div>
                         <strong>Component</strong>
+
                         <p>
-                            {{ diagnosis.diagnosis.replacement_recommendation.component }}
+                            {{
+                                diagnosis.diagnosis.replacement_recommendation.component
+                            }}
                         </p>
                     </div>
 
                     <div>
                         <strong>Reason</strong>
+
                         <p>
-                            {{ diagnosis.diagnosis.replacement_recommendation.reason }}
+                            {{
+                                diagnosis.diagnosis.replacement_recommendation.reason
+                            }}
                         </p>
                     </div>
 
@@ -450,9 +567,8 @@ Example:
 
             </section>
 
-
             <!-- ============================= -->
-            <!-- Recommended Part              -->
+            <!-- Recommended Part               -->
             <!-- ============================= -->
 
             <section class="Diagnosis-Card Part-Card">
@@ -463,6 +579,7 @@ Example:
 
                     <div>
                         <strong>AI Recommended Component</strong>
+
                         <p>
                             {{ diagnosis.llm_recommended_part.llm_component }}
                         </p>
@@ -470,6 +587,7 @@ Example:
 
                     <div>
                         <strong>Reason</strong>
+
                         <p>
                             {{ diagnosis.llm_recommended_part.llm_reason }}
                         </p>
@@ -490,7 +608,6 @@ Example:
 
                 </div>
 
-
                 <!-- Matched Database Part -->
                 <div class="Matched-Part">
 
@@ -506,17 +623,23 @@ Example:
 
                             <div>
                                 <span>Part Number</span>
-                                <strong>{{ part.part_number }}</strong>
+                                <strong>
+                                    {{ part.part_number }}
+                                </strong>
                             </div>
 
                             <div>
                                 <span>Name</span>
-                                <strong>{{ part.name }}</strong>
+                                <strong>
+                                    {{ part.name }}
+                                </strong>
                             </div>
 
                             <div>
                                 <span>Stock</span>
-                                <strong>{{ part.stock }}</strong>
+                                <strong>
+                                    {{ part.stock }}
+                                </strong>
                             </div>
 
                         </div>
@@ -527,49 +650,75 @@ Example:
 
             </section>
 
-            <!-- Technician Notes -->
-            <section class="Service-Request-Card Technician-Notes">
+        </section>
 
-                <h2>Technician Notes</h2>
+        <!-- ============================= -->
+        <!-- Technician Notes               -->
+        <!-- ============================= -->
 
-                <div class="Service-Request-Fields">
-                    <textarea
-                        placeholder="Enter technician notes..."
-                    ></textarea>
-                </div>
+        <section class="Service-Request-Card Technician-Notes">
 
-            </section>
+            <h2>Technician Notes</h2>
 
-            <!-- Request Actions -->
-            <div class="Service-Request-Actions">
+            <div class="Service-Request-Fields">
 
-                <select>
-                    <option value="Pending">Pending</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="For Further Inspection">For Further Inspection</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Unsuccessful">Unsuccessful</option>
-                </select>
-
-                <div class="Service-Request-Action-Buttons">
-                    <button 
-                        type="button" 
-                        class="Confirm-Button"
-                    >
-                        Confirm
-                    </button>
-
-                    <button 
-                        type="button" 
-                        class="Cancel-Button"
-                    >
-                        Cancel
-                    </button>
-                </div>
+                <textarea
+                    placeholder="Enter technician notes..."
+                ></textarea>
 
             </div>
 
         </section>
+
+        <!-- ============================= -->
+        <!-- Request Actions                -->
+        <!-- ============================= -->
+
+        <div class="Service-Request-Actions">
+
+            <select v-model="FinalStatus">
+                <option value="Pending">
+                    Pending
+                </option>
+
+                <option value="In Progress">
+                    In Progress
+                </option>
+
+                <option value="For Further Inspection">
+                    For Further Inspection
+                </option>
+
+                <option value="Completed">
+                    Completed
+                </option>
+
+                <option value="Unsuccessful">
+                    Unsuccessful
+                </option>
+            </select>
+
+            <div class="Service-Request-Action-Buttons">
+
+                <button
+                    type="button"
+                    class="Confirm-Button"
+                    @click="ConfirmRequest"
+                >
+                    Confirm
+                </button>
+
+                <button
+                    type="button"
+                    class="Cancel-Button"
+                    @click="CancelRequest"
+                >
+                    Cancel
+                </button>
+
+            </div>
+
+        </div>
 
     </div>
 </template>
