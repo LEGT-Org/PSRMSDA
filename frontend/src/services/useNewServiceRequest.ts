@@ -1,5 +1,7 @@
 import { ApiFetch } from "@/api/Client";
 import { ParseApiError } from "@/api/Error";
+import { accessToken } from "./state/Auth";
+import { getCSRFToken } from "@/api/CSRF";
 import { 
     showDiagnosis,
     isDiagnosing,
@@ -8,6 +10,9 @@ import {
     type DiagnosisResponse,
     type ConfirmServiceRequest 
 } from "./state/NewServiceRequest";
+
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 // Run an AI Diagnosis
@@ -108,4 +113,47 @@ export const cancelServiceRequest = async (serviceRequestId: number): Promise<vo
     }
 
     return await response.json();
+};
+
+
+// Cancel Service Request On Unload
+
+export const cancelServiceRequestOnUnload = (serviceRequestId: number): void => {
+
+    const csrfToken = getCSRFToken();
+
+    const headers = new Headers();
+
+    headers.set('Content-Type', 'application/json');
+    headers.set('Accept', 'application/json');
+
+    if (accessToken.value) {
+
+        headers.set('Authorization', `Bearer ${accessToken.value}`);
+
+    }
+
+    if (csrfToken) {
+
+        headers.set('X-CSRF-Token', csrfToken);
+    }
+
+    fetch(`${API_URL}/service-requests/cancel/unload`,
+        {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            keepalive: true,
+            body: JSON.stringify(
+                {
+                    "service_request_id": serviceRequestId
+                }
+            ),
+        }
+    ).catch((error) => {
+
+        console.error('Failed to cancel staged service request:', error);
+
+    });
+
 };

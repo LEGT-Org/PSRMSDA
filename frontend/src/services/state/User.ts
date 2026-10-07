@@ -16,6 +16,14 @@ export interface RegisterUserRequest {
     email: string;
 }
 
+export interface UserPageListResponse {
+    items: User[];
+    page: number;
+    limit: number;
+    total: number;
+    pages: number;
+}
+
 
 // For user essential state
 
@@ -26,6 +34,12 @@ export const UserError = ref<string | null>(null);
 
 
 // For pagination state
+
+export const Search = ref<string>('');
+export const RoleFilter = ref<string>('all');
+export const StatusFilter = ref<string>('all');
+export const ShowRegisterUser = ref<boolean>(false);
+
 
 export const CurrentPage = ref<number>(1);
 export const UsersPerPage = ref<number>(10);

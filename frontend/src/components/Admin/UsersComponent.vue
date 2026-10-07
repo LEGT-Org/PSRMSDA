@@ -9,7 +9,9 @@
         PromoteUser,
         DemoteUser,
         DisableUser,
-        EnableUser
+        EnableUser,
+        HandleSearch,
+        ApplyUserFilters
     } from '@/services/useUser.ts';
 
     import {
@@ -20,16 +22,13 @@
         CurrentPage,
         UsersPerPage,
         TotalPages,
-        TotalUsers,
+        Search,
+        RoleFilter,
+        StatusFilter,
+        ShowRegisterUser,
         type RegisterUserRequest
     } from '@/services/state/User.ts';
 
-
-    const Search = ref('');
-    const RoleFilter = ref('all');
-    const StatusFilter = ref('all');
-
-    const ShowRegisterUser = ref(false);
 
     const FirstName = ref('');
     const LastName = ref('');
@@ -83,7 +82,10 @@
 
         await GetUsers(
             CurrentPage.value + 1,
-            UsersPerPage.value
+            UsersPerPage.value,
+            Search.value,
+            RoleFilter.value,
+            StatusFilter.value
         );
 
     };
@@ -99,15 +101,23 @@
 
         await GetUsers(
             CurrentPage.value - 1,
-            UsersPerPage.value
+            UsersPerPage.value,
+            Search.value,
+            RoleFilter.value,
+            StatusFilter.value
         );
 
     };
 
-
-    onMounted(() => {
+    onMounted(async () => {
         
-        GetUsers();
+        await GetUsers(
+            CurrentPage.value,
+            UsersPerPage.value,
+            Search.value,
+            RoleFilter.value,
+            StatusFilter.value
+        );
         
     });
 
@@ -283,6 +293,7 @@
                     v-model="Search"
                     type="text"
                     placeholder="Search users..."
+                    @input="HandleSearch"
                 />
 
             </div>
@@ -297,6 +308,7 @@
                 <select
                     id="role-filter"
                     v-model="RoleFilter"
+                    @change="ApplyUserFilters"
                 >
                     <option value="all">
                         All Roles
@@ -306,8 +318,8 @@
                         Admin
                     </option>
 
-                    <option value="technician">
-                        Technician
+                    <option value="user">
+                        Staff
                     </option>
                 </select>
 
@@ -323,6 +335,7 @@
                 <select
                     id="status-filter"
                     v-model="StatusFilter"
+                    @change="ApplyUserFilters"
                 >
                     <option value="all">
                         All Status

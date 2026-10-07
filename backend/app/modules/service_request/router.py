@@ -73,3 +73,16 @@ def cancel_request(
 
     service.cancel_request(request.service_request_id)
 
+
+@router.post(
+    "/cancel/unload",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+def cancel_request_on_unload(
+    request: CancelServiceRequest,
+    service: ServiceRequestService,
+    _: ValidateCSRF
+) -> None:
+
+    service.cancel_request(request.service_request_id)
+

@@ -23,6 +23,11 @@ from app.modules.service_request.interface import (
     CustomerInterface
 )
 
+from app.shared.infrastructure.email import (
+    JinjaEmailRendered,
+    EmailService
+)
+
 from app.shared.exception import (
     ServiceRequestStatusIsNotPendingError,
     ServiceRequestDoesNotExistError,
@@ -40,6 +45,8 @@ class ServiceRequestService:
         request_part_interface: RequestPartInterface,
         spare_part_interface: SparePartInterface,
         customer_interface: CustomerInterface,
+        email_renderer: JinjaEmailRendered,
+        email_service: EmailService,
         db: Session
     ):
 
@@ -49,6 +56,8 @@ class ServiceRequestService:
         self.request_part_interface = request_part_interface
         self.spare_part_interface = spare_part_interface
         self.customer_interface = customer_interface
+        self.email_renderer = email_renderer
+        self.email_service = email_service
         self.db = db
 
     
@@ -297,6 +306,47 @@ class ServiceRequestService:
 
             self.db.commit()
             self.db.refresh(service_request)
+
+            # --------------------------------
+            # Notify Customer Through Email
+            # --------------------------------
+
+            html = self.email_renderer.render(
+                "service_request.html",
+
+                preheader="Your service request has been created.",
+                company_name="Lightyear Electrical Goods Trading",
+                address="...",
+                first_name=customer.first_name,
+                last_name=customer.last_name,
+                intro="Your service request has been successfully created.",
+                service_request_id=service_request.id,
+                device_type=service_request.device_type,
+                device_brand=service_request.device_brand,
+                device_model=service_request.device_model,
+                status=service_request.status,
+                fault_description=service_request.fault_descriptions,
+                notice_title="What happens next?",
+                notice_body="A technician will review your service request and proceed with the necessary inspection.",
+                regards="Thanks,",
+                team="The LEGT Team",
+                footer="This is an automated message. Please do not reply directly to this email."
+            )
+
+            message = EmailMessage(
+                to=customer.email,
+                subject="Service Request Created",
+                body=(
+                    "Your service request has been successfully created.\n\n"
+                    f"Service Request #: {service_request.id}\n"
+                    f"Device: {service_request.device_type}\n"
+                    f"Brand: {service_request.device_brand}\n"
+                    f"Model: {service_request.device_model}\n"
+                    f"Status: {service_request.status}\n\n"
+                    "Please wait for our team to contact you for further assistance."
+                ),
+                    html=html
+            )
 
             llm_recommendation = None
             matched_parts = []

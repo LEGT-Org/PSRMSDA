@@ -1,12 +1,13 @@
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import { onMounted, onUnmounted, ref } from 'vue';
     import { parseFaultDescriptions } from '@/helper/SymptomsParser';
     import { validateDiagnosisForm } from '@/helper/ValidateServiceRequestForm';
 
     import { 
         runAIDiagnosis, 
         confirmServiceRequest, 
-        cancelServiceRequest 
+        cancelServiceRequest, 
+        cancelServiceRequestOnUnload
     } from '@/services/useNewServiceRequest';
 
     import { 
@@ -181,6 +182,33 @@
         }
     };
 
+
+    const HandlePageHide = () => {
+        
+        const serviceRequestId =diagnosis.value?.service_request_id;
+
+        if (serviceRequestId == null) {
+
+            return;
+            
+        }
+
+        cancelServiceRequestOnUnload(serviceRequestId);
+        
+    };
+
+
+    onMounted(() => {
+
+        window.addEventListener('pagehide', HandlePageHide);
+
+    });
+
+    onUnmounted(() => {
+
+        window.removeEventListener('pagehide', HandlePageHide);
+
+    });
 
 </script>
 

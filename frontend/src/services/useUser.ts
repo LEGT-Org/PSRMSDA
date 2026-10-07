@@ -9,15 +9,17 @@ import {
     TotalUsers,
     TotalPages,
     type RegisterUserRequest,
-    type User
+    type User,
+    type UserPageListResponse,
+    Search,
+    RoleFilter,
+    StatusFilter
 } from './state/User.ts';
 
 
 // Register a User
 
-export const RegisterUser = async (
-    payload: RegisterUserRequest
-): Promise<User | null> => {
+export const RegisterUser = async (payload: RegisterUserRequest): Promise<User | null> => {
 
     isRegisteringUser.value = true;
     UserError.value = null;
@@ -60,6 +62,35 @@ export const RegisterUser = async (
 };
 
 
+export const ApplyUserFilters = async (): Promise<void> => {
+
+    CurrentPage.value = 1;
+
+    await GetUsers(
+        1,
+        UsersPerPage.value,
+        Search.value,
+        RoleFilter.value,
+        StatusFilter.value
+    );
+};
+
+
+let SearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+export const HandleSearch = (): void => {
+
+    if (SearchTimeout !== null) {
+        clearTimeout(SearchTimeout);
+    }
+
+    SearchTimeout = setTimeout(() => {
+        ApplyUserFilters();
+    }, 400);
+};
+
+
+
 // Get List of Users
 
 export const GetUsers = async (
@@ -68,7 +99,7 @@ export const GetUsers = async (
     search: string = '',
     role: string = 'all',
     status: string = 'all'
-): Promise<User[]> => {
+): Promise<UserPageListResponse | null> => {
 
     isLoadingUsers.value = true;
     UserError.value = null;
@@ -76,58 +107,60 @@ export const GetUsers = async (
     try {
 
         const params = new URLSearchParams();
+
         params.set('page', String(page));
         params.set('limit', String(limit));
 
         if (search.trim()) {
-
             params.set('search', search.trim());
-
         }
 
         if (role !== 'all') {
-            
             params.set('role', role);
-
         }
 
         if (status !== 'all') {
-            
             params.set('status', status);
-
         }
 
-        const response = await ApiFetch(`/user/list?${params.toString()}`,{ method: 'GET' });
+        const response = await ApiFetch(
+            `/user/list?${params.toString()}`,
+            {
+                method: 'GET',
+            }
+        );
+
         const data = await response.json();
 
         if (!response.ok) {
 
             UserError.value = data.detail ?? 'Failed to load users.';
-            return [];
+            return null;
 
         }
 
-        Users.value = data.items;
+        const pageData: UserPageListResponse = data;
 
-        CurrentPage.value = data.page;
-        UsersPerPage.value = data.limit;
-        TotalUsers.value = data.total;
-        TotalPages.value = data.pages;
+        Users.value = pageData.items;
+        CurrentPage.value = pageData.page;
+        UsersPerPage.value = pageData.limit;
+        TotalUsers.value = pageData.total;
+        TotalPages.value = pageData.pages;
 
-        return data.items;
+        return pageData;
 
     } catch (error) {
 
         console.error('Get Users Error:', error);
         UserError.value = 'Unable to connect to the server. Please try again later.';
-        return [];
+        return null;
 
     } finally {
 
         isLoadingUsers.value = false;
 
     }
-    
+
 };
 
 
