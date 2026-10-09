@@ -1,47 +1,201 @@
-<script setup lang="ts"></script>
+<script setup lang="ts">
+    import { ref, onMounted } from 'vue';
+    import { useRouter } from 'vue-router';
+
+    import { FormatServiceRequestDate } from '@/helper/DateFormatter';
+    import { 
+        GetServiceRequests, 
+        ApplyServiceRequestFilters,
+        HandleSearch
+    } from '@/services/useServiceRequest';
+
+    import {
+        ServiceRequests,
+        CurrentPage,
+        ServiceRequestsPerPage,
+        TotalPages,
+        isLoadingServiceRequests,
+        Search,
+        StatusFilter,
+        CreatedDate
+    } from '@/services/state/ServiceRequest';
+
+
+    const Router = useRouter();
+
+
+    const GetStatusClass = (status: string): string => {
+
+        switch (status) {
+            case 'Pending':
+                return 'Status-Pending';
+
+            case 'In Progress':
+                return 'Status-Ongoing';
+
+            case 'For Further Inspection':
+                return 'Status-Diagnosing';
+
+            case 'Completed':
+                return 'Status-Completed';
+
+            case 'Unsuccessful':
+                return 'Status-Unsuccessful';
+
+            default:
+                return '';
+        }
+
+    };
+    
+
+    const GoToNextPage = async (): Promise<void> => {
+
+        if (CurrentPage.value >= TotalPages.value) {
+            return;
+        }
+
+        await GetServiceRequests(
+            CurrentPage.value + 1,
+            ServiceRequestsPerPage.value,
+            Search.value,
+            StatusFilter.value,
+            CreatedDate.value
+        );
+        
+    };
+
+
+    const GoToPreviousPage = async (): Promise<void> => {
+
+        if (CurrentPage.value <= 1) {
+            return;
+        }
+
+        await GetServiceRequests(
+            CurrentPage.value - 1,
+            ServiceRequestsPerPage.value,
+            Search.value,
+            StatusFilter.value,
+            CreatedDate.value
+        );
+        
+    };
+
+
+    const GoToNewServiceRequest = (): void => {
+        Router.push('/admin/request/new');
+    };
+
+    const GoToServiceRequestDetail = (id: number): void => {
+        Router.push(`/admin/requests/${id}`);
+    }
+
+
+    onMounted(async () => {
+
+        await GetServiceRequests(
+            CurrentPage.value,
+            ServiceRequestsPerPage.value,
+            Search.value,
+            StatusFilter.value,
+            CreatedDate.value
+        );
+
+    });
+
+</script>
 
 <template>
-
     <section class="Service-Requests">
 
-        <!-- Header -->
-        <header class="Service-Requests-Header">
-
+        <!-- Title -->
+        <div class="Service-Requests-Title">
             <div>
-                <h1>Service Requests</h1>
-
+                <h1>Service Requests Management</h1>
                 <p>
                     View and manage service requests.
                 </p>
             </div>
 
-            <button class="Create-Request-Button">
+            <button
+                type="button"
+                class="Create-Request-Button"
+                @click="GoToNewServiceRequest"
+            >
                 + New Service Request
             </button>
-
-        </header>
-
+        </div>
 
         <!-- Filters -->
         <div class="Request-Filters">
 
-            <input
-                type="text"
-                placeholder="Search requests..."
-                class="Request-Search"
-            />
+            <div class="Search-Field">
+                <label for="request-search">
+                    Search
+                </label>
 
-            <select class="Request-Filter">
-                <option value="">All Status</option>
-                <option value="Pending">Pending</option>
-                <option value="In Progress">In Progress</option>
-                <option value="For Further Inspection">For Further Inspection</option>
-                <option value="Completed">Completed</option>
-                <option value="Unsuccessful">Unsuccessful</option>
-            </select>
+                <input
+                    id="request-search"
+                    v-model="Search"
+                    type="text"
+                    placeholder="Search requests..."
+                    class="Request-Search"
+                    @input="HandleSearch"
+                />
+            </div>
 
+            <div class="Filter-Field">
+                <label for="request-status-filter">
+                    Status
+                </label>
+
+                <select
+                    id="request-status-filter"
+                    v-model="StatusFilter"
+                    class="Request-Filter"
+                    @change="ApplyServiceRequestFilters"
+                >
+                    <option value="">
+                        All Status
+                    </option>
+
+                    <option value="Pending">
+                        Pending
+                    </option>
+
+                    <option value="In Progress">
+                        In Progress
+                    </option>
+
+                    <option value="For Further Inspection">
+                        For Further Inspection
+                    </option>
+
+                    <option value="Completed">
+                        Completed
+                    </option>
+
+                    <option value="Unsuccessful">
+                        Unsuccessful
+                    </option>
+                </select>
+            </div>
+
+            <div class="Filter-Field">
+
+                <label for="request-date-filter">
+                    Date
+                </label>
+
+                <input
+                    v-model="CreatedDate"
+                    type="date"
+                    class="Request-Filter"
+                    @change="ApplyServiceRequestFilters"
+                />
+            </div>
         </div>
-
 
         <!-- Table -->
         <div class="Request-Table-Container">
@@ -49,7 +203,6 @@
             <table class="Request-Table">
 
                 <thead>
-
                     <tr>
                         <th>Request</th>
                         <th>Customer</th>
@@ -59,211 +212,97 @@
                         <th>Status</th>
                         <th></th>
                     </tr>
-
                 </thead>
 
-
                 <tbody>
-
-                    <tr>
-
+                    <tr
+                        v-for="serviceRequest in ServiceRequests"
+                        :key="serviceRequest.id"
+                    >
                         <td>
-                            <strong>#128</strong>
+                            <strong>#{{ serviceRequest.id }}</strong>
                         </td>
 
                         <td>
-                            Juan Dela Cruz
-                        </td>
-
-                        <td>
-                            <div class="Device-Cell">
-                                <strong>Refrigerator</strong>
-                                <small>Samsung RT38K553ASL</small>
-                            </div>
-                        </td>
-
-                        <td>
-                            John Smith
-                        </td>
-
-                        <td>
-                            Oct 5, 2026
-                        </td>
-
-                        <td>
-                            <span class="Request-Status Status-Ongoing">
-                                Ongoing
-                            </span>
-                        </td>
-
-                        <td>
-                            <button class="View-Request-Button">
-                                →
-                            </button>
-                        </td>
-
-                    </tr>
-
-
-                    <tr>
-
-                        <td>
-                            <strong>#127</strong>
-                        </td>
-
-                        <td>
-                            Maria Santos
+                            {{ serviceRequest.customer_name }}
                         </td>
 
                         <td>
                             <div class="Device-Cell">
-                                <strong>Air Conditioner</strong>
-                                <small>Daikin FTKF35</small>
+                                <strong>
+                                    {{ serviceRequest.device_type }}
+                                </strong>
+
+                                <small>
+                                    {{ serviceRequest.device_brand }}
+                                    {{ serviceRequest.device_model }}
+                                </small>
                             </div>
                         </td>
 
                         <td>
-                            Mark Cruz
+                            {{ serviceRequest.technician_name }}
                         </td>
 
                         <td>
-                            Oct 4, 2026
+                            {{ FormatServiceRequestDate(serviceRequest.created_at) }}
                         </td>
 
                         <td>
-                            <span class="Request-Status Status-Pending">
-                                Pending
+                            <span
+                                class="Request-Status"
+                                :class="GetStatusClass(serviceRequest.status)"
+                            >
+                                {{ serviceRequest.status }}
                             </span>
                         </td>
 
                         <td>
-                            <button class="View-Request-Button">
+                            <button
+                                type="button"
+                                class="View-Request-Button"
+                                @click="GoToServiceRequestDetail(serviceRequest.id)"
+                            >
                                 →
                             </button>
                         </td>
-
                     </tr>
-
-
-                    <tr>
-
-                        <td>
-                            <strong>#126</strong>
-                        </td>
-
-                        <td>
-                            Pedro Reyes
-                        </td>
-
-                        <td>
-                            <div class="Device-Cell">
-                                <strong>Washing Machine</strong>
-                                <small>LG T2108</small>
-                            </div>
-                        </td>
-
-                        <td>
-                            John Smith
-                        </td>
-
-                        <td>
-                            Oct 4, 2026
-                        </td>
-
-                        <td>
-                            <span class="Request-Status Status-Completed">
-                                Completed
-                            </span>
-                        </td>
-
-                        <td>
-                            <button class="View-Request-Button">
-                                →
-                            </button>
-                        </td>
-
-                    </tr>
-
-
-                    <tr>
-
-                        <td>
-                            <strong>#125</strong>
-                        </td>
-
-                        <td>
-                            Ana Garcia
-                        </td>
-
-                        <td>
-                            <div class="Device-Cell">
-                                <strong>Refrigerator</strong>
-                                <small>Panasonic NR-BX</small>
-                            </div>
-                        </td>
-
-                        <td>
-                            Mark Cruz
-                        </td>
-
-                        <td>
-                            Oct 3, 2026
-                        </td>
-
-                        <td>
-                            <span class="Request-Status Status-Diagnosing">
-                                Diagnosing
-                            </span>
-                        </td>
-
-                        <td>
-                            <button class="View-Request-Button">
-                                →
-                            </button>
-                        </td>
-
-                    </tr>
-
                 </tbody>
 
             </table>
 
         </div>
 
-
         <!-- Pagination -->
         <div class="Request-Pagination">
 
-            <button disabled>
-                ←
+            <button
+                type="button"
+                :disabled="
+                    CurrentPage <= 1 ||
+                    isLoadingServiceRequests
+                "
+                @click="GoToPreviousPage"
+            >
+                Previous
             </button>
 
-            <button class="Pagination-Active">
-                1
-            </button>
+            <span>
+                Page {{ CurrentPage }} of {{ TotalPages }}
+            </span>
 
-            <button>
-                2
-            </button>
-
-            <button>
-                3
-            </button>
-
-            <button>
-                4
-            </button>
-
-            <button>
-                5
-            </button>
-
-            <button>
-                →
+            <button
+                type="button"
+                :disabled="
+                    CurrentPage >= TotalPages ||
+                    isLoadingServiceRequests
+                "
+                @click="GoToNextPage"
+            >
+                Next
             </button>
 
         </div>
 
     </section>
-
 </template>

@@ -15,7 +15,8 @@
         showDiagnosis,
         diagnosis,
         type DiagnosisRequest,
-        type ConfirmServiceRequest, 
+        type ConfirmServiceRequest,
+        type SelectedPart, 
     } from '@/services/state/NewServiceRequest';
 
 
@@ -31,7 +32,7 @@
 
     const TechnicianNotes = ref<string>('');
     const FinalStatus = ref<string>('Pending');
-    const SelectedParts = ref([]);
+    const SelectedParts = ref<SelectedPart[]>([]);
 
 
     const BuildRequestPayload = (): DiagnosisRequest => {
@@ -603,7 +604,10 @@ Example:
 
                 <h3>Recommended Part</h3>
 
-                <div class="Recommended-Part">
+                <div 
+                    v-if="diagnosis.llm_recommended_part"
+                    class="Recommended-Part"
+                >
 
                     <div>
                         <strong>AI Recommended Component</strong>
@@ -638,42 +642,89 @@ Example:
 
                 <!-- Matched Database Part -->
                 <div class="Matched-Part">
-
                     <h4>Matched Parts</h4>
 
                     <div class="Matched-Part-List">
-
                         <div
                             v-for="part in diagnosis.matched_parts"
-                            :key="part.part_number"
+                            :key="part.part_id"
                             class="Matched-Part-Item"
                         >
+                            <input
+                                type="checkbox"
+                                :checked="SelectedParts.some(selected => selected.part_id === part.part_id)"
+                                @change="(event) => {
+                                    const checked = (event.target as HTMLInputElement).checked;
+
+                                    if (checked) {
+                                        SelectedParts.push({
+                                            part_id: part.part_id,
+                                            part_name: part.part_name,
+                                            quantity: 1
+                                        });
+                                    } else {
+                                        const index = SelectedParts.findIndex(selected => selected.part_id === part.part_id);
+
+                                        if (index !== -1) {
+                                            SelectedParts.splice(index, 1);
+                                        }
+                                    }
+
+                                }"
+                            />
 
                             <div>
                                 <span>Part Number</span>
-                                <strong>
-                                    {{ part.part_number }}
-                                </strong>
+                                <strong>{{ part.part_code }}</strong>
                             </div>
 
                             <div>
                                 <span>Name</span>
-                                <strong>
-                                    {{ part.name }}
-                                </strong>
+                                <strong>{{ part.part_name }}</strong>
                             </div>
 
                             <div>
                                 <span>Stock</span>
-                                <strong>
-                                    {{ part.stock }}
-                                </strong>
+                                <strong>{{ part.stock_quantity ?? 0 }}</strong>
                             </div>
 
+                            <div v-if="SelectedParts.some(selected => selected.part_id === part.part_id)">
+                                <span>Quantity</span>
+
+                                <button
+                                    type="button"
+                                    @click="SelectedParts.find(
+                                        selected => selected.part_id === part.part_id
+                                    )!.quantity--"
+                                    :disabled="SelectedParts.find(
+                                        selected => selected.part_id === part.part_id
+                                    )!.quantity <= 1"
+                                >
+                                    -
+                                </button>
+
+                                <strong>
+                                    {{ SelectedParts.find(
+                                        selected => selected.part_id === part.part_id
+                                    )!.quantity }}
+                                </strong>
+
+                                <button
+                                    type="button"
+                                    @click="SelectedParts.find(
+                                        selected => selected.part_id === part.part_id
+                                    )!.quantity++"
+                                    :disabled="
+                                        SelectedParts.find(
+                                            selected => selected.part_id === part.part_id
+                                        )!.quantity >= (part.stock_quantity ?? 0)
+                                    "
+                                >
+                                    +
+                                </button>
+                            </div>
                         </div>
-
                     </div>
-
                 </div>
 
             </section>

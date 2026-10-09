@@ -1,9 +1,13 @@
-from datetime import datetime
-from sqlalchemy import select
+from datetime import date, time, datetime, timedelta
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session
 
 from app.modules.service_request.schema import ServiceRequestStatus
 from app.modules.service_request.model import ServiceRequest
+from app.modules.llm_diagnosis.model import LLMDiagnosis
+from app.modules.request_part.model import RequestPart
+from app.modules.customer.model import Customer
+from app.modules.user.model import User
 
 
 class ServiceRequestRepository:
@@ -19,6 +23,81 @@ class ServiceRequestRepository:
 
         self.db.add(service_request)
         return service_request
+
+
+    def get_all(
+        self,
+        page: int,
+        limit: int,
+        search: str | None = None,
+        status: str | None = None,
+        created_date: date | None = None,
+    ) -> tuple[list[ServiceRequest], int]:
+
+        statement = (
+            select(ServiceRequest)
+            .join(Customer, ServiceRequest.customer_id == Customer.id)
+            .join(User, ServiceRequest.user_id == User.id)
+        )
+
+        if search:
+            search_value = f"%{search.strip()}%"
+
+            statement = statement.where(
+                or_(
+                    ServiceRequest.device_type.ilike(search_value),
+                    ServiceRequest.device_brand.ilike(search_value),
+                    ServiceRequest.device_model.ilike(search_value),
+
+                    Customer.first_name.ilike(search_value),
+                    Customer.last_name.ilike(search_value),
+
+                    User.first_name.ilike(search_value),
+                    User.last_name.ilike(search_value),
+                )
+        )
+
+        if status:
+            statement = statement.where(ServiceRequest.status == status)
+
+        if created_date:
+            start_date = datetime.combine(created_date, time.min)
+            end_date = start_date + timedelta(days=1)
+
+            statement = statement.where(
+                ServiceRequest.created_at >= start_date,
+                ServiceRequest.created_at < end_date,
+            )
+
+        count_statement = select(func.count()).select_from(statement.subquery())
+        total = self.db.scalar(count_statement) or 0
+
+        statement = (statement
+            .order_by(ServiceRequest.created_at.desc())
+            .offset((page - 1) * limit)
+            .limit(limit)
+        )
+
+        service_requests = list(self.db.scalars(statement).all())
+
+        return service_requests, total
+
+        
+    def get_specific_detail(
+        self,
+        service_request_id: int
+    ) -> ServiceRequest:
+
+        statement = (
+            select(ServiceRequest)
+            .join(Customer, ServiceRequest.customer_id == Customer.id)
+            .join(User, ServiceRequest.user_id == User.id)
+            .outerjoin(LLMDiagnosis, LLMDiagnosis.request_id == ServiceRequest.id)
+            .outerjoin(RequestPart, RequestPart.request_id == ServiceRequest.id)
+            .where(ServiceRequest.id == service_request_id)
+        )
+
+        return self.db.execute(statement).scalars().first()
 
 
     def get_by_id(

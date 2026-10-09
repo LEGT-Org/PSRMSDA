@@ -8,12 +8,12 @@ import {
     UsersPerPage,
     TotalUsers,
     TotalPages,
+    Search,
+    RoleFilter,
+    StatusFilter,
     type RegisterUserRequest,
     type User,
     type UserPageListResponse,
-    Search,
-    RoleFilter,
-    StatusFilter
 } from './state/User.ts';
 
 

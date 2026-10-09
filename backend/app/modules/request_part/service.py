@@ -35,8 +35,7 @@ class RequestPartService:
         try:
 
             self.repository.create(request_part)
-            self.db.commit()
-            self.db.refresh(request_part)
+            self.db.flush()
 
             return request_part
 

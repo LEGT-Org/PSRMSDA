@@ -206,6 +206,24 @@ export async function setPassword(
 
 // This is for Refresh Token
 
+let RefreshTimer: ReturnType<typeof setTimeout> | null = null;
+
+const ScheduleTokenRefresh = (): void => {
+    if (RefreshTimer !== null) {
+        clearTimeout(RefreshTimer);
+    }
+
+    RefreshTimer = setTimeout(async () => {
+        const success = await RestoreSession();
+
+        if (!success) {
+            return;
+        }
+
+        ScheduleTokenRefresh();
+    }, 15 * 60 * 1000);
+};
+
 export async function RestoreSession() {
     
     try {
@@ -226,6 +244,8 @@ export async function RestoreSession() {
         accessToken.value = data.access_token;
 
         await getCurrentUser(true);
+
+        ScheduleTokenRefresh();
 
         return true;
         

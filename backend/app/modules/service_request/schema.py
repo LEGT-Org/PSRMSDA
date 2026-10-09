@@ -8,8 +8,12 @@ from pydantic import (
     Field
 )
 
-from app.modules.llm_diagnosis.schema import LLMDiagnosticResponse, LLMDiagnosisStatus
 from app.modules.procurement_alert.schema import ProcurementAlertType
+from app.modules.llm_diagnosis.schema import (
+    StandardOperatingProcedure,
+    LLMDiagnosticResponse, 
+    LLMDiagnosisStatus
+) 
 
 class ServiceRequestStatus(StrEnum):
 
@@ -83,14 +87,17 @@ class MatchedSparePartPreview(BaseModel):
     part_id: int
     part_name: str
     part_code: str
+
     device_model: str | None = None
     device_brand: str | None = None
     specifications: str | None = None
+
     unit_cost: Decimal | None = None
-    stock_quality: int | None = None
+    stock_quantity: int | None = None
     shelf_location: str
+
     image_url: str | None = None
-    category_id: int
+    category_name: str
     is_available: bool
 
 
@@ -124,3 +131,57 @@ class UserSchema(BaseModel):
     last_name: str
     email: str
     role: str
+
+
+class ServiceRequestListResponse(BaseModel):
+
+    id: int
+    customer_name: str
+    technician_name: str
+    device_type: str
+    device_brand: str
+    device_model: str
+    created_at: datetime
+    status: ServiceRequestStatus
+
+
+class ServiceRequestPageListResponse(BaseModel):
+
+    items: list[ServiceRequestListResponse]
+    page: int
+    limit: int
+    total: int
+    pages: int
+
+
+class UserServiceRequestDetails (BaseModel):
+
+    id: int
+    name: str
+
+
+class CustomerServiceRequestDetails (BaseModel):
+
+    id: int
+    name: str
+
+
+class RequestPartDetails (BaseModel):
+
+    quantity: int
+    part_name: str
+    validated: bool
+
+
+class ServiceRequestDetailsResponse(BaseModel):
+
+    id: int
+    device_type: str
+    device_brand: str
+    device_model: str
+    fault_descriptions: list[str]
+    status: ServiceRequestStatus
+    diagnosis: LLMDiagnosticResponse | None
+    customer: CustomerServiceRequestDetails
+    technician: UserServiceRequestDetails
+    requested_part: list[RequestPartDetails]

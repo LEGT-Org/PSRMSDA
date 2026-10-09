@@ -4,6 +4,7 @@
 
     import { logout } from '@/services/useAuth';
     import { currentUser } from '@/services/state/Auth';
+    import { ShowNavigation, CloseNavigation } from '@/services/state/Navigation';
     import { capitalizeFirstLetter } from '@/helper/Capitalize';
 
     import DashboardBlue from '@/assets/Images/Icons/Blue/dashboard-blue.png';
@@ -12,8 +13,6 @@
     import RequestWhite from '@/assets/Images/Icons/White/service-request-white.png';
     import NewServiceRequestBlue from '@/assets/Images/Icons/Blue/new-service-request-blue.png';
     import NewServiceRequestWhite from '@/assets/Images/Icons/White/new-service-request-white.png';
-    import SOPBlue from '@/assets/Images/Icons/Blue/sop-blue.png';
-    import SOPWhite from '@/assets/Images/Icons/White/sop-white.png';
     import InventoryBlue from '@/assets/Images/Icons/Blue/inventory-reference-blue.png';
     import InventoryWhite from '@/assets/Images/Icons/White/inventory-reference-white.png';
     import ReportBlue from '@/assets/Images/Icons/Blue/reports-blue.png';
@@ -43,15 +42,12 @@
 </script>
 
 <template>
-    <div class="Sidebar-Navigation-Container">
+    <div 
+        class="Sidebar-Navigation-Container"
+        :class="{ 'Navigation-Open': ShowNavigation }"    
+    >
 
         <div class="Sidebar-Navigation">
-            <!-- <button>
-                <img 
-                    src="@/assets/Images/Icons/menu.png" 
-                    alt="Menu" 
-                />
-            </button> -->
 
             <p>Main Operations</p>
 
@@ -59,6 +55,7 @@
                 to="/admin"
                 class="Navigation-Link"
                 exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"
             >
                 <img 
                     :src="Route.path === '/admin'
@@ -75,7 +72,8 @@
             <RouterLink 
                 to="/admin/request/new"
                 class="Navigation-Link"
-                exact-active-class="Navigation-Link-Active"    
+                exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"    
             >
                 <img 
                     :src="Route.path === '/admin/request/new'
@@ -93,6 +91,7 @@
                 to="/admin/requests"
                 class="Navigation-Link"
                 exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"
             >
                 <img 
                     :src="Route.path === '/admin/requests'
@@ -105,24 +104,10 @@
             </RouterLink>
 
             <RouterLink 
-                to="/admin/sops"
-                class="Navigation-Link"
-                exact-active-class="Navigation-Link-Active"
-            >
-                <img 
-                    :src="Route.path === '/admin/sops'
-                        ? SOPBlue
-                        : SOPWhite
-                    " 
-                    alt="Standard Operational Procedure"
-                />
-                <span>SOP</span>
-            </RouterLink>
-
-            <RouterLink 
                 to="/admin/inventory"
                 class="Navigation-Link"
                 exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"
             >
                 <img 
                     :src="Route.path === '/admin/inventory'
@@ -138,6 +123,7 @@
                 to="/admin/reports"
                 class="Navigation-Link"
                 exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"
             >
                 <img 
                     :src="Route.path === '/admin/reports'
@@ -152,7 +138,8 @@
             <RouterLink 
                 to="/admin/customers"
                 class="Navigation-Link"
-                exact-active-class="Navigation-Link-Active"    
+                exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"    
             >
                 <img 
                     :src="Route.path === '/admin/customers'
@@ -167,7 +154,8 @@
             <RouterLink 
                 to="/admin/users"
                 class="Navigation-Link"
-                exact-active-class="Navigation-Link-Active"    
+                exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"    
             >
                 <img 
                     :src="Route.path === '/admin/users'

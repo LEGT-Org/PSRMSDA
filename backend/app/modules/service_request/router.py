@@ -1,4 +1,5 @@
-from fastapi import APIRouter, status
+from datetime import date
+from fastapi import APIRouter, Query, status
 
 from app.modules.service_request.dependency import (
     ServiceRequestService,
@@ -7,6 +8,8 @@ from app.modules.service_request.dependency import (
 )
 
 from app.modules.service_request.schema import (
+    ServiceRequestPageListResponse,
+    ServiceRequestDetailsResponse,
     LLMDiagnosticRequestPreview,
     CustomerRequestPreview,
     ServiceRequestResponse,
@@ -15,11 +18,35 @@ from app.modules.service_request.schema import (
     UserSchema
 )
 
-
+            
 router = APIRouter(
     prefix="/service-requests",
     tags=["Service Requests"]
 )
+
+
+@router.get(
+    "/list",
+    response_model=ServiceRequestPageListResponse,
+    status_code=status.HTTP_200_OK
+)
+def list_of_service_requests(
+    current_user: CurrentUser,
+    service: ServiceRequestService,
+    page: int = Query(1, ge=1),
+    limit: int = Query(10, ge=1, le=100),
+    search: str | None = Query(None),
+    status: str | None = Query(None),
+    created_date: date | None = Query(None),
+) -> ServiceRequestPageListResponse:
+
+    return service.get_all_service_requests(
+        page=page,
+        limit=limit,
+        search=search,
+        status=status,
+        created_date=created_date
+    )
 
 
 @router.post(
@@ -85,4 +112,17 @@ def cancel_request_on_unload(
 ) -> None:
 
     service.cancel_request(request.service_request_id)
+
+
+@router.get(
+    "/{service_request_id}/detail",
+    response_model=ServiceRequestDetailsResponse,
+    status_code=status.HTTP_200_OK
+)
+def service_request_detail(
+    service_request_id: int,
+    service: ServiceRequestService,
+) -> ServiceRequestDetailsResponse:
+
+    return service.get_service_request_details(service_request_id)
 

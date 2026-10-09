@@ -1,17 +1,25 @@
-from datetime import datetime, timezone
+from math import ceil
+from datetime import date, datetime, timezone
 from sqlalchemy.orm import Session
 
 from app.modules.service_request.helper import build_service_request_response
 from app.modules.service_request.repository import ServiceRequestRepository
 from app.modules.service_request.model import ServiceRequest
 from app.modules.service_request.schema import (
+    ServiceRequestPageListResponse,
+    ServiceRequestDetailsResponse,
+    CustomerServiceRequestDetails,
     LLMDiagnosticRequestPreview,
     ProcurementAlertTypeReview,
+    ServiceRequestListResponse,
+    UserServiceRequestDetails,
     LLMRecommendedSparePart,
+    MatchedSparePartPreview,
     ServiceRequestResponse,
     CustomerRequestPreview,
     ConfirmServiceRequest,
     ServiceRequestStatus,
+    RequestPartDetails,
     UserSchema 
 )
 
@@ -98,19 +106,34 @@ class ServiceRequestService:
             self.db.flush()
 
             llm_diagnosis.request_id = service_request.id
-            self.llm_diagnosis_interface.stage(llm_diagnosis)
 
-            self.db.commit()
-            self.db.refresh(service_request)
-            self.db.refresh(llm_diagnosis)
+            self.llm_diagnosis_interface.stage(llm_diagnosis)
 
             llm_recommendation = llm_diagnosis.llm_recommendation
 
             matched_parts = []
 
             if llm_recommendation is not None:
-                matched_parts = self.spare_part_interface.search_matched_spare_part(
-                    llm_recommendation.component
+                matched_parts = self.spare_part_interface.search_matched_spare_part(llm_recommendation.component)
+
+                in_stock = (
+                    matched_parts.stock_quantity is not None
+                    and matched_parts.stock_quantity >= 1
+                )
+
+                matched_spare_parts = MatchedSparePartPreview(
+                    part_id=matched_parts.id,
+                    part_name=matched_parts.name,
+                    part_code=matched_parts.part_code,
+                    device_model=matched_parts.device_model,
+                    device_brand=matched_parts.device_brand,
+                    specifications=matched_parts.specifications,
+                    unit_cost=matched_parts.unit_cost,
+                    stock_quantity=matched_parts.stock_quantity,
+                    shelf_location=matched_parts.shelf_location,
+                    image_url=matched_parts.image_url,
+                    category_name=matched_parts.categories.name,
+                    is_available=in_stock
                 )
 
                 llm_recommended_part = LLMRecommendedSparePart(
@@ -118,8 +141,28 @@ class ServiceRequestService:
                     llm_reason=llm_recommendation.reason,
                     compatibility_requirements=llm_recommendation.compatibility_requirements
                 )
+
+                self.procurement_alert_interface.create_procurement_alert(
+                    request_id=service_request.id,
+                    part_id=None,
+                    part_name_snapshot=llm_recommendation.component,
+                    is_resolved=False,
+                    created_at=now,
+                    alert_type=ProcurementAlertTypeReview.alert.REQUEST_STAGE,
+                    alert_message=(
+                        f"Service Request No. {service_request.id} created by "
+                        f"{service_request.user_id} has been staged and ready to "
+                        f"be review."
+                    ),
+                )
+
             else:
+                matched_spare_parts = []
                 llm_recommended_part = None
+
+            self.db.commit()
+            self.db.refresh(service_request)
+            self.db.refresh(llm_diagnosis)
 
             return ServiceRequestResponse(
                 service_request_id=service_request.id,
@@ -128,7 +171,7 @@ class ServiceRequestService:
                 status=ServiceRequestStatus.PENDING,
                 diagnosis=llm_diagnosis.response,
                 llm_recommended_part=llm_recommended_part,
-                matched_part=matched_parts,
+                matched_part=matched_spare_parts,
                 created_at=service_request.created_at
             )
 
@@ -196,11 +239,7 @@ class ServiceRequestService:
 
             if service_request is None:
 
-                customer = (
-                    self.customer_interface.find_or_create_customer(
-                        customer_request=request.customer_data
-                    )
-                )
+                customer = self.customer_interface.find_or_create_customer(customer_request=request.customer_data)
 
                 service_request = ServiceRequest(
                     customer_id=customer.id,
@@ -217,16 +256,20 @@ class ServiceRequestService:
                 self.repository.create(service_request)
                 self.db.flush()
 
+            else:
+                customer = service_request.customer
+
             # --------------------------------
             # Optional AI diagnosis
             # --------------------------------
 
             llm_diagnosis = service_request.llm_diagnosis
 
-            if llm_diagnosis is not None:
-
-                if request.diagnosis_verdict is not None:
-                    llm_diagnosis.status = request.diagnosis_verdict
+            if (
+                llm_diagnosis is not None
+                and request.diagnosis_verdict is not None
+            ):
+                llm_diagnosis.status = request.diagnosis_verdict
 
             # --------------------------------
             # Selected parts
@@ -234,19 +277,13 @@ class ServiceRequestService:
 
             for selection in request.selected_parts:
 
-                part = (
-                    self.spare_part_interface.get_spare_part_by_id(selection.part_id)
-                    if selection.part_id is not None
-                    else None
-                )
-
-                if part is None:
-
+                if selection.part_id is None:
+                    
                     self.request_part_interface.create_request(
                         request_id=service_request.id,
                         part_id=None,
                         part_name_snapshot=selection.part_name,
-                        quantity=selection.quantity,
+                        quantity=None,
                         is_stock_validated=False,
                     )
 
@@ -260,15 +297,38 @@ class ServiceRequestService:
                         alert_message=(
                             f"Service Request No. {service_request.id} created by "
                             f"{service_request.user_id} needs {selection.part_name} "
-                            f"which does not exist in spare part stock."
+                            f"which no suitable part matches the recommendation "
+                            f"on the spare part inventory"
                         ),
                     )
 
                     continue
 
+                part = self.spare_part_interface.get_spare_part_by_id(selection.part_id)
+
+                if part is None:
+
+                    self.procurement_alert_interface.create_procurement_alert(
+                        request_id=service_request.id,
+                        part_id=None,
+                        part_name_snapshot=selection.part_name,
+                        is_resolved=False,
+                        created_at=now,
+                        alert_type=ProcurementAlertTypeReview.alert.PART_NOT_FOUND,
+                        alert_message=(
+                            f"Service Request No. {service_request.id} created by "
+                            f"{service_request.user_id} needs {selection.part_name} "
+                            f"which requested part record doesn't exist on the "
+                            f"spare part inventory"
+                        ),
+                    )
+
+                    continue
+
+
                 in_stock = (
-                    part.stock_quality is not None
-                    and part.stock_quality >= selection.quantity
+                    part.stock_quantity is not None
+                    and part.stock_quantity >= selection.quantity
                 )
 
                 self.request_part_interface.create_request(
@@ -279,18 +339,33 @@ class ServiceRequestService:
                     is_stock_validated=in_stock,
                 )
 
+                alert_type = (
+                    ProcurementAlertTypeReview.alert.PART_SELECTED
+                    if in_stock
+                    else ProcurementAlertTypeReview.alert.INSUFFICIENT_STOCK
+                )
+
+                if in_stock:
+                    alert_message = (
+                        f"Service Request No. {service_request.id} requires "
+                        f"{part.part_name} ({part.part_code}) "
+                        f"from {part.shelf_location}."
+                    )
+                else:
+                    alert_message = (
+                        f"Service Request No. {service_request.id} requires "
+                        f"{selection.quantity} units of {part.part_name} "
+                        f"({part.part_code}), but available stock is insufficient."
+                    )
+
                 self.procurement_alert_interface.create_procurement_alert(
                     request_id=service_request.id,
                     part_id=part.id,
                     part_name_snapshot=part.part_name,
                     is_resolved=False,
                     created_at=now,
-                    alert_type=ProcurementAlertTypeReview.alert.PART_SELECTED,
-                    alert_message=(
-                        f"Service Request No. {service_request.id} created by "
-                        f"{service_request.user_id} needs {part.part_name} "
-                        f"({part.part_code}) from {part.shelf_location}."
-                    ),
+                    alert_type=alert_type,
+                    alert_message=alert_message,
                 )
 
             # --------------------------------
@@ -316,7 +391,7 @@ class ServiceRequestService:
 
                 preheader="Your service request has been created.",
                 company_name="Lightyear Electrical Goods Trading",
-                address="...",
+                address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
                 first_name=customer.first_name,
                 last_name=customer.last_name,
                 intro="Your service request has been successfully created.",
@@ -348,6 +423,10 @@ class ServiceRequestService:
                     html=html
             )
 
+            # --------------------------------
+            # Prepare the Matched Items
+            # --------------------------------
+
             llm_recommendation = None
             matched_parts = []
 
@@ -355,13 +434,35 @@ class ServiceRequestService:
                 llm_recommendation = llm_diagnosis.llm_recommendation
 
                 if llm_recommendation is not None:
-                    matched_parts = self.spare_part_interface.search_matched_spare_part(
-                        llm_recommendation.component
+                    matched_parts = self.spare_part_interface.search_matched_spare_part(llm_recommendation.component)
+
+                    in_stock = (
+                        matched_parts.stock_quantity is not None
+                        and matched_parts.stock_quantity >= 1
                     )
+
+                    matched_spare_parts = MatchedSparePartPreview(
+                        part_id=matched_parts.id,
+                        part_name=matched_parts.name,
+                        part_code=matched_parts.part_code,
+                        device_model=matched_parts.device_model,
+                        device_brand=matched_parts.device_brand,
+                        specifications=matched_parts.specifications,
+                        unit_cost=matched_parts.unit_cost,
+                        stock_quantity=matched_parts.stock_quantity,
+                        shelf_location=matched_parts.shelf_location,
+                        image_url=matched_parts.image_url,
+                        category_name=matched_parts.categories.name,
+                        is_available=in_stock
+                    )
+
+                else:
+                    matched_spare_parts = []
+
 
             return build_service_request_response(
                 service_request=service_request,
-                matched_parts=matched_parts
+                matched_parts=matched_spare_parts
             )
 
         except (
@@ -462,3 +563,100 @@ class ServiceRequestService:
         except Exception as error:
             self.db.rollback()
             raise ServiceRequestFailedError() from error
+
+
+    
+    def get_all_service_requests(
+        self,
+        page: int,
+        limit: int,
+        search: str | None = None,
+        status: str | None = None,
+        created_date: date | None = None,
+    ) -> ServiceRequestPageListResponse:
+    
+        service_requests, total = self.repository.get_all(
+            page=page,
+            limit=limit,
+            search=search,
+            status=status,
+            created_date=created_date
+        )
+
+        items = [
+            ServiceRequestListResponse(
+                id=service_request.id,
+                customer_name=(
+                    f"{service_request.customers.first_name} "
+                    f"{service_request.customers.last_name}"
+                ),
+                device_type=service_request.device_type,
+                device_brand=service_request.device_brand,
+                device_model=service_request.device_model,
+                technician_name=(
+                    f"{service_request.users.first_name} "
+                    f"{service_request.users.last_name}"
+                ),
+                created_at=service_request.created_at,
+                status=service_request.status,
+            )
+            for service_request in service_requests
+        ]
+
+        pages = ceil(total / limit) if total else 0
+
+        return {
+            "items": items,
+            "page": page,
+            "limit": limit,
+            "total": total,
+            "pages": pages,
+        }
+
+
+    def get_service_request_details(
+        self,
+        service_request_id: int
+    ) -> ServiceRequestDetailsResponse:
+
+        service_request = self.repository.get_specific_detail(service_request_id)
+
+        customer_detail = CustomerServiceRequestDetails(
+            id=service_request.customers.id,
+            name=(
+                f"{service_request.customers.first_name} "
+                f"{service_request.customers.last_name}"
+            )
+        )
+
+        technician_detail = UserServiceRequestDetails(
+            id=service_request.users.id,
+            name=(
+                f"{service_request.users.first_name} "
+                f"{service_request.users.last_name}"
+            )
+        )
+
+        requested_part_detail = [
+            RequestPartDetails(
+                quantity=request_part.quantity,
+                part_name=request_part.part_name_snapshot,
+                validated=request_part.is_stock_validated,
+            )
+            for request_part in service_request.request_parts
+        ]
+
+        item = ServiceRequestDetailsResponse(
+            id=service_request.id,
+            device_type=service_request.device_type,
+            device_brand=service_request.device_brand,
+            device_model=service_request.device_model,
+            fault_descriptions=service_request.fault_description,
+            status=service_request.status,
+            diagnosis=service_request.llm_diagnosis.response,
+            customer=customer_detail,
+            technician=technician_detail,
+            requested_part=requested_part_detail
+        )
+
+        return item

@@ -4,6 +4,7 @@
 
     import { logout } from '@/services/useAuth';
     import { currentUser } from '@/services/state/Auth';
+    import { ShowNavigation, CloseNavigation } from '@/services/state/Navigation';
     import { capitalizeFirstLetter } from '@/helper/Capitalize';
 
     import DashboardBlue from '@/assets/Images/Icons/Blue/dashboard-blue.png';
@@ -12,6 +13,10 @@
     import RequestWhite from '@/assets/Images/Icons/White/service-request-white.png';
     import NewServiceRequestBlue from '@/assets/Images/Icons/Blue/new-service-request-blue.png';
     import NewServiceRequestWhite from '@/assets/Images/Icons/White/new-service-request-white.png';
+    import InventoryBlue from '@/assets/Images/Icons/Blue/inventory-reference-blue.png';
+    import InventoryWhite from '@/assets/Images/Icons/White/inventory-reference-white.png';
+    import CustomerBlue from '@/assets/Images/Icons/Blue/customers-management-blue.png';
+    import CustomerWhite from '@/assets/Images/Icons/White/customers-management-white.png';
     
     const Route = useRoute();
     const showProfileMenu = ref<boolean>(false);
@@ -32,7 +37,10 @@
 </script>
 
 <template>
-    <div class="Sidebar-Navigation-Container">
+    <div 
+        class="Sidebar-Navigation-Container"
+        :class="{ 'Navigation-Open': ShowNavigation }"    
+    >
 
         <div class="Sidebar-Navigation">
             <!-- <button>
@@ -48,6 +56,7 @@
                 to="/dashboard"
                 class="Navigation-Link"
                 exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"
             >
                 <img 
                     :src="Route.path === '/dashboard'
@@ -63,6 +72,7 @@
                 to="/request/new"
                 class="Navigation-Link"
                 exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"
             >
                 <img 
                     :src="Route.path === '/request/new'
@@ -80,16 +90,50 @@
                 to="/requests"
                 class="Navigation-Link"
                 exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"
             >
                 <img 
                     :src="Route.path === '/requests'
                         ? RequestBlue
                         : RequestWhite
                     " 
-                    alt="Request"
+                    alt="Service Requests"
                 />
                 <span>Service Request</span>
             </RouterLink>
+
+            <RouterLink 
+                to="/inventory"
+                class="Navigation-Link"
+                exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"
+            >
+                <img 
+                    :src="Route.path === '/inventory'
+                        ? InventoryBlue
+                        : InventoryWhite
+                    " 
+                    alt="Inventory Reference"
+                />
+                <span>Inventory Reference</span>
+            </RouterLink>
+
+            <RouterLink 
+                to="/customers"
+                class="Navigation-Link"
+                exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"
+            >
+                <img 
+                    :src="Route.path === '/customers'
+                        ? CustomerBlue
+                        : CustomerWhite
+                    " 
+                    alt="Customers"
+                />
+                <span>Customers</span>
+            </RouterLink>
+            
 
 
         </div>

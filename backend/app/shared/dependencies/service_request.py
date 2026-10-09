@@ -78,5 +78,7 @@ def get_service_request_service(
         request_part_interface=request_part_interface,
         spare_part_interface=spare_part_interface,
         customer_interface=customer_interface,
+        email_renderer=email_renderer,
+        email_service=email_service,
         db=db
     )

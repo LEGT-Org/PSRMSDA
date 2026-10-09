@@ -111,6 +111,42 @@ const routes = [
                     title: 'Service Request Management'
                 }
             },
+            {
+                path: '/inventory',
+                name: 'Staff Inventory Reference',
+                component: () => import('@/components/Staff/InvRefComponent.vue'),
+                meta: {
+                    requiresAuth: true,
+                    requiresToken: false,
+                    requiresAdmin: false,
+                    requiresStaff: true,
+                    title: 'Inventory Reference Management'
+                }
+            },
+            {
+                path: '/customers',
+                name: 'Staff Customers Management',
+                component: () => import('@/components/Staff/CustomerComponent.vue'),
+                meta: {
+                    requiresAuth: true,
+                    requiresToken: false,
+                    requiresAdmin: false,
+                    requiresStaff: true,
+                    title: 'Customers Management'
+                }
+            },
+            {
+                path: '/requests/:id',
+                name: 'ServiceRequestDetails',
+                component: () => import('@/components/Stage/ServiceRequestDetailsComponent.vue'),
+                meta: {
+                    requiresAuth: true,
+                    requiresToken: false,
+                    requiresAdmin: false,
+                    requiresStaff: true,
+                    title: 'Service Request Detail'
+                }
+            }
         ]
     },
 
@@ -158,18 +194,6 @@ const routes = [
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'Service Request Management'
-                }
-            },
-            {
-                path: 'sops',
-                name: 'Admin Standard Operational Procedure',
-                component: () => import('@/components/Admin/StanOpeProdComponent.vue'),
-                meta: {
-                    requiresAuth: true,
-                    requiresToken: false,
-                    requiresAdmin: true,
-                    requiresStaff: false,
-                    title: 'Standard Operational Procedure Management'
                 }
             },
             {
@@ -232,6 +256,18 @@ const routes = [
                     title: 'Users Management'
                 }
             },
+            {
+                path: '/admin/requests/:id',
+                name: 'Admin Service Request Details',
+                component: () => import('@/components/Stage/ServiceRequestDetailsComponent.vue'),
+                meta: {
+                    requiresAuth: true,
+                    requiresToken: false,
+                    requiresAdmin: true,
+                    requiresStaff: false,
+                    title: 'Service Request Detail'
+                }
+            }
         ]
     },
 

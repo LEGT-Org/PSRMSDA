@@ -1,5 +1,5 @@
 <script setup lang="ts"></script>
 
 <template>
-    <h1>Standard Operational Procedure</h1>
+    <h1>Inventory Reference</h1>
 </template>

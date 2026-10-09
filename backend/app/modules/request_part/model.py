@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import String, ForeignKey, text
+from sqlalchemy import String, Boolean, ForeignKey, text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.shared.database import Base
@@ -14,6 +14,7 @@ class RequestPart(Base):
     quantity: Mapped[int] = mapped_column(nullable=True)
     part_name_snapshot: Mapped[str] = mapped_column(String(255), nullable=False)
     is_stock_validated: Mapped[bool] = mapped_column(server_default=text("0"))
+    parts_used: Mapped[bool | None] = mapped_column(Boolean, nullable=True, default=None)
 
     # Foreign Key
     request_id: Mapped[int] = mapped_column(ForeignKey("service_requests.id"))

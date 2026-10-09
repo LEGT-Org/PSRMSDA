@@ -246,3 +246,21 @@
     border-color: var(--normal-text-color);
     background-color: var(--error-handler-color);
 }
+
+
+/* ================================
+   Mobile View Navigation
+================================ */
+
+@media (max-width: 768px) {
+
+    .Sidebar-Navigation-Container {
+        display: none;
+        width: 15rem;
+        z-index: 1000;
+    }
+
+    .Sidebar-Navigation-Container.Navigation-Open {
+        display: flex;
+    }
+}
