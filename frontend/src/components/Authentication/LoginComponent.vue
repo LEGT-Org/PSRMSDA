@@ -4,6 +4,7 @@
 
     import { login } from '@/services/useAuth';
     import { Error, currentUser, isLoading } from '@/services/state/Auth';
+    import { HandleSuccess } from '@/helper/HandleSuccess';
 
     const Email         = ref<string>('');
     const Password      = ref<string>('');
@@ -16,6 +17,11 @@
         const success = await login(Email.value, Password.value);
 
         if (success) {
+
+            await HandleSuccess(
+                'You have successfully logged in.',
+                'Login Successful!'
+            );
 
             await Router.push(currentUser.value?.role === 'admin' ? '/admin' : '/dashboard');
 

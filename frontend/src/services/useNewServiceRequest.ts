@@ -1,5 +1,7 @@
 import { ApiFetch } from "@/api/Client";
-import { ParseApiError } from "@/api/Error";
+import { HandleApiError } from "@/api/Error";
+import { accessToken } from "./state/Auth";
+import { getCSRFToken } from "@/api/CSRF";
 import { 
     showDiagnosis,
     isDiagnosing,
@@ -8,6 +10,10 @@ import {
     type DiagnosisResponse,
     type ConfirmServiceRequest 
 } from "./state/NewServiceRequest";
+import Swal from "sweetalert2";
+
+
+const API_URL = import.meta.env.VITE_API_URL;
 
 
 // Run an AI Diagnosis
@@ -26,12 +32,10 @@ export const runAIDiagnosis = async (payload: DiagnosisRequest): Promise<void> =
         );
 
         if (!response.ok) {
-            throw new Error(
-                await ParseApiError(
-                    response,
-                    'Failed to generate diagnosis.'
-                )
-            );
+            await HandleApiError(
+                response,
+                'Failed to generate diagnosis.'
+            )
         }
 
         const data: DiagnosisResponse = await response.json();
@@ -39,19 +43,12 @@ export const runAIDiagnosis = async (payload: DiagnosisRequest): Promise<void> =
         diagnosis.value = data;
         showDiagnosis.value = true;
 
-    } catch (error) {
-
-        alert(
-            error instanceof Error
-                ? error.message
-                : 'Something went wrong while generating the diagnosis.'
-        );
-
     } finally {
 
         isDiagnosing.value = false;
 
     }
+    
 };
 
 
@@ -69,12 +66,10 @@ export const confirmServiceRequest = async (payload: ConfirmServiceRequest): Pro
     );
 
     if (!response.ok) {
-        throw new Error(
-            await ParseApiError(
-                response,
-                'Failed to confirm service request.'
-            )
-        );
+        await HandleApiError(
+            response,
+            'Failed to confirm service request.'
+        )
     }
 
     return await response.json();
@@ -99,13 +94,54 @@ export const cancelServiceRequest = async (serviceRequestId: number): Promise<vo
     );
 
     if (!response.ok) {
-        throw new Error(
-            await ParseApiError(
-                response,
-                'Failed to cancel service request.'
-            )
-        );
+        await HandleApiError(
+            response,
+            'Failed to cancel service request.'
+        )
     }
 
     return await response.json();
+};
+
+
+// Cancel Service Request On Unload
+
+export const cancelServiceRequestOnUnload = (serviceRequestId: number): void => {
+
+    const csrfToken = getCSRFToken();
+
+    const headers = new Headers();
+
+    headers.set('Content-Type', 'application/json');
+    headers.set('Accept', 'application/json');
+
+    if (accessToken.value) {
+
+        headers.set('Authorization', `Bearer ${accessToken.value}`);
+
+    }
+
+    if (csrfToken) {
+
+        headers.set('X-CSRF-Token', csrfToken);
+    }
+
+    fetch(`${API_URL}/service-requests/cancel/unload`,
+        {
+            method: 'POST',
+            headers,
+            credentials: 'include',
+            keepalive: true,
+            body: JSON.stringify(
+                {
+                    "service_request_id": serviceRequestId
+                }
+            ),
+        }
+    ).catch((error) => {
+
+        console.error('Failed to cancel staged service request:', error);
+
+    });
+
 };

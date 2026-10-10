@@ -7,6 +7,7 @@
 @import './Components/ServiceRequest.css';
 @import './Components/Dashboard.css';
 @import './Components/User.css';
+@import './Components/ServiceRequestDetail.css';
 
 :root {
     --background-color: #c4c4c4;

@@ -65,12 +65,21 @@ export interface DiagnosisResponse {
         llm_component: string;
         llm_reason: string;
         compatibility_requirements: string[];
-    };
+    } | null;
 
     matched_parts: {
-        part_number: string;
-        name: string;
-        stock: number;
+        part_id: number;
+        part_name: string;
+        part_code: string;
+        device_model: string | null;
+        device_brand: string | null;
+        specifications: string | null;
+        unit_cost: string | null;
+        stock_quantity: number | null;
+        shelf_location: string;
+        image_url: string | null;
+        category_name: string;
+        is_available: boolean;
     }[];
 
     created_at: string;

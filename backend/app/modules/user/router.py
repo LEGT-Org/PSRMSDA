@@ -37,6 +37,7 @@ def get_me(current_user: CurrentUser):
 @router.get(
     "/list",
     response_model=UserPageListResponse,
+    status_code=status.HTTP_200_OK
 )
 def get_users(
     current_user:  AdminUser,

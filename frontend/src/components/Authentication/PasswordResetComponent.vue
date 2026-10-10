@@ -1,9 +1,10 @@
 <script setup lang="ts">
     import { ref } from 'vue';
     import { useRouter } from 'vue-router';
-
+    
     import { resetPassword } from '@/services/useAuth';
     import { Error, isLoading } from '@/services/state/Auth';
+    import { HandleSuccess } from '@/helper/HandleSuccess'; 
 
     const Email          = ref<string>('');
     const ErrorMessage   = ref<string>('');
@@ -16,8 +17,12 @@
 
         if (success) {
 
+            await HandleSuccess(
+                'Your password has been reset successfully. You can now log in using your new password.',
+                'Password Reset Successful!'
+            )
+
             await Router.push('/');
-            alert(success.message)
 
         }
 

@@ -25,7 +25,7 @@ class SparePart(Base):
     device_model: Mapped[str] = mapped_column(Text, nullable=True)
     device_brand: Mapped[str] = mapped_column(Text, nullable=True)
     specifications: Mapped[str] = mapped_column(Text, nullable=True)
-    stock_quality: Mapped[int] = mapped_column(nullable=True)
+    stock_quantity: Mapped[int] = mapped_column(nullable=True)
     unit_cost: Mapped[Decimal] = mapped_column(Numeric(10, 2),nullable=True)
     shelf_location: Mapped[str] = mapped_column(String(255), nullable=False)
     image_url: Mapped[str] = mapped_column(String(255), nullable=True)

@@ -37,8 +37,7 @@ class ProcurementAlertService:
         try:
 
             self.repository.create(procurement_alert)
-            self.db.commit()
-            self.db.refresh(procurement_alert)
+            self.db.flush()
 
             return procurement_alert
 

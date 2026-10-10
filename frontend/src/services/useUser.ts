@@ -1,4 +1,7 @@
 import { ApiFetch } from '@/api/Client';
+import { HandleApiError } from '@/api/Error.ts';
+import { HandleSuccess } from "@/helper/HandleSuccess";
+import Swal from 'sweetalert2';
 import {
     Users,
     isRegisteringUser,
@@ -8,16 +11,18 @@ import {
     UsersPerPage,
     TotalUsers,
     TotalPages,
+    Search,
+    RoleFilter,
+    StatusFilter,
     type RegisterUserRequest,
-    type User
+    type User,
+    type UserPageListResponse,
 } from './state/User.ts';
 
 
 // Register a User
 
-export const RegisterUser = async (
-    payload: RegisterUserRequest
-): Promise<User | null> => {
+export const RegisterUser = async (payload: RegisterUserRequest): Promise<User | null> => {
 
     isRegisteringUser.value = true;
     UserError.value = null;
@@ -35,21 +40,30 @@ export const RegisterUser = async (
         });
 
         const data = await response.json();
-
+        
         if (!response.ok) {
-
+            
             UserError.value = data.detail ?? 'Failed to register user.';
             return null;
         }
-
+        
         Users.value.push(data);
+
+        await HandleSuccess(
+            `User ${data.email} has been created.`,
+            'Registration Successful!'
+        );
 
         return data;
 
     } catch (error) {
 
-        console.error('Register User Error:', error);
-        UserError.value = 'Unable to connect to the server. Please try again later.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return null;
 
     } finally {
@@ -60,6 +74,35 @@ export const RegisterUser = async (
 };
 
 
+export const ApplyUserFilters = async (): Promise<void> => {
+
+    CurrentPage.value = 1;
+
+    await GetUsers(
+        1,
+        UsersPerPage.value,
+        Search.value,
+        RoleFilter.value,
+        StatusFilter.value
+    );
+};
+
+
+let SearchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+export const HandleSearch = (): void => {
+
+    if (SearchTimeout !== null) {
+        clearTimeout(SearchTimeout);
+    }
+
+    SearchTimeout = setTimeout(() => {
+        ApplyUserFilters();
+    }, 400);
+};
+
+
+
 // Get List of Users
 
 export const GetUsers = async (
@@ -68,7 +111,7 @@ export const GetUsers = async (
     search: string = '',
     role: string = 'all',
     status: string = 'all'
-): Promise<User[]> => {
+): Promise<UserPageListResponse | null> => {
 
     isLoadingUsers.value = true;
     UserError.value = null;
@@ -76,58 +119,67 @@ export const GetUsers = async (
     try {
 
         const params = new URLSearchParams();
+
         params.set('page', String(page));
         params.set('limit', String(limit));
 
         if (search.trim()) {
-
             params.set('search', search.trim());
-
         }
 
         if (role !== 'all') {
-            
             params.set('role', role);
-
         }
 
         if (status !== 'all') {
-            
             params.set('status', status);
-
         }
 
-        const response = await ApiFetch(`/user/list?${params.toString()}`,{ method: 'GET' });
-        const data = await response.json();
+        const response = await ApiFetch(`/user/list?${params.toString()}`,
+            {
+                method: 'GET',
+            }
+        );
 
+        
         if (!response.ok) {
-
-            UserError.value = data.detail ?? 'Failed to load users.';
-            return [];
-
+            
+            await HandleApiError(
+                response,
+                'Failed to load users table.'
+            );
+            
+            return null;
+            
         }
+        
+        const data = await response.json();
+        const pageData: UserPageListResponse = data;
 
-        Users.value = data.items;
+        Users.value = pageData.items;
+        CurrentPage.value = pageData.page;
+        UsersPerPage.value = pageData.limit;
+        TotalUsers.value = pageData.total;
+        TotalPages.value = pageData.pages;
 
-        CurrentPage.value = data.page;
-        UsersPerPage.value = data.limit;
-        TotalUsers.value = data.total;
-        TotalPages.value = data.pages;
-
-        return data.items;
+        return pageData;
 
     } catch (error) {
 
-        console.error('Get Users Error:', error);
-        UserError.value = 'Unable to connect to the server. Please try again later.';
-        return [];
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
+        return null;
 
     } finally {
 
         isLoadingUsers.value = false;
 
     }
-    
+
 };
 
 
@@ -138,25 +190,33 @@ export const PromoteUser = async (userId: number): Promise<boolean> => {
     try {
 
         const response = await ApiFetch(`/user/admin/${userId}/promote`, { method: 'PATCH' });
-        const data = await response.json();
-
+        
         if (!response.ok) {
-
-            UserError.value = data.detail ?? 'Failed to promote user.';
+            
+            await HandleApiError(
+                response,
+                'Failed to promote user.'
+            );
+            
             return false;
-
+            
         }
-
+        
+        const data = await response.json();
         await GetUsers();
 
-        alert(data.message);
+        await HandleSuccess(data.message);
 
         return true;
 
     } catch (error) {
 
-        console.error('Promote User Error:', error);
-        UserError.value = 'Unable to connect to the server.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return false;
 
     }
@@ -170,25 +230,33 @@ export const DemoteUser = async (userId: number): Promise<boolean> => {
     try {
 
         const response = await ApiFetch(`/user/admin/${userId}/demote`, { method: 'PATCH' });
-        const data = await response.json();
-
+        
         if (!response.ok) {
-
-            UserError.value = data.detail ?? 'Failed to demote user.';
+            
+            await HandleApiError(
+                response,
+                'Failed to demote user.'
+            );
+            
             return false;
-
+            
         }
-
+        
+        const data = await response.json();
         await GetUsers();
 
-        alert(data.message);
+        await HandleSuccess(data.message);
 
         return true;
 
     } catch (error) {
 
-        console.error('Demote User Error:', error);
-        UserError.value = 'Unable to connect to the server.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return false;
 
     }
@@ -202,25 +270,33 @@ export const DisableUser = async (userId: number): Promise<boolean> => {
     try {
 
         const response = await ApiFetch(`/user/admin/${userId}/disable`, { method: 'PATCH' });
-        const data = await response.json();
-
+        
         if (!response.ok) {
+            
+            await HandleApiError(
+                response,
+                'Failed to disable user.'
+            );
 
-            UserError.value = data.detail ?? 'Failed to disable user.';
             return false;
 
         }
-
+        
+        const data = await response.json();
         await GetUsers();
 
-        alert(data.message);
+        await HandleSuccess(data.message);
 
         return true;
 
     } catch (error) {
 
-        console.error('Disable User Error:', error);
-        UserError.value = 'Unable to connect to the server.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return false;
 
     }
@@ -234,25 +310,33 @@ export const EnableUser = async (userId: number): Promise<boolean> => {
     try {
 
         const response = await ApiFetch(`/user/admin/${userId}/enable`,{ method: 'PATCH' });
-        const data = await response.json();
-
+        
         if (!response.ok) {
-
-            UserError.value = data.detail ?? 'Failed to enable user.';
+            
+            await HandleApiError(
+                response,
+                'Failed to enable user.'
+            );
+            
             return false;
-
+            
         }
-
+        
+        const data = await response.json();
         await GetUsers();
 
-        alert(data.message);
+        await HandleSuccess(data.message);
 
         return true;
 
     } catch (error) {
 
-        console.error('Enable User Error:', error);
-        UserError.value = 'Unable to connect to the server.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return false;
 
     }

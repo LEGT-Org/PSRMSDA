@@ -1,12 +1,16 @@
 <script setup lang="ts">
-    import { ref } from 'vue';
+    import Swal from 'sweetalert2';
+    import { onMounted, onUnmounted, ref } from 'vue';
     import { parseFaultDescriptions } from '@/helper/SymptomsParser';
-    import { validateDiagnosisForm } from '@/helper/ValidateServiceRequestForm';
+    import { ValidateDiagnosisForm } from '@/helper/ValidateServiceRequestForm';
+    import { HandleSuccess } from '@/helper/HandleSuccess';
+    
 
     import { 
         runAIDiagnosis, 
         confirmServiceRequest, 
-        cancelServiceRequest 
+        cancelServiceRequest, 
+        cancelServiceRequestOnUnload
     } from '@/services/useNewServiceRequest';
 
     import { 
@@ -14,7 +18,8 @@
         showDiagnosis,
         diagnosis,
         type DiagnosisRequest,
-        type ConfirmServiceRequest, 
+        type ConfirmServiceRequest,
+        type SelectedPart, 
     } from '@/services/state/NewServiceRequest';
 
 
@@ -30,7 +35,7 @@
 
     const TechnicianNotes = ref<string>('');
     const FinalStatus = ref<string>('Pending');
-    const SelectedParts = ref([]);
+    const SelectedParts = ref<SelectedPart[]>([]);
 
 
     const BuildRequestPayload = (): DiagnosisRequest => {
@@ -109,7 +114,7 @@
     
     const RunDiagnosis = async () => {
 
-        const isValid = validateDiagnosisForm(
+        const isValid = await ValidateDiagnosisForm(
             CustomerFirstName.value,
             CustomerLastName.value,
             CustomerEmail.value,
@@ -133,25 +138,15 @@
     const ConfirmRequest = async () => {
 
         const payload = BuildConfirmRequestPayload();
+        const response = await confirmServiceRequest(payload);
 
-        try {
+        ResetServiceRequest();
 
-            const response = await confirmServiceRequest(payload);
+        await HandleSuccess(
+            'Service request confirmed successfully.',
+            'Request Confirmed!'
+        )
 
-            ResetServiceRequest();
-
-            alert('Service request confirmed successfully.');
-
-        } catch (error) {
-
-            console.error('Confirm Request Error:', error);
-
-            alert(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to confirm service request.'
-            );
-        }
     };
 
 
@@ -170,17 +165,43 @@
 
         } catch (error) {
 
-            console.error('Cancel Request Error:', error);
 
-            alert(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to cancel service request.'
-            );
+            await Swal.fire({
+                title: 'Connection Error!',
+                text: 'Failed to cancel service request. Please try again later.',
+                icon: 'error',
+            });
 
         }
     };
 
+
+    const HandlePageHide = () => {
+        
+        const serviceRequestId =diagnosis.value?.service_request_id;
+
+        if (serviceRequestId == null) {
+
+            return;
+            
+        }
+
+        cancelServiceRequestOnUnload(serviceRequestId);
+        
+    };
+
+
+    onMounted(() => {
+
+        window.addEventListener('pagehide', HandlePageHide);
+
+    });
+
+    onUnmounted(() => {
+
+        window.removeEventListener('pagehide', HandlePageHide);
+
+    });
 
 </script>
 
@@ -575,7 +596,10 @@ Example:
 
                 <h3>Recommended Part</h3>
 
-                <div class="Recommended-Part">
+                <div 
+                    v-if="diagnosis.llm_recommended_part"
+                    class="Recommended-Part"
+                >
 
                     <div>
                         <strong>AI Recommended Component</strong>
@@ -610,42 +634,89 @@ Example:
 
                 <!-- Matched Database Part -->
                 <div class="Matched-Part">
-
                     <h4>Matched Parts</h4>
 
                     <div class="Matched-Part-List">
-
                         <div
                             v-for="part in diagnosis.matched_parts"
-                            :key="part.part_number"
+                            :key="part.part_id"
                             class="Matched-Part-Item"
                         >
+                            <input
+                                type="checkbox"
+                                :checked="SelectedParts.some(selected => selected.part_id === part.part_id)"
+                                @change="(event) => {
+                                    const checked = (event.target as HTMLInputElement).checked;
+
+                                    if (checked) {
+                                        SelectedParts.push({
+                                            part_id: part.part_id,
+                                            part_name: part.part_name,
+                                            quantity: 1
+                                        });
+                                    } else {
+                                        const index = SelectedParts.findIndex(selected => selected.part_id === part.part_id);
+
+                                        if (index !== -1) {
+                                            SelectedParts.splice(index, 1);
+                                        }
+                                    }
+
+                                }"
+                            />
 
                             <div>
                                 <span>Part Number</span>
-                                <strong>
-                                    {{ part.part_number }}
-                                </strong>
+                                <strong>{{ part.part_code }}</strong>
                             </div>
 
                             <div>
                                 <span>Name</span>
-                                <strong>
-                                    {{ part.name }}
-                                </strong>
+                                <strong>{{ part.part_name }}</strong>
                             </div>
 
                             <div>
                                 <span>Stock</span>
-                                <strong>
-                                    {{ part.stock }}
-                                </strong>
+                                <strong>{{ part.stock_quantity ?? 0 }}</strong>
                             </div>
 
+                            <div v-if="SelectedParts.some(selected => selected.part_id === part.part_id)">
+                                <span>Quantity</span>
+
+                                <button
+                                    type="button"
+                                    @click="SelectedParts.find(
+                                        selected => selected.part_id === part.part_id
+                                    )!.quantity--"
+                                    :disabled="SelectedParts.find(
+                                        selected => selected.part_id === part.part_id
+                                    )!.quantity <= 1"
+                                >
+                                    -
+                                </button>
+
+                                <strong>
+                                    {{ SelectedParts.find(
+                                        selected => selected.part_id === part.part_id
+                                    )!.quantity }}
+                                </strong>
+
+                                <button
+                                    type="button"
+                                    @click="SelectedParts.find(
+                                        selected => selected.part_id === part.part_id
+                                    )!.quantity++"
+                                    :disabled="
+                                        SelectedParts.find(
+                                            selected => selected.part_id === part.part_id
+                                        )!.quantity >= (part.stock_quantity ?? 0)
+                                    "
+                                >
+                                    +
+                                </button>
+                            </div>
                         </div>
-
                     </div>
-
                 </div>
 
             </section>

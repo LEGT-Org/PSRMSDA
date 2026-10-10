@@ -1,3 +1,6 @@
+import Swal from "sweetalert2";
+
+
 export interface ApiValidationError {
     type?: string;
     loc?: (string | number)[];
@@ -25,25 +28,18 @@ export const ParseApiError = async (
     response: Response,
     fallbackMessage: string
 ): Promise<string> => {
-
     try {
-
         const errorData = await response.json();
 
         if (Array.isArray(errorData.detail)) {
+            const FirstError = errorData.detail[0] as ApiValidationError | undefined;
 
-            return errorData.detail
-                .map((error: ApiValidationError) => {
+            if (FirstError) {
+                const Field = FormatFieldName(FirstError.loc);
+                return `${Field}: ${FirstError.msg ?? fallbackMessage}`;
+            }
 
-                    const field = FormatFieldName(
-                        error.loc
-                    );
-
-                    return `${field}: ${error.msg}`;
-                })
-                .filter(Boolean)
-                .join('\n');
-
+            return fallbackMessage;
         }
 
         if (typeof errorData.detail === 'string') {
@@ -55,9 +51,26 @@ export const ParseApiError = async (
         }
 
         return fallbackMessage;
-
     } catch {
-
         return fallbackMessage;
     }
+};
+
+
+export const HandleApiError = async (
+    Response: Response,
+    FallbackMessage: string
+): Promise<void> => {
+    
+    const Message = await ParseApiError(
+        Response,
+        FallbackMessage
+    );
+
+    await Swal.fire({
+        title: 'Error!',
+        text: Message,
+        icon: 'error',
+        confirmButtonText: 'OK',
+    });
 };

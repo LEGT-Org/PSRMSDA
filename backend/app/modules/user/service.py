@@ -2,7 +2,7 @@ from math import ceil
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
 
-from app.modules.user.schema import UserRole, UserCreate
+from app.modules.user.schema import UserRole, UserCreate, UserPageListResponse
 from app.modules.user.repository import UserRepository
 from app.modules.user.model import User
 
@@ -217,7 +217,7 @@ class UserService:
         search: str | None = None,
         role: str | None = None,
         status: str | None = None,
-    ):
+    ) -> UserPageListResponse:
     
         users, total = self.repository.get_all(
             page=page,

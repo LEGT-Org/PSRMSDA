@@ -1,12 +1,25 @@
 <script setup lang="ts">
     import { ref } from 'vue';
+    import { ToggleNavigation } from '@/services/state/Navigation';
 
-    const Search = ref<string>('');
 </script>
 
 <template>
     <div class="Header-Container">
+
         <div class="Header-Logo">
+
+            <button
+                type="button"
+                class="Mobile-Navigation-Button"
+                @click="ToggleNavigation"
+            >
+                <img
+                    src="@/assets/Images/Icons/menu.png"
+                    alt="Menu"
+                />
+            </button>
+
             <img 
                 src="@/assets/Images/LEGT-Logo.png" 
                 alt="Lighyear Electrical Goods Logo"

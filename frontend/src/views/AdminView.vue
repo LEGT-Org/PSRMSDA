@@ -1,6 +1,7 @@
 <script setup lang="ts">
     import Header from '@/components/Partial/Header.vue';
     import Navigation from '@/components/Partial/AdminNavigation.vue';
+
 </script>
 
 <template>

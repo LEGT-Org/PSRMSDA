@@ -3,7 +3,9 @@ from typing import Annotated
 from fastapi import Depends
 from sqlalchemy.orm import Session
 
+from app.shared.dependencies.external_service.email_service import get_email_service, get_email_renderer
 from app.shared.dependencies.procurement_alert import get_procurement_alert_service
+from app.shared.infrastructure.email import EmailService, JinjaEmailRendered
 from app.shared.dependencies.llm_diagnosis import get_llm_diagnosis_service
 from app.shared.dependencies.request_part import get_request_part_service
 from app.shared.dependencies.spare_part import get_spare_part_service
@@ -55,7 +57,14 @@ def get_service_request_service(
         CustomerService,
         Depends(get_customer_service)
     ],
-
+    email_service: Annotated[
+        EmailService,
+        Depends(get_email_service)
+    ],
+    email_renderer: Annotated[
+        JinjaEmailRendered,
+        Depends(get_email_renderer)
+    ],
     db: Annotated[
         Session,
         Depends(get_db)
@@ -69,5 +78,7 @@ def get_service_request_service(
         request_part_interface=request_part_interface,
         spare_part_interface=spare_part_interface,
         customer_interface=customer_interface,
+        email_renderer=email_renderer,
+        email_service=email_service,
         db=db
     )
