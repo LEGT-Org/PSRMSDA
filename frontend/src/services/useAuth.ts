@@ -1,4 +1,5 @@
 import { ApiFetch } from "@/api/Client";
+import { HandleApiError } from "@/api/Error";
 
 import { 
     currentUser, 
@@ -9,6 +10,7 @@ import {
 
     type User 
 } from "./state/Auth";
+import Swal from "sweetalert2";
 
 
 // Fetching the User
@@ -93,7 +95,12 @@ export async function login(Email: string, Password: string) {
 
     } catch(error) {
 
-        alert('Unable to connect to the server. Please try again later');
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return;
 
     } finally {
@@ -136,7 +143,12 @@ export async function resetPassword(Email: string) {
 
     } catch(error) {
 
-        alert('Unable to connect to the server. Please try again later');
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return;
 
     } finally {
@@ -193,7 +205,12 @@ export async function setPassword(
 
     } catch (error) {
 
-        alert('Unable to connect to the server. Please try again later');
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return;
 
     } finally {
@@ -283,7 +300,10 @@ export async function logout() {
 
         if (!res.ok) {
 
-            alert(data.detail);
+            await HandleApiError(
+                res,
+                'Failed to logout'
+            );
 
         }
 

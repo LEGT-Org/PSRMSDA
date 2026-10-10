@@ -1,4 +1,11 @@
-export const validateDiagnosisForm = (
+import Swal from 'sweetalert2';
+
+interface ValidationField {
+    Value: string;
+    Message: string;
+}
+
+export const ValidateDiagnosisForm = async (
     CustomerFirstName: string,
     CustomerLastName: string,
     CustomerEmail: string,
@@ -7,45 +14,30 @@ export const validateDiagnosisForm = (
     DeviceBrand: string,
     DeviceModel: string,
     FaultDescription: string,
-): boolean => {
+): Promise<boolean> => {
+    const Fields: ValidationField[] = [
+        { Value: CustomerFirstName, Message: 'Customer first name is required.' },
+        { Value: CustomerLastName, Message: 'Customer last name is required.' },
+        { Value: CustomerEmail, Message: 'Customer email is required.' },
+        { Value: CustomerPhoneNumber, Message: 'Customer phone number is required.' },
+        { Value: DeviceType, Message: 'Device type is required.' },
+        { Value: DeviceBrand, Message: 'Device brand is required.' },
+        { Value: DeviceModel, Message: 'Device model is required.' },
+        { Value: FaultDescription, Message: 'Fault description is required.' },
+    ];
 
-    if (!CustomerFirstName.trim()) {
-        alert('Customer first name is required.');
-        return false;
-    }
+    const MissingField = Fields.find(
+        (Field: ValidationField) => !Field.Value.trim()
+    );
 
-    if (!CustomerLastName.trim()) {
-        alert('Customer last name is required.');
-        return false;
-    }
+    if (MissingField) {
+        await Swal.fire({
+            title: 'Validation Error',
+            text: MissingField.Message,
+            icon: 'warning',
+            confirmButtonText: 'OK',
+        });
 
-    if (!CustomerEmail.trim()) {
-        alert('Customer email is required.');
-        return false;
-    }
-
-    if (!CustomerPhoneNumber.trim()) {
-        alert('Customer phone number is required.');
-        return false;
-    }
-
-    if (!DeviceType.trim()) {
-        alert('Device type is required.');
-        return false;
-    }
-
-    if (!DeviceBrand.trim()) {
-        alert('Device brand is required.');
-        return false;
-    }
-
-    if (!DeviceModel.trim()) {
-        alert('Device model is required.');
-        return false;
-    }
-
-    if (!FaultDescription.trim()) {
-        alert('Fault description is required.');
         return false;
     }
 

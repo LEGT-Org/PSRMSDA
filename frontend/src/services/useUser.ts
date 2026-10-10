@@ -1,4 +1,7 @@
 import { ApiFetch } from '@/api/Client';
+import { HandleApiError } from '@/api/Error.ts';
+import { HandleSuccess } from "@/helper/HandleSuccess";
+import Swal from 'sweetalert2';
 import {
     Users,
     isRegisteringUser,
@@ -37,21 +40,30 @@ export const RegisterUser = async (payload: RegisterUserRequest): Promise<User |
         });
 
         const data = await response.json();
-
+        
         if (!response.ok) {
-
+            
             UserError.value = data.detail ?? 'Failed to register user.';
             return null;
         }
-
+        
         Users.value.push(data);
+
+        await HandleSuccess(
+            `User ${data.email} has been created.`,
+            'Registration Successful!'
+        );
 
         return data;
 
     } catch (error) {
 
-        console.error('Register User Error:', error);
-        UserError.value = 'Unable to connect to the server. Please try again later.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return null;
 
     } finally {
@@ -123,22 +135,25 @@ export const GetUsers = async (
             params.set('status', status);
         }
 
-        const response = await ApiFetch(
-            `/user/list?${params.toString()}`,
+        const response = await ApiFetch(`/user/list?${params.toString()}`,
             {
                 method: 'GET',
             }
         );
 
-        const data = await response.json();
-
+        
         if (!response.ok) {
-
-            UserError.value = data.detail ?? 'Failed to load users.';
+            
+            await HandleApiError(
+                response,
+                'Failed to load users table.'
+            );
+            
             return null;
-
+            
         }
-
+        
+        const data = await response.json();
         const pageData: UserPageListResponse = data;
 
         Users.value = pageData.items;
@@ -151,8 +166,12 @@ export const GetUsers = async (
 
     } catch (error) {
 
-        console.error('Get Users Error:', error);
-        UserError.value = 'Unable to connect to the server. Please try again later.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return null;
 
     } finally {
@@ -171,25 +190,33 @@ export const PromoteUser = async (userId: number): Promise<boolean> => {
     try {
 
         const response = await ApiFetch(`/user/admin/${userId}/promote`, { method: 'PATCH' });
-        const data = await response.json();
-
+        
         if (!response.ok) {
-
-            UserError.value = data.detail ?? 'Failed to promote user.';
+            
+            await HandleApiError(
+                response,
+                'Failed to promote user.'
+            );
+            
             return false;
-
+            
         }
-
+        
+        const data = await response.json();
         await GetUsers();
 
-        alert(data.message);
+        await HandleSuccess(data.message);
 
         return true;
 
     } catch (error) {
 
-        console.error('Promote User Error:', error);
-        UserError.value = 'Unable to connect to the server.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return false;
 
     }
@@ -203,25 +230,33 @@ export const DemoteUser = async (userId: number): Promise<boolean> => {
     try {
 
         const response = await ApiFetch(`/user/admin/${userId}/demote`, { method: 'PATCH' });
-        const data = await response.json();
-
+        
         if (!response.ok) {
-
-            UserError.value = data.detail ?? 'Failed to demote user.';
+            
+            await HandleApiError(
+                response,
+                'Failed to demote user.'
+            );
+            
             return false;
-
+            
         }
-
+        
+        const data = await response.json();
         await GetUsers();
 
-        alert(data.message);
+        await HandleSuccess(data.message);
 
         return true;
 
     } catch (error) {
 
-        console.error('Demote User Error:', error);
-        UserError.value = 'Unable to connect to the server.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return false;
 
     }
@@ -235,25 +270,33 @@ export const DisableUser = async (userId: number): Promise<boolean> => {
     try {
 
         const response = await ApiFetch(`/user/admin/${userId}/disable`, { method: 'PATCH' });
-        const data = await response.json();
-
+        
         if (!response.ok) {
+            
+            await HandleApiError(
+                response,
+                'Failed to disable user.'
+            );
 
-            UserError.value = data.detail ?? 'Failed to disable user.';
             return false;
 
         }
-
+        
+        const data = await response.json();
         await GetUsers();
 
-        alert(data.message);
+        await HandleSuccess(data.message);
 
         return true;
 
     } catch (error) {
 
-        console.error('Disable User Error:', error);
-        UserError.value = 'Unable to connect to the server.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return false;
 
     }
@@ -267,25 +310,33 @@ export const EnableUser = async (userId: number): Promise<boolean> => {
     try {
 
         const response = await ApiFetch(`/user/admin/${userId}/enable`,{ method: 'PATCH' });
-        const data = await response.json();
-
+        
         if (!response.ok) {
-
-            UserError.value = data.detail ?? 'Failed to enable user.';
+            
+            await HandleApiError(
+                response,
+                'Failed to enable user.'
+            );
+            
             return false;
-
+            
         }
-
+        
+        const data = await response.json();
         await GetUsers();
 
-        alert(data.message);
+        await HandleSuccess(data.message);
 
         return true;
 
     } catch (error) {
 
-        console.error('Enable User Error:', error);
-        UserError.value = 'Unable to connect to the server.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
         return false;
 
     }

@@ -1,5 +1,5 @@
 import { ApiFetch } from "@/api/Client";
-import { ParseApiError } from "@/api/Error";
+import { HandleApiError } from "@/api/Error";
 import { accessToken } from "./state/Auth";
 import { getCSRFToken } from "@/api/CSRF";
 import { 
@@ -10,6 +10,7 @@ import {
     type DiagnosisResponse,
     type ConfirmServiceRequest 
 } from "./state/NewServiceRequest";
+import Swal from "sweetalert2";
 
 
 const API_URL = import.meta.env.VITE_API_URL;
@@ -31,12 +32,10 @@ export const runAIDiagnosis = async (payload: DiagnosisRequest): Promise<void> =
         );
 
         if (!response.ok) {
-            throw new Error(
-                await ParseApiError(
-                    response,
-                    'Failed to generate diagnosis.'
-                )
-            );
+            await HandleApiError(
+                response,
+                'Failed to generate diagnosis.'
+            )
         }
 
         const data: DiagnosisResponse = await response.json();
@@ -44,19 +43,12 @@ export const runAIDiagnosis = async (payload: DiagnosisRequest): Promise<void> =
         diagnosis.value = data;
         showDiagnosis.value = true;
 
-    } catch (error) {
-
-        alert(
-            error instanceof Error
-                ? error.message
-                : 'Something went wrong while generating the diagnosis.'
-        );
-
     } finally {
 
         isDiagnosing.value = false;
 
     }
+    
 };
 
 
@@ -74,12 +66,10 @@ export const confirmServiceRequest = async (payload: ConfirmServiceRequest): Pro
     );
 
     if (!response.ok) {
-        throw new Error(
-            await ParseApiError(
-                response,
-                'Failed to confirm service request.'
-            )
-        );
+        await HandleApiError(
+            response,
+            'Failed to confirm service request.'
+        )
     }
 
     return await response.json();
@@ -104,12 +94,10 @@ export const cancelServiceRequest = async (serviceRequestId: number): Promise<vo
     );
 
     if (!response.ok) {
-        throw new Error(
-            await ParseApiError(
-                response,
-                'Failed to cancel service request.'
-            )
-        );
+        await HandleApiError(
+            response,
+            'Failed to cancel service request.'
+        )
     }
 
     return await response.json();

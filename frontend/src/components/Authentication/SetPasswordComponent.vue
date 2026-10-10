@@ -4,6 +4,7 @@
 
     import { setPassword } from '@/services/useAuth';
     import { Error, isLoading } from '@/services/state/Auth';
+    import { HandleSuccess } from '@/helper/HandleSuccess';
 
     const Route     = useRoute();
     const Router    = useRouter();
@@ -34,6 +35,11 @@
             return;
             
         }
+
+        await HandleSuccess(
+            'Your new password has been set. You may login now.',
+            'Set New Password Successful!'
+        )
 
         await Router.push('/');
 

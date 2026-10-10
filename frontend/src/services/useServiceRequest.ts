@@ -1,5 +1,6 @@
 import { ApiFetch } from "@/api/Client";
-import { ParseApiError } from "@/api/Error";
+import { HandleApiError } from "@/api/Error";
+import Swal from "sweetalert2";
 import { 
     CurrentPage, 
     isLoadingServiceRequests, 
@@ -88,11 +89,9 @@ export const GetServiceRequests = async (
         );
 
         if (!response.ok) {
-            throw new Error(
-                await ParseApiError(
-                    response,
-                    'Failed to load service requests.'
-                )
+            await HandleApiError(
+                response,
+                'Failed to load service requests.'
             );
         }
 
@@ -109,10 +108,11 @@ export const GetServiceRequests = async (
 
     } catch (error) {
 
-        ServiceRequestError.value =
-            error instanceof Error
-                ? error.message
-                : 'Failed to load service requests.';
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
 
         return [];
 
