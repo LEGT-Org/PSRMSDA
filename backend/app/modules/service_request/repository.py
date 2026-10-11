@@ -122,3 +122,16 @@ class ServiceRequestRepository:
         stored_service_request.status = final_status
         stored_service_request.updated_at = now
 
+
+    def final_confirmation(
+        self,
+        now: datetime,
+        approved_by: int,
+        stored_service_request: ServiceRequest,
+        final_status: ServiceRequestStatus,
+    ) -> None:
+
+        stored_service_request.status = final_status
+        stored_service_request.approved_by_id = approved_by
+        stored_service_request.updated_at = now
+

@@ -19,6 +19,15 @@ class ServiceRequestStatusIsNotPendingError(BaseHTTPException):
             detail=detail
         )
 
+class ServiceRequestStatusCanOnlyModifiedAgain(BaseHTTPException):
+
+    def __init__(self, detail: str):
+        super().__init__(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=detail
+        )
+        
+
 class ServiceRequestFailedError(BaseHTTPException):
 
     def __init__(self):

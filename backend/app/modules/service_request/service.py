@@ -8,11 +8,13 @@ from app.modules.service_request.model import ServiceRequest
 from app.modules.service_request.schema import (
     ServiceRequestPageListResponse,
     ServiceRequestDetailsResponse,
+    ServiceRequestFinalizeRequest,
     CustomerServiceRequestDetails,
     LLMDiagnosticRequestPreview,
-    ProcurementAlertTypeReview,
+    ProcurementAlertTypePreview,
     ServiceRequestListResponse,
     UserServiceRequestDetails,
+    LLMDiagnosisStatusPreview,
     LLMRecommendedSparePart,
     MatchedSparePartPreview,
     ServiceRequestResponse,
@@ -37,8 +39,13 @@ from app.shared.infrastructure.email import (
 )
 
 from app.shared.exception import (
+    RequestPartQuantityUsedMustGreaterThanZeroError,
+    ServiceRequestStatusCanOnlyModifiedAgain,
+    RequestPartInvalidUsageConfirmationError,
+    RequestPartQuantityUsedMustBeZeroError,
     ServiceRequestStatusIsNotPendingError,
     ServiceRequestDoesNotExistError,
+    RequestPartDuplicationError,
     ServiceRequestFailedError
 )
 
@@ -148,7 +155,7 @@ class ServiceRequestService:
                     part_name_snapshot=llm_recommendation.component,
                     is_resolved=False,
                     created_at=now,
-                    alert_type=ProcurementAlertTypeReview.alert.REQUEST_STAGE,
+                    alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
                     alert_message=(
                         f"Service Request No. {service_request.id} created by "
                         f"{service_request.user_id} has been staged and ready to "
@@ -269,7 +276,7 @@ class ServiceRequestService:
                 llm_diagnosis is not None
                 and request.diagnosis_verdict is not None
             ):
-                llm_diagnosis.status = request.diagnosis_verdict
+                llm_diagnosis.status = request.diagnosis_verdict.ACCEPTED
 
             # --------------------------------
             # Selected parts
@@ -285,6 +292,7 @@ class ServiceRequestService:
                         part_name_snapshot=selection.part_name,
                         quantity=None,
                         is_stock_validated=False,
+                        approved_by_id=None
                     )
 
                     self.procurement_alert_interface.create_procurement_alert(
@@ -293,7 +301,7 @@ class ServiceRequestService:
                         part_name_snapshot=selection.part_name,
                         is_resolved=False,
                         created_at=now,
-                        alert_type=ProcurementAlertTypeReview.alert.NO_PART_MATCH,
+                        alert_type=ProcurementAlertTypePreview.NO_PART_MATCH,
                         alert_message=(
                             f"Service Request No. {service_request.id} created by "
                             f"{service_request.user_id} needs {selection.part_name} "
@@ -314,7 +322,7 @@ class ServiceRequestService:
                         part_name_snapshot=selection.part_name,
                         is_resolved=False,
                         created_at=now,
-                        alert_type=ProcurementAlertTypeReview.alert.PART_NOT_FOUND,
+                        alert_type=ProcurementAlertTypePreview.PART_NOT_FOUND,
                         alert_message=(
                             f"Service Request No. {service_request.id} created by "
                             f"{service_request.user_id} needs {selection.part_name} "
@@ -337,12 +345,13 @@ class ServiceRequestService:
                     part_name_snapshot=part.part_name,
                     quantity=selection.quantity,
                     is_stock_validated=in_stock,
+                    approved_by_id=None
                 )
 
                 alert_type = (
-                    ProcurementAlertTypeReview.alert.PART_SELECTED
+                    ProcurementAlertTypePreview.PART_SELECTED
                     if in_stock
-                    else ProcurementAlertTypeReview.alert.INSUFFICIENT_STOCK
+                    else ProcurementAlertTypePreview.INSUFFICIENT_STOCK
                 )
 
                 if in_stock:
@@ -528,7 +537,7 @@ class ServiceRequestService:
 
             if service_request.llm_diagnosis is not None:
                 service_request.llm_diagnosis.status = (
-                    DiagnosisVerdict.REJECTED
+                    LLMDiagnosisStatusPreview.REJECTED
                 )
 
                 diagnostic_status = str(
@@ -660,3 +669,131 @@ class ServiceRequestService:
         )
 
         return item
+
+
+    def final_service_request_confirmation(
+        self,
+        approved_by: UserSchema,
+        service_request_id: int,
+        request_data: ServiceRequestFinalizeRequest
+    ) -> None:
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        stored_service_request = self.repository.get_by_id(service_request_id)
+
+        if stored_service_request is None:
+            raise ServiceRequestDoesNotExistError(detail=f"Service request {service_request_id} not found")
+
+        is_admin = approved_by.role == UserRolePreview.role.ADMIN
+        is_finalized = stored_service_request.status in {
+            ServiceRequestStatus.COMPLETED,
+            ServiceRequestStatus.UNSUCCESSFUL
+        }
+
+        if is_finalized and not is_admin:
+            raise ServiceRequestStatusCanOnlyModifiedAgain(
+                detail=(
+                    f"Service request {service_request_id} has already "
+                    f"been finalized."
+                )
+            )
+
+        usage_by_id = {
+            item.request_part_id: item
+            for item in request_data.parts_usage
+        }
+
+        if len(usage_by_id) != len(request_data.parts_usage):
+            raise RequestPartDuplicationError()
+
+        request_data_part_ids = {
+            item.request_part_id
+            for item in request_data.parts_usage
+        }
+
+        request_parts_by_id = {
+            request_part.id: request_part
+            for request_part in stored_service_request.request_parts
+        }
+
+        if set(usage_by_id) != set(request_parts_by_id):
+            raise RequestPartInvalidUsageConfirmationError()
+
+        for usage in request_data.parts_usage:
+            if usage.parts_used and (
+                usage.quantity_used is None 
+                or usage.quantity_used <= 0
+            ):
+                raise RequestPartQuantityUsedMustGreaterThanZeroError()
+
+            if not usage.parts_used and usage.quantity_used != 0:
+                raise RequestPartQuantityUsedMustBeZeroError()
+
+        request_parts_to_update = [
+            request_part
+            for request_part in stored_service_request.request_parts
+            if request_part.id in request_data_part_ids
+        ]
+
+        try:
+
+            for request_part in request_parts_to_update:
+                usage = usage_by_id[request_part.id]
+
+                previous_quantity = (
+                    request_part.quantity_used
+                    if request_part.parts_used and request_part.quantity_used is not None
+                    else 0
+                )
+
+                new_quantity = (
+                    usage.quantity_used
+                    if usage.parts_used and usage.quantity_used is not None
+                    else 0
+                )
+
+                quantity_difference = new_quantity - previous_quantity
+
+                if quantity_difference > 0:
+                    remaining_stock = self.spare_part_interface.update_spare_part_quantity(
+                        part_id=request_part.part_id,
+                        quantity_used=quantity_difference,
+                    )
+
+                    if remaining_stock <= 0:
+                        self.procurement_alert_interface.create_procurement_alert(
+                            request_id=stored_service_request.id,
+                            part_id=request_part.part_id,
+                            part_name_snapshot=request_part.part_name_snapshot,
+                            is_resolved=False,
+                            created_at=now,
+                            alert_type=ProcurementAlertTypePreview.FINALIZED_REQUEST,
+                            alert_message=(
+                                f"Spare part '{request_part.part_name_snapshot}' is out of stock "
+                                f"after finalizing service request No. {stored_service_request.id}."
+                            ),
+                        )
+
+                elif quantity_difference < 0:
+                    self.spare_part_interface.add_spare_part_quantity(
+                        part_id=request_part.part_id,
+                        quantity_used=abs(quantity_difference),
+                    )
+
+                request_part.parts_used = usage.parts_used
+                request_part.quantity_used = usage.quantity_used
+
+            self.repository.final_confirmation(
+                now=now,
+                approved_by=approved_by.id,
+                stored_service_request=stored_service_request,
+                final_status=request_data.status
+            )
+
+            self.db.commit()
+            self.db.refresh(stored_service_request)
+
+        except Exception as error:
+
+            self.db.rollback()
+            raise ServiceRequestFailedError() from error

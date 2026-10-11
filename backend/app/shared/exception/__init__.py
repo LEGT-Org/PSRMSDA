@@ -25,6 +25,7 @@ from app.shared.exception.llm_service import (
 )
 
 from app.shared.exception.service_request import (
+    ServiceRequestStatusCanOnlyModifiedAgain,
     ServiceRequestStatusIsNotPendingError,
     ServiceRequestDoesNotExistError,
     ServiceRequestFailedError
@@ -35,7 +36,16 @@ from app.shared.exception.procurement_alert import (
 )
 
 from app.shared.exception.request_part import (
+    RequestPartQuantityUsedMustGreaterThanZeroError,
+    RequestPartInvalidUsageConfirmationError,
+    RequestPartQuantityUsedMustBeZeroError,
+    RequestPartDuplicationError,
     RequestPartFailedError
+)
+
+from app.shared.exception.spare_part import (
+    SparePartInsufficientQuantityError,
+    SparePartUpdateQuantityError
 )
 
 from app.shared.exception.customer import (
@@ -119,6 +129,7 @@ __all__ = [
     "LLMDiagnosisInvalidStringError",
 
     # Service Request Exception
+    "ServiceRequestStatusCanOnlyModifiedAgain",
     "ServiceRequestStatusIsNotPendingError",
     "ServiceRequestDoesNotExistError",
     "ServiceRequestFailedError",
@@ -130,9 +141,17 @@ __all__ = [
     "CategoryDoesNotExistError",
 
     # Request Part Exception
+    "RequestPartQuantityUsedMustGreaterThanZeroError",
+    "RequestPartInvalidUsageConfirmationError",
+    "RequestPartQuantityUsedMustBeZeroError",
+    "RequestPartDuplicationError",
     "RequestPartFailedError",
 
     # Procurement Alert Exception
     "ProcurementAlertFailedError",
+
+    # Spare Part Exception
+    "SparePartInsufficientQuantityError",
+    "SparePartUpdateQuantityError",
     
 ]

@@ -10,6 +10,7 @@ from app.modules.service_request.dependency import (
 from app.modules.service_request.schema import (
     ServiceRequestPageListResponse,
     ServiceRequestDetailsResponse,
+    ServiceRequestFinalizeRequest,
     LLMDiagnosticRequestPreview,
     CustomerRequestPreview,
     ServiceRequestResponse,
@@ -122,7 +123,31 @@ def cancel_request_on_unload(
 def service_request_detail(
     service_request_id: int,
     service: ServiceRequestService,
+    current_user: CurrentUser
 ) -> ServiceRequestDetailsResponse:
 
     return service.get_service_request_details(service_request_id)
+
+
+@router.post(
+    "/{service_request_id}/final-confimation",
+    status_code=status.HTTP_200_OK
+)
+def finalized_service_request(
+    service_request_id: int,
+    request: ServiceRequestFinalizeRequest,
+    service: ServiceRequestService,
+    current_user: CurrentUser
+) -> dict[str, str]:
+
+    service.final_service_request_confirmation(
+        service_request_id=service_request_id,
+        approved_by=current_user,
+        request_data=request
+    )
+
+    return {
+        "message": "Service request has been finalized"
+    }
+
 

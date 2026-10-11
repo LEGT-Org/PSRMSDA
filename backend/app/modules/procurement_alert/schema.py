@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 class ProcurementAlertType(StrEnum):
 
+    FINALIZED_REQUEST = "Finalized Request"
     REQUEST_STAGE = "Request Stage"
     PART_SELECTED = "Part Selected"
     NO_PART_MATCH = "No Part Match"

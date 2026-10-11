@@ -39,8 +39,9 @@ class ServiceRequest(Base):
     )
 
     # Foreign Key
-    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    approved_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
