@@ -9,6 +9,8 @@ from app.modules.request_part.model import RequestPart
 from app.modules.customer.model import Customer
 from app.modules.user.model import User
 
+from app.modules.service_request.schema import LLMDiagnosisStatusPreview
+
 
 class ServiceRequestRepository:
 
@@ -38,6 +40,8 @@ class ServiceRequestRepository:
             select(ServiceRequest)
             .join(Customer, ServiceRequest.customer_id == Customer.id)
             .join(User, ServiceRequest.user_id == User.id)
+            .join(ServiceRequest.llm_diagnosis)
+            .where(LLMDiagnosis.status != LLMDiagnosisStatusPreview.DRAFT)
         )
 
         if search:
@@ -58,7 +62,7 @@ class ServiceRequestRepository:
         )
 
         if status:
-            statement = statement.where(ServiceRequest.status == status)
+            statement = statement.where(ServiceRequest.status == status,)
 
         if created_date:
             start_date = datetime.combine(created_date, time.min)

@@ -39,4 +39,4 @@ class User(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationship
-    service_requests: Mapped[list["ServiceRequest"]] = relationship(back_populates="users")
+    service_requests: Mapped[list["ServiceRequest"]] = relationship(back_populates="users", foreign_keys="ServiceRequest.user_id")

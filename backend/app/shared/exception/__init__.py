@@ -25,7 +25,8 @@ from app.shared.exception.llm_service import (
 )
 
 from app.shared.exception.service_request import (
-    ServiceRequestStatusCanOnlyModifiedAgain,
+    ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError,
+    ServiceRequestStatusCanOnlyModifiedAgainError,
     ServiceRequestStatusIsNotPendingError,
     ServiceRequestDoesNotExistError,
     ServiceRequestFailedError
@@ -129,7 +130,8 @@ __all__ = [
     "LLMDiagnosisInvalidStringError",
 
     # Service Request Exception
-    "ServiceRequestStatusCanOnlyModifiedAgain",
+    "ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError",
+    "ServiceRequestStatusCanOnlyModifiedAgainError",
     "ServiceRequestStatusIsNotPendingError",
     "ServiceRequestDoesNotExistError",
     "ServiceRequestFailedError",

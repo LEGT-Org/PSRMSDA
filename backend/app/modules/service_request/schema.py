@@ -44,6 +44,7 @@ class UserRolePreview(StrEnum):
 
 class LLMDiagnosisStatusPreview(StrEnum):
 
+    DRAFT = LLMDiagnosisStatus.DRAFT
     ACCEPTED = LLMDiagnosisStatus.ACCEPTED
     REJECTED = LLMDiagnosisStatus.REJECTED
 
@@ -151,6 +152,25 @@ class UserSchema(BaseModel):
     email: str
     role: str
 
+
+class ProcurementAlertRequest(BaseModel):
+
+    request_id: int
+    part_id: int | None = None
+    part_name_snapshot: str | None = None
+    is_resolved: bool = False
+    created_at: datetime
+    alert_type: ProcurementAlertType
+    alert_message: str | None = None
+
+
+class RequestPartRequest(BaseModel):
+
+    request_id: int
+    part_id: int
+    quantity: int | None = None
+    part_name_snapshot: str
+    is_stock_validated: bool = False
 
 class ServiceRequestListResponse(BaseModel):
 

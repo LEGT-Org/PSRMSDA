@@ -15,10 +15,10 @@ class ProcurementAlertType(StrEnum):
 
 class ProcurementAlertSchema(BaseModel):
 
-    alert_message: str
-    alert_type: ProcurementAlertType
-    is_resolved: bool
     request_id: int
-    part_id: int
-    part_name_snapshot: str
+    part_id: int | None = None
+    part_name_snapshot: str | None = None
+    is_resolved: bool = False
     created_at: datetime
+    alert_type: ProcurementAlertType
+    alert_message: str | None = None

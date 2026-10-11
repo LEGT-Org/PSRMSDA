@@ -32,7 +32,7 @@ class SparePartService:
 
         spare_part = self.repository.search_by_name(part_name)
 
-        return spare_part
+        return list(spare_part)
 
 
     def get_spare_part_by_id(

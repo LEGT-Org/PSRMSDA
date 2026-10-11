@@ -37,9 +37,10 @@ class RequestPartService:
             self.repository.create(request_part)
             self.db.flush()
 
+            print("Created procurement alert ID:", procurement_alert.id)
+
             return request_part
 
         except Exception as error:
             
-            self.db.rollback()
             raise RequestPartFailedError() from error
