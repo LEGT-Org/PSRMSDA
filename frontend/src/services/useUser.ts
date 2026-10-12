@@ -18,6 +18,8 @@ import {
     type User,
     type UserPageListResponse,
 } from './state/User.ts';
+import { logout } from './useAuth.ts';
+
 
 
 // Register a User
@@ -187,6 +189,21 @@ export const GetUsers = async (
 
 export const PromoteUser = async (userId: number): Promise<boolean> => {
 
+    const Confirmation = await Swal.fire({
+        title: 'Promote User?',
+        text: 'This user will receive administrator privileges.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, promote user',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        focusCancel: true,
+    });
+
+    if (!Confirmation.isConfirmed) {
+        return false;
+    }
+
     try {
 
         const response = await ApiFetch(`/user/admin/${userId}/promote`, { method: 'PATCH' });
@@ -226,6 +243,21 @@ export const PromoteUser = async (userId: number): Promise<boolean> => {
 // Demote a User
 
 export const DemoteUser = async (userId: number): Promise<boolean> => {
+
+    const Confirmation = await Swal.fire({
+        title: 'Demote User?',
+        text: 'This user will lose administrator privileges.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, demote user',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        focusCancel: true,
+    });
+
+    if (!Confirmation.isConfirmed) {
+        return false;
+    }
 
     try {
 
@@ -267,6 +299,21 @@ export const DemoteUser = async (userId: number): Promise<boolean> => {
 
 export const DisableUser = async (userId: number): Promise<boolean> => {
 
+    const Confirmation = await Swal.fire({
+        title: 'Disable User?',
+        text: 'This user will lose an access to the system.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, disable user',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        focusCancel: true,
+    });
+
+    if (!Confirmation.isConfirmed) {
+        return false;
+    }
+
     try {
 
         const response = await ApiFetch(`/user/admin/${userId}/disable`, { method: 'PATCH' });
@@ -286,7 +333,7 @@ export const DisableUser = async (userId: number): Promise<boolean> => {
         await GetUsers();
 
         await HandleSuccess(data.message);
-
+        
         return true;
 
     } catch (error) {
@@ -306,6 +353,21 @@ export const DisableUser = async (userId: number): Promise<boolean> => {
 // Enable a User
 
 export const EnableUser = async (userId: number): Promise<boolean> => {
+
+    const Confirmation = await Swal.fire({
+        title: 'Enable User?',
+        text: 'This user will have an access to the system.',
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, enable user',
+        cancelButtonText: 'Cancel',
+        reverseButtons: true,
+        focusCancel: true,
+    });
+
+    if (!Confirmation.isConfirmed) {
+        return false;
+    }
 
     try {
 

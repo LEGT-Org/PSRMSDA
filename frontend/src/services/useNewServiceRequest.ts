@@ -4,8 +4,9 @@ import { accessToken } from "./state/Auth";
 import { getCSRFToken } from "@/api/CSRF";
 import { 
     showDiagnosis,
-    isDiagnosing,
     diagnosis,
+    isDiagnosing,
+    isConfirming,
     type DiagnosisRequest,
     type DiagnosisResponse,
     type ConfirmServiceRequest 
@@ -56,23 +57,33 @@ export const runAIDiagnosis = async (payload: DiagnosisRequest): Promise<void> =
 
 export const confirmServiceRequest = async (payload: ConfirmServiceRequest): Promise<DiagnosisResponse> => {
 
-    const response = await ApiFetch('/service-requests/confirm',
-        {
+    isConfirming.value = true;
 
-            method: 'POST',
-            body: JSON.stringify(payload),
+    try {
 
+        const response = await ApiFetch('/service-requests/confirm',
+            {
+
+                method: 'POST',
+                body: JSON.stringify(payload),
+
+            }
+        );
+
+        if (!response.ok) {
+            await HandleApiError(
+                response,
+                'Failed to confirm service request.'
+            )
         }
-    );
 
-    if (!response.ok) {
-        await HandleApiError(
-            response,
-            'Failed to confirm service request.'
-        )
+        return await response.json();
+
+    } finally {
+
+        isConfirming.value = false;
+
     }
-
-    return await response.json();
 
 };
 

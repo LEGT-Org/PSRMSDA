@@ -49,6 +49,11 @@ class LLMDiagnosisStatusPreview(StrEnum):
     REJECTED = LLMDiagnosisStatus.REJECTED
 
 
+class ServiceRequestStatusUpdate(BaseModel):
+
+    status: ServiceRequestStatus
+
+
 class SelectedPart(BaseModel):
     
     part_id: int | None = None          
@@ -229,4 +234,4 @@ class ServiceRequestDetailsResponse(BaseModel):
 class ServiceRequestFinalizeRequest(BaseModel):
 
     status: ServiceRequestStatus
-    parts_usage: RequestPartUsage
+    parts_usage: list[RequestPartUsage]

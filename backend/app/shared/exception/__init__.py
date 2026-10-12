@@ -70,11 +70,11 @@ from app.shared.exception.user import (
     PasswordMustContainUppercaseError,
     PasswordMustContainNumberError, 
     InvalidRegistrationTokenError, 
+    InsufficientPermissionsError,
     PasswordDoesNotMatchError,
     InvalidEmailAddressError, 
     InvalidPhoneNumberError,
     EmailAlreadyExistsError,
-    EmailServiceFailedError,
     SetupNewPasswordError,
     NoNameError
 )  
@@ -117,10 +117,10 @@ __all__ = [
     # User Exception
     "NameOnlyContainAlphabeticCharacterError", 
     "NameMustBeTwoToFiftyCharacterError", 
+    "InsufficientPermissionsError", 
     "InvalidEmailAddressError", 
     "EmailAlreadyExistsError",
-    "EmailServiceFailedError",
-    "InvalidPhoneNumberError", 
+    "InvalidPhoneNumberError",
     "NoNameError",
 
     # LLM Diagnosis Exception

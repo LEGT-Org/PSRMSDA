@@ -28,6 +28,7 @@
         ShowRegisterUser,
         type RegisterUserRequest
     } from '@/services/state/User.ts';
+import { accessToken, currentUser, isFetched } from '@/services/state/Auth';
 
 
     const FirstName = ref('');
@@ -74,11 +75,7 @@
 
     const GoToNextPage = async () => {
 
-        if (CurrentPage.value >= TotalPages.value) {
-
-            return;
-
-        }
+        if (CurrentPage.value >= TotalPages.value) return;
 
         await GetUsers(
             CurrentPage.value + 1,
@@ -93,11 +90,7 @@
 
     const GoToPreviousPage = async () => {
 
-        if (CurrentPage.value <= 1) {
-
-            return;
-
-        }
+        if (CurrentPage.value <= 1) return;
 
         await GetUsers(
             CurrentPage.value - 1,
@@ -110,7 +103,9 @@
     };
 
     onMounted(async () => {
-        
+
+        if (!currentUser.value || !accessToken.value) return;
+
         await GetUsers(
             CurrentPage.value,
             UsersPerPage.value,

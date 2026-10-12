@@ -195,6 +195,7 @@
 
 .Diagnostic-Hypotheses-Details {
     margin-top: 1.5rem;
+    font-size: 0.85rem;
 }
 
 .Diagnostic-Hypotheses-Details article {
@@ -248,7 +249,7 @@
 
 .Missing-Information-Details li,
 .Recommended-Checks-Details li {
-    color: #374151;
+    color: var(--third-color);
 }
 
 /* ================================

@@ -13,9 +13,11 @@ import {
     StatusFilter,
     CreatedDate, 
     type ServiceRequestListResponse, 
-    type ServiceRequestListResponseData 
+    type ServiceRequestListResponseData, 
+    type ServiceRequestFinalizePayload,
+    type ServiceRequestStatus,
+    type ServiceRequestDetail
 } from "./state/ServiceRequest";
-
 
 
 
@@ -120,5 +122,120 @@ export const GetServiceRequests = async (
 
         isLoadingServiceRequests.value = false;
 
+    }
+};
+
+
+export const GetServiceRequestDetail = async (
+    serviceRequestId: number,
+): Promise<ServiceRequestDetail> => {
+    const Response = await ApiFetch(
+        `/service-requests/${serviceRequestId}/detail`,
+        {
+            method: 'GET',
+        },
+    );
+
+    const Data = await Response.json().catch(() => null);
+
+    if (!Response.ok) {
+        throw new Error(
+            typeof Data?.detail === 'string'
+                ? Data.detail
+                : 'Failed to load service request.',
+        );
+    }
+
+    return Data as ServiceRequestDetail;
+};
+
+
+export const FinalizeServiceRequest = async (
+    serviceRequestId: number,
+    payload: ServiceRequestFinalizePayload,
+): Promise<boolean> => {
+
+    try {
+        const response = await ApiFetch(`/service-requests/${serviceRequestId}/final-confirmation`,
+            {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            },
+        );
+
+        if (!response.ok) {
+            await HandleApiError(
+                response,
+                'Failed to finalize service request.',
+            );
+
+            return false;
+        }
+
+        return true;
+
+    } catch (error) {
+
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
+        return false;
+    }
+};
+
+
+export const RegularStatusUpdate = async (
+    serviceRequestId: number,
+    status: ServiceRequestStatus,
+): Promise<boolean> => {
+    try {
+        const Response = await ApiFetch(
+            `/service-requests/${serviceRequestId}/status`,
+            {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    status,
+                }),
+            },
+        );
+
+        if (!Response.ok) {
+            const ErrorData = await Response.json().catch(() => null);
+
+            const Message =
+                typeof ErrorData?.detail === 'string'
+                    ? ErrorData.detail
+                    : 'Failed to update the service request.';
+
+            await Swal.fire({
+                title: 'Update Failed!',
+                text: Message,
+                icon: 'error',
+            });
+
+            return false;
+        }
+
+        return true;
+
+    } catch (error) {
+        console.error('Failed to update service request:', error);
+
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
+        return false;
     }
 };

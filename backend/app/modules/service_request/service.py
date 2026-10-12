@@ -24,6 +24,7 @@ from app.modules.service_request.schema import (
     ServiceRequestStatus,
     RequestPartDetails,
     RequestPartRequest,
+    UserRolePreview,
     UserSchema 
 )
 
@@ -50,7 +51,8 @@ from app.shared.exception import (
     ServiceRequestStatusIsNotPendingError,
     ServiceRequestDoesNotExistError,
     RequestPartDuplicationError,
-    ServiceRequestFailedError
+    ServiceRequestFailedError,
+    EmailServiceFailedError
 )
 
 
@@ -135,7 +137,7 @@ class ServiceRequestService:
                     )
 
                     matched_spare_parts.append(
-                        MatchedSparePartPreview(
+                      MatchedSparePartPreview(
                             part_id=part.id,
                             part_name=part.part_name,
                             part_code=part.part_code,
@@ -176,9 +178,9 @@ class ServiceRequestService:
 
         except Exception as error:
 
-            print(error)
-
             self.db.rollback()
+
+            print(f"Diagnosis failed: {error}")
             raise ServiceRequestFailedError() from error
 
 
@@ -203,11 +205,6 @@ class ServiceRequestService:
         try:
 
             now = datetime.now(timezone.utc).replace(tzinfo=None)
-
-            # --------------------------------
-            # Find existing staged request
-            # --------------------------------
-
             service_request = None
 
             if request.service_request_id is not None:
@@ -232,10 +229,6 @@ class ServiceRequestService:
                         )
                     )
 
-            # --------------------------------
-            # Create request if it doesn't exist
-            # --------------------------------
-
             if service_request is None:
 
                 customer = self.customer_interface.find_or_create_customer(customer_request=request.customer_data)
@@ -258,10 +251,6 @@ class ServiceRequestService:
             else:
                 customer = service_request.customers
 
-            # --------------------------------
-            # Optional AI diagnosis
-            # --------------------------------
-
             llm_diagnosis = service_request.llm_diagnosis
 
             if (
@@ -269,10 +258,6 @@ class ServiceRequestService:
                 and request.diagnosis_verdict is not None
             ):
                 llm_diagnosis.status = request.diagnosis_verdict.ACCEPTED
-
-            # --------------------------------
-            # Selected parts
-            # --------------------------------
 
             if not request.selected_parts:
                 self.procurement_alert_interface.create_procurement_alert(
@@ -393,20 +378,12 @@ class ServiceRequestService:
                     )
                 )
 
-            # --------------------------------
-            # Finalize request
-            # --------------------------------
-
             self.repository.update_service_request(
                 now=now,
                 stored_service_request=service_request,
                 final_status=request.final_status,
                 technician_notes=request.technician_notes
             )
-
-            # --------------------------------
-            # Notify Admin: Request Ready for Review
-            # --------------------------------
 
             self.procurement_alert_interface.create_procurement_alert(
                 data=ProcurementAlertRequest(
@@ -434,52 +411,51 @@ class ServiceRequestService:
             self.db.commit()
             self.db.refresh(service_request)
 
-            # --------------------------------
-            # Notify Customer Through Email
-            # --------------------------------
+            try:
 
-            html = self.email_renderer.render(
-                "service_request.html",
+                html = self.email_renderer.render(
+                    "service_request.html",
 
-                preheader="Your service request has been created.",
-                company_name="Lightyear Electrical Goods Trading",
-                address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
-                first_name=customer.first_name,
-                last_name=customer.last_name,
-                intro="Your service request has been successfully created.",
-                service_request_id=service_request.id,
-                device_type=service_request.device_type,
-                device_brand=service_request.device_brand,
-                device_model=service_request.device_model,
-                status=service_request.status,
-                fault_description=service_request.fault_description,
-                notice_title="What happens next?",
-                notice_body="A technician will review your service request and proceed with the necessary inspection.",
-                regards="Thanks,",
-                team="The LEGT Team",
-                footer="This is an automated message. Please do not reply directly to this email."
-            )
+                    preheader="Your service request has been created.",
+                    company_name="Lightyear Electrical Goods Trading",
+                    address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
+                    first_name=customer.first_name,
+                    last_name=customer.last_name,
+                    intro="Your service request has been successfully created.",
+                    service_request_id=service_request.id,
+                    device_type=service_request.device_type,
+                    device_brand=service_request.device_brand,
+                    device_model=service_request.device_model,
+                    status=service_request.status,
+                    fault_description=service_request.fault_description,
+                    notice_title="What happens next?",
+                    notice_body="A technician will review your service request and proceed with the necessary inspection.",
+                    regards="Thanks,",
+                    team="The LEGT Team",
+                    footer="This is an automated message. Please do not reply directly to this email."
+                )
 
-            message = EmailMessage(
-                to=customer.email,
-                subject="Service Request Created",
-                body=(
-                    "Your service request has been successfully created.\n\n"
-                    f"Service Request #: {service_request.id}\n"
-                    f"Device: {service_request.device_type}\n"
-                    f"Brand: {service_request.device_brand}\n"
-                    f"Model: {service_request.device_model}\n"
-                    f"Status: {service_request.status}\n\n"
-                    "Please wait for our team to contact you for further assistance."
-                ),
-                    html=html
-            )
+                message = EmailMessage(
+                    to=customer.email,
+                    subject="Service Request Created",
+                    body=(
+                        "Your service request has been successfully created.\n\n"
+                        f"Service Request #: {service_request.id}\n"
+                        f"Device: {service_request.device_type}\n"
+                        f"Brand: {service_request.device_brand}\n"
+                        f"Model: {service_request.device_model}\n"
+                        f"Status: {service_request.status}\n\n"
+                        "Please wait for our team to contact you for further assistance."
+                    ),
+                        html=html
+                )
+
+            except Exception as email_error:
+
+                print(f"Failed to send finalization email: {email_error}")
+                raise EmailServiceFailedError() from error
 
             self.email_service.send(message)
-
-            # --------------------------------
-            # Prepare the Matched Items
-            # --------------------------------
 
             llm_recommendation = None
             matched_spare_parts = []
@@ -531,18 +507,18 @@ class ServiceRequestService:
             )
 
         except (
-            ServiceRequestDoesNotExistError,
-            ServiceRequestStatusIsNotPendingError
+            ServiceRequestStatusIsNotPendingError,
+            ServiceRequestDoesNotExistError
         ):
 
             self.db.rollback()
             raise
 
         except Exception as error:
-            
-            print(error)
 
             self.db.rollback()
+
+            print(f"Confirm service request failed: {error}")
             raise ServiceRequestFailedError() from error
 
 
@@ -611,14 +587,18 @@ class ServiceRequestService:
             self.db.commit()
 
         except (
-            ServiceRequestDoesNotExistError,
             ServiceRequestStatusIsNotPendingError,
+            ServiceRequestDoesNotExistError
         ):
+
             self.db.rollback()
             raise
 
         except Exception as error:
+
             self.db.rollback()
+
+            print(f"Cancel service request failed: {error}")
             raise ServiceRequestFailedError() from error
 
 
@@ -743,77 +723,77 @@ class ServiceRequestService:
         request_data: ServiceRequestFinalizeRequest
     ) -> None:
 
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
-        stored_service_request = self.repository.get_by_id(service_request_id)
-
-        if stored_service_request is None:
-            raise ServiceRequestDoesNotExistError(
-                detail=f"Service request {service_request_id} not found"
-            )
-
-        final_statuses = {
-            ServiceRequestStatus.COMPLETED,
-            ServiceRequestStatus.UNSUCCESSFUL
-        }
-
-        is_admin = approved_by.role == UserRolePreview.ADMIN
-        is_finalized = stored_service_request.status in final_statuses
-
-        if request_data.status not in final_statuses:
-            raise ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError(
-                detail=(
-                    "Final confirmation status can only be "
-                    f"{ServiceRequestStatus.COMPLETED} or "
-                    f"{ServiceRequestStatus.UNSUCCESSFUL}."
-                )
-            )
-
-        if is_finalized and not is_admin:
-            raise ServiceRequestStatusCanOnlyModifiedAgain(
-                detail=(
-                    f"Service request {service_request_id} has already "
-                    f"been finalized."
-                )
-            )
-
-        usage_by_id = {
-            item.request_part_id: item
-            for item in request_data.parts_usage
-        }
-
-        if len(usage_by_id) != len(request_data.parts_usage):
-            raise RequestPartDuplicationError()
-
-        request_data_part_ids = {
-            item.request_part_id
-            for item in request_data.parts_usage
-        }
-
-        request_parts_by_id = {
-            request_part.id: request_part
-            for request_part in stored_service_request.request_parts
-        }
-
-        if set(usage_by_id) != set(request_parts_by_id):
-            raise RequestPartInvalidUsageConfirmationError()
-
-        for usage in request_data.parts_usage:
-            if usage.parts_used and (
-                usage.quantity_used is None 
-                or usage.quantity_used <= 0
-            ):
-                raise RequestPartQuantityUsedMustGreaterThanZeroError()
-
-            if not usage.parts_used and usage.quantity_used != 0:
-                raise RequestPartQuantityUsedMustBeZeroError()
-
-        request_parts_to_update = [
-            request_part
-            for request_part in stored_service_request.request_parts
-            if request_part.id in request_data_part_ids
-        ]
-
         try:
+
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+            stored_service_request = self.repository.get_by_id(service_request_id)
+
+            if stored_service_request is None:
+                raise ServiceRequestDoesNotExistError(
+                    detail=f"Service request {service_request_id} not found"
+                )
+
+            final_statuses = {
+                ServiceRequestStatus.COMPLETED,
+                ServiceRequestStatus.UNSUCCESSFUL
+            }
+
+            is_admin = approved_by.role == UserRolePreview.ADMIN
+            is_finalized = stored_service_request.status in final_statuses
+
+            if request_data.status not in final_statuses:
+                raise ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError(
+                    detail=(
+                        "Final confirmation status can only be "
+                        f"{ServiceRequestStatus.COMPLETED} or "
+                        f"{ServiceRequestStatus.UNSUCCESSFUL}."
+                    )
+                )
+
+            if is_finalized and not is_admin:
+                raise ServiceRequestStatusCanOnlyModifiedAgain(
+                    detail=(
+                        f"Service request {service_request_id} has already "
+                        f"been finalized."
+                    )
+                )
+
+            usage_by_id = {
+                item.request_part_id: item
+                for item in request_data.parts_usage
+            }
+
+            if len(usage_by_id) != len(request_data.parts_usage):
+                raise RequestPartDuplicationError()
+
+            request_data_part_ids = {
+                item.request_part_id
+                for item in request_data.parts_usage
+            }
+
+            request_parts_by_id = {
+                request_part.id: request_part
+                for request_part in stored_service_request.request_parts
+            }
+
+            if set(usage_by_id) != set(request_parts_by_id):
+                raise RequestPartInvalidUsageConfirmationError()
+
+            for usage in request_data.parts_usage:
+                if usage.parts_used and (
+                    usage.quantity_used is None 
+                    or usage.quantity_used <= 0
+                ):
+                    raise RequestPartQuantityUsedMustGreaterThanZeroError()
+
+                if not usage.parts_used and usage.quantity_used != 0:
+                    raise RequestPartQuantityUsedMustBeZeroError()
+
+            request_parts_to_update = [
+                request_part
+                for request_part in stored_service_request.request_parts
+                if request_part.id in request_data_part_ids
+            ]
 
             for request_part in request_parts_to_update:
                 usage = usage_by_id[request_part.id]
@@ -872,12 +852,207 @@ class ServiceRequestService:
                 final_status=request_data.status
             )
 
+            self.procurement_alert_interface.create_procurement_alert(
+                data=ProcurementAlertRequest(
+                    request_id=stored_service_request.id,
+                    part_id=None,
+                    part_name_snapshot=None,
+                    is_resolved=False,
+                    created_at=now,
+                    alert_type=ProcurementAlertTypePreview.FINALIZED_REQUEST,
+                    alert_message=(
+                        f"Service request No. {stored_service_request.id} "
+                        f"has been finalized as {request_data.status.value}."
+                    ),
+                )
+            )
+
+
             self.db.commit()
             self.db.refresh(stored_service_request)
 
-        except Exception as error:
+            try:
+                
+                html = self.email_renderer.render(
+                    "service_request.html",
+                    preheader="Your service request has been finalized.",
+                    company_name="Lightyear Electrical Goods Trading",
+                    address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
+                    first_name=stored_service_request.customers.first_name,
+                    last_name=stored_service_request.customers.last_name,
+                    intro="Your service request has been finalized.",
+                    service_request_id=stored_service_request.id,
+                    device_type=stored_service_request.device_type,
+                    device_brand=stored_service_request.device_brand,
+                    device_model=stored_service_request.device_model,
+                    status=stored_service_request.status.value,
+                    fault_description=stored_service_request.fault_description,
+                    notice_title="Final Service Request Status",
+                    notice_body=(
+                        "Good news! Your device is repaired and ready to be picked up. "
+                        "Please visit our store to collect your device."
+                        if stored_service_request.status == ServiceRequestStatus.COMPLETED
+                        else (
+                            "Your service request has been marked as unsuccessful. "
+                            "Please contact our team to discuss the results and next steps."
+                        )
+                    ),
+                    regards="Thanks,",
+                    team="The LEGT Team",
+                    footer=(
+                        "This is an automated message. "
+                        "Please do not reply directly to this email."
+                    ),
+                )
 
-            print(error)
+                message = EmailMessage(
+                    to=stored_service_request.customers.email,
+                    subject="Service Request Finalized",
+                    body=(
+                        "Your service request has been finalized.\n\n"
+                        f"Service Request #: {stored_service_request.id}\n"
+                        f"Device: {stored_service_request.device_type}\n"
+                        f"Brand: {stored_service_request.device_brand}\n"
+                        f"Model: {stored_service_request.device_model}\n"
+                        f"Status: {stored_service_request.status.value}\n\n"
+                        "Please contact our team if you have any questions."
+                    ),
+                    html=html,
+                )
+
+                self.email_service.send(message)
+
+            except Exception as email_error:
+
+                print(f"Failed to send finalization email: {email_error}")
+                raise EmailServiceFailedError() from error
+
+        except (
+            ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError,
+            RequestPartQuantityUsedMustGreaterThanZeroError,
+            ServiceRequestStatusCanOnlyModifiedAgain,
+            RequestPartInvalidUsageConfirmationError,
+            RequestPartQuantityUsedMustBeZeroError,
+            ServiceRequestDoesNotExistError,
+            RequestPartDuplicationError,
+        ):
 
             self.db.rollback()
+            raise
+
+        except Exception as error:
+
+            self.db.rollback()
+
+            print(f"Status final confirmation failed: {error}")
+            raise ServiceRequestFailedError() from error
+
+
+    """  
+    
+        Update Reqular Service Request Status
+
+    """
+
+    def update_service_request_status(
+        self,
+        service_request_id: int,
+        status: ServiceRequestStatus,
+        updated_by: UserSchema,
+    ) -> None:
+
+        try:
+
+            service_request = self.repository.get_by_id(service_request_id)
+
+            if service_request is None:
+                raise ServiceRequestDoesNotExistError(
+                    detail=f"Service request {service_request_id} not found"
+                )
+
+            final_statuses = {
+                ServiceRequestStatus.COMPLETED,
+                ServiceRequestStatus.UNSUCCESSFUL,
+            }
+
+            regular_statuses = {
+                ServiceRequestStatus.PENDING,
+                ServiceRequestStatus.IN_PROGRESS,
+                ServiceRequestStatus.FOR_FURTHER_INSPECTION,
+            }
+
+            # Final statuses must go through final confirmation.
+            if status not in regular_statuses:
+                raise ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError(
+                    detail=(
+                        "Completed and Unsuccessful must be set through "
+                        "the final-confirmation endpoint."
+                    )
+                )
+
+            is_finalized = service_request.status in final_statuses
+            is_admin = updated_by.role == UserRolePreview.ADMIN
+
+            # Only admins can reopen finalized requests, and only as In Progress.
+            if is_finalized:
+                if not is_admin:
+                    raise ServiceRequestStatusCanOnlyModifiedAgainError(
+                        detail=(
+                            f"Service request {service_request_id} "
+                            "has already been finalized."
+                        )
+                    )
+
+                if status != ServiceRequestStatus.IN_PROGRESS:
+                    raise ServiceRequestStatusCanOnlyModifiedAgainError(
+                        detail=(
+                            "A finalized service request can only be "
+                            "reopened as In Progress."
+                        )
+                    )
+
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+            self.repository.update_service_request(
+                now=now,
+                stored_service_request=service_request,
+                final_status=status,
+                technician_notes=service_request.technician_notes,
+            )
+
+            self.procurement_alert_interface.create_procurement_alert(
+                ProcurementAlertRequest(
+                    request_id=service_request_id,
+                    part_id=None,
+                    part_name_snapshot=None,
+                    alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
+                    alert_message=(
+                        f"Service Request No. {service_request_id} "
+                        f"status updated to {status.value}."
+                    ),
+                    created_at=datetime.now(),
+                )
+            )
+
+
+            self.db.commit()
+
+        except (
+            ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError,
+            ServiceRequestStatusCanOnlyModifiedAgainError,
+            ServiceRequestDoesNotExistError
+        ):
+
+            print(ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError)
+            print(ServiceRequestStatusCanOnlyModifiedAgainError)
+            print(ServiceRequestDoesNotExistError)
+
+            self.db.rollback()
+            raise
+
+        except Exception as error:
+
+            self.db.rollback()
+
+            print(f"Status update failed: {error}") 
             raise ServiceRequestFailedError() from error

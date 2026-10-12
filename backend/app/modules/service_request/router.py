@@ -12,6 +12,7 @@ from app.modules.service_request.schema import (
     ServiceRequestDetailsResponse,
     ServiceRequestFinalizeRequest,
     LLMDiagnosticRequestPreview,
+    ServiceRequestStatusUpdate,
     CustomerRequestPreview,
     ServiceRequestResponse,
     ConfirmServiceRequest,
@@ -130,7 +131,7 @@ def service_request_detail(
 
 
 @router.post(
-    "/{service_request_id}/final-confimation",
+    "/{service_request_id}/final-confirmation",
     status_code=status.HTTP_200_OK
 )
 def finalized_service_request(
@@ -147,7 +148,35 @@ def finalized_service_request(
     )
 
     return {
-        "message": "Service request has been finalized"
+        "message": (
+            f"Service request {service_request_id} "
+            f"status has been finalized into {request.status.value}."
+        )
+    }
+
+
+@router.patch(
+    "/{service_request_id}/status",
+    status_code=status.HTTP_200_OK
+)
+def update_service_request_status(
+    service_request_id: int,
+    request: ServiceRequestStatusUpdate,
+    service: ServiceRequestService,
+    current_user: CurrentUser
+) -> dict[str, str]:
+
+    service.update_service_request_status(
+        service_request_id=service_request_id,
+        status=request.status,
+        updated_by=current_user
+    )
+
+    return {
+        "message": (
+            f"Service request {service_request_id} "
+            f"status updated to {request.status.value}."
+        )
     }
 
 

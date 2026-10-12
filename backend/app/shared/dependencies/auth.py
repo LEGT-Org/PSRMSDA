@@ -81,4 +81,6 @@ def require_role(require_role: UserRole) -> Callable:
                 detail="Insufficient permissions"
             )
 
+        return current_user
+
     return dependency

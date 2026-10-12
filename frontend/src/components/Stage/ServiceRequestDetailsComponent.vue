@@ -1,71 +1,321 @@
 <script setup lang="ts">
+    import Swal from 'sweetalert2';
     import { computed, onMounted, ref } from 'vue';
     import { useRoute } from 'vue-router';
-    import { ApiFetch } from '@/api/Client';
     
+    import { FinalizeServiceRequest, GetServiceRequestDetail, RegularStatusUpdate } from '@/services/useServiceRequest';
+    import { capitalizeFirstLetter } from '@/helper/Capitalize';
+    import { currentUser } from '@/services/state/Auth';
     import type { 
+        FinalServiceRequestStatus,
+        PartUsagePayload,
         ServiceRequestDetail, 
+        ServiceRequestFinalizePayload, 
         ServiceRequestStatus 
     } from '@/services/state/ServiceRequest';
-    import { capitalizeFirstLetter } from '@/helper/Capitalize';
 
 
     const Route = useRoute();
     const SelectedStatus = ref<ServiceRequestStatus>('Pending');
-    const PartsUsed = ref<boolean | null>(null);
 
     const ServiceRequestId = computed<number>(() =>
         Number(Route.params.id)
     );
 
     const IsLoading = ref<boolean>(true);
+    const IsStatusLoading = ref<boolean>(false);
     const ErrorMessage = ref<string | null>(null);
 
     const ServiceRequest = ref<ServiceRequestDetail | null>(null);
 
-    const IsRequestClosed = computed<boolean>(() =>
-        ['Completed', 'Unsuccessful'].includes(
-            ServiceRequest.value?.status ?? ''
-        )
-    );
+    const IsRequestClosed = computed<boolean>(() => {
+        const IsFinalized = [
+            'Completed',
+            'Unsuccessful',
+        ].includes(ServiceRequest.value?.status ?? '');
 
-    const UpdateServiceRequestStatus = async () => {
-        // Call your API to update the service request status.
-    }
+        const IsAdmin = currentUser.value?.role === 'Admin';
 
-    const UpdatePartsUsage = async (used: boolean) => {
-        // Call your API to record whether requested parts were used.
-    }
+        return IsFinalized && !IsAdmin;
+    });
 
-    const FetchServiceRequest = async (value: number): Promise<void> => {
+    const UpdateServiceRequestStatus = async (): Promise<void> => {
 
+        IsStatusLoading.value = true;
+
+        if (!ServiceRequest.value) return;
+
+        const PreviousStatus = ServiceRequest.value.status;
+        const Status = SelectedStatus.value;
+        
+        if (Status === ServiceRequest.value.status) return;
+
+        const IsFinalStatus =
+            Status === 'Completed' ||
+            Status === 'Unsuccessful';
+
+        try {
+
+            const IsReopeningRequest =
+                ['Completed', 'Unsuccessful'].includes(PreviousStatus) &&
+                ['In Progress', 'For Further Inspection'].includes(Status);
+
+            if (IsReopeningRequest) {
+                const Confirmation = await Swal.fire({
+                    title: 'Reopen Service Request?',
+                    text: `Service Request No. ${ServiceRequestId.value} is already finalized. Do you want to reopen it?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, reopen request',
+                    cancelButtonText: 'Cancel',
+                    reverseButtons: true,
+                    focusCancel: true,
+                });
+
+                if (!Confirmation.isConfirmed) {
+                    SelectedStatus.value = PreviousStatus;
+                    return;
+                }
+            }
+
+            if (IsFinalStatus) {
+                
+                // 1. Ask the technician to confirm parts usage.
+                const PartsUsage = await ConfirmPartsUsage(Status);
+
+                if (PartsUsage === null) {
+                    SelectedStatus.value = ServiceRequest.value.status;
+                    return;
+                }
+
+                // 2. Call your existing finalization API function.
+                const Payload: ServiceRequestFinalizePayload = {
+                    status: Status,
+                    parts_usage: PartsUsage,
+                };
+
+                const Success = await FinalizeServiceRequest(
+                    ServiceRequestId.value,
+                    Payload,
+                );
+
+                // FinalizeServiceRequest already handles API errors.
+                if (!Success) {
+                    SelectedStatus.value = ServiceRequest.value.status;
+                    return;
+                }
+
+            } else {
+
+                // 3. Ordinary statuses use the regular status endpoint.
+                const Success = await RegularStatusUpdate(
+                    ServiceRequestId.value,
+                    Status,
+                );
+
+                if (!Success) {
+                    SelectedStatus.value = ServiceRequest.value.status;
+                    return;
+                }
+            }
+
+            // 4. Both workflows succeeded.
+            await Swal.fire({
+                title: 'Success!',
+                text: IsFinalStatus
+                    ? 'Service request has been finalized.'
+                    : 'Service request status updated successfully.',
+                icon: 'success',
+            });
+
+            // 5. Refresh the displayed request.
+            await FetchServiceRequest(ServiceRequestId.value);
+
+        } catch (error) {
+
+            await Swal.fire({
+                title: 'Error!',
+                text: error instanceof Error
+                    ? error.message
+                    : 'Unable to complete the operation.',
+                icon: 'error',
+            });
+
+            SelectedStatus.value = ServiceRequest.value?.status ?? 'Pending';
+
+        } finally {
+
+            IsStatusLoading.value = false;
+
+        }
+    };
+
+
+    const ConfirmPartsUsage = async (
+        Status: FinalServiceRequestStatus,
+    ): Promise<PartUsagePayload[] | null> => {
+        
+        const Parts = ServiceRequest.value?.requested_part ?? [];
+
+        if (Parts.some(Part => Part.id == null)) {
+
+            throw new Error('A requested part is missing its request-part ID.');
+
+        }
+
+        const EscapeHtml = (Value: string): string => {
+            const Characters: Record<string, string> = {
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#39;',
+            };
+
+            return Value.replace(/[&<>"']/g, Char => Characters[Char] ?? Char);
+        };
+
+        const PartsHtml = Parts.length > 0
+            ? Parts.map(Part => `
+                <div style="display:flex; align-items:center; gap:12px; margin:12px 0;">
+                    <label style="flex:1; text-align:left;">
+                        <input
+                            type="checkbox"
+                            id="part-used-${Part.id}"
+                        />
+                        ${EscapeHtml(Part.part_name)}
+                        (Requested: ${Part.quantity ?? 'N/A'})
+                    </label>
+
+                    <input
+                        type="number"
+                        id="quantity-used-${Part.id}"
+                        min="1"
+                        step="1"
+                        value="${Math.max(1, Part.quantity ?? 1)}"
+                        disabled
+                        style="width:90px;"
+                    />
+                </div>
+            `).join('')
+            : '<p>No requested parts were recorded.</p>';
+
+        const Result = await Swal.fire<PartUsagePayload[]>({
+            title: `Finalize as ${Status}?`,
+            html: `
+                <p>Confirm which parts were actually used.</p>
+                ${PartsHtml}
+            `,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Confirm Finalization',
+            cancelButtonText: 'Cancel',
+            reverseButtons: true,
+            focusCancel: true,
+
+            didOpen: () => {
+                for (const Part of Parts) {
+                    const Checkbox = document.getElementById(
+                        `part-used-${Part.id}`,
+                    ) as HTMLInputElement | null;
+
+                    const QuantityInput = document.getElementById(
+                        `quantity-used-${Part.id}`,
+                    ) as HTMLInputElement | null;
+
+                    Checkbox?.addEventListener('change', () => {
+                        if (!Checkbox || !QuantityInput) return;
+
+                        QuantityInput.disabled = !Checkbox.checked;
+
+                        QuantityInput.value = Checkbox.checked
+                            ? String(Math.max(1, Part.quantity ?? 1))
+                            : '0';
+                    });
+                }
+            },
+
+            preConfirm: () => {
+                const PartsUsage: PartUsagePayload[] = [];
+
+                for (const Part of Parts) {
+
+                    if (Part.id == null) {
+
+                        Swal.showValidationMessage('A requested part is missing its ID.',);
+                        return false;
+
+                    }
+
+                    const Checkbox = document.getElementById(`part-used-${Part.id}`,) as HTMLInputElement | null;
+                    const QuantityInput = document.getElementById(`quantity-used-${Part.id}`,) as HTMLInputElement | null;
+
+                    if (!Checkbox || !QuantityInput) {
+
+                        Swal.showValidationMessage('Unable to read the parts usage.',);
+                        return false;
+
+                    }
+
+                    const PartsWereUsed = Checkbox.checked;
+                    const QuantityUsed = PartsWereUsed
+                        ? Number(QuantityInput.value)
+                        : 0;
+
+                    if (
+                        PartsWereUsed &&
+                        (!Number.isInteger(QuantityUsed) || QuantityUsed <= 0)
+                    ) {
+
+                        Swal.showValidationMessage('Enter a positive whole-number quantity for every part used.',);
+                        return false;
+
+                    }
+
+                    PartsUsage.push(
+                        {
+                            request_part_id: Part.id,
+                            parts_used: PartsWereUsed,
+                            quantity_used: QuantityUsed,
+                        }
+                    );
+                }
+
+                return PartsUsage;
+            },
+        });
+
+        return Result.isConfirmed
+            ? Result.value ?? null
+            : null;
+    };
+
+
+    const FetchServiceRequest = async (serviceRequestId: number): Promise<void> => {
         IsLoading.value = true;
         ErrorMessage.value = null;
 
         try {
 
-            const Response = await ApiFetch(`/service-requests/${ServiceRequestId.value}/detail`, { method: 'GET' });
-
-            if (!Response.ok) {
-                const ErrorData = await Response.json();
-
-                ErrorMessage.value =
-                    typeof ErrorData.detail === 'string'
-                        ? ErrorData.detail
-                        : 'Failed to load service request.';
-
-                return;
-            }
-
-            ServiceRequest.value =
-                await Response.json() as ServiceRequestDetail;
-
+            ServiceRequest.value = await GetServiceRequestDetail(serviceRequestId,);
             SelectedStatus.value = ServiceRequest.value.status;
 
-        } catch (Error) {
+        } catch (error) {
+            
+            await Swal.fire({
+                title: 'Error!',
+                text: error instanceof Error
+                    ? error.message
+                    : 'Unable to load service request detail.',
+                icon: 'error',
+            });
 
-            ErrorMessage.value = 'Unable to connect to the server.';
-            console.error('Failed to fetch service request:', Error);
+            ErrorMessage.value =
+                error instanceof Error
+                    ? error.message
+                    : 'Unable to load service request detail.';
+
+            console.error('Failed to fetch service request:', error);
 
         } finally {
 
@@ -76,7 +326,7 @@
 
     onMounted(async () => { 
         await FetchServiceRequest(ServiceRequestId.value)
-    });
+    }); 
     
 </script>
 
@@ -95,7 +345,7 @@
         <template v-else-if="ServiceRequest">
             <!-- Header -->
             <header class="Request-Header-Details">
-                <h1>Service Request #{{ ServiceRequest.id }}</h1>
+                <h1>Service Request No. {{ ServiceRequest.id }}</h1>
                 <p>Status: 
                     <span 
                         class="Status-Badge"
@@ -186,7 +436,15 @@
 
                         <p>
                             <strong>Confidence:</strong>
-                            {{ hypothesis.confidence }}
+                            <span
+                                class="Overall-Confidence"
+                                :class="{
+                                    'Confidence-Low': capitalizeFirstLetter(hypothesis.confidence) === 'Low',
+                                    'Confidence-Moderate': capitalizeFirstLetter(hypothesis.confidence) === 'Moderate',
+                                    'Confidence-High': capitalizeFirstLetter(hypothesis.confidence) === 'High',
+                                }"
+                            >
+                                {{ capitalizeFirstLetter(hypothesis.confidence) }}</span>
                         </p>
 
                         <p>
@@ -340,38 +598,16 @@
                     <button
                         type="button"
                         @click="UpdateServiceRequestStatus"
-                        :disabled="SelectedStatus === ServiceRequest.status"
+                        :disabled="SelectedStatus === ServiceRequest.status || IsStatusLoading"
                     >
-                        Update Status
+                        {{
+                            IsStatusLoading
+                                ? 'Updating Status...'
+                                : 'Update Status'
+                        }}
                     </button>
                 </div>
-
-                <!-- Requested Parts Usage -->
-                <div
-                    v-if="PartsUsed === null" 
-                    class="Requested-Parts-Control-Details"
-                >
-                    <p>Were the requested parts used?</p>
-
-                    <button
-                        type="button"
-                        @click="UpdatePartsUsage(true)"
-                    >
-                        Yes, parts were used
-                    </button>
-
-                    <button
-                        type="button"
-                        @click="UpdatePartsUsage(false)"
-                    >
-                        No parts were used
-                    </button>
-                </div>
-
-                <p v-else>
-                    Parts usage:
-                    {{ PartsUsed ? 'Parts were used' : 'No parts were used' }}
-                </p>
+                
             </div>
         </template>
     </section>
