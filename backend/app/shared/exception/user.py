@@ -44,15 +44,6 @@ class NameOnlyContainAlphabeticCharacterError(BaseHTTPException):
         )
 
 
-class EmailServiceFailedError(BaseHTTPException):
-    
-    def __init__(self):
-        super().__init__(
-            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
-            detail="Email Service Failed"
-        )
-
-
 class InvalidPhoneNumberError(BaseHTTPException):
 
     def __init__(self):
@@ -113,4 +104,13 @@ class PasswordDoesNotMatchError(BaseHTTPException):
         super().__init__(
             status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
             detail="Password and Confirm Password does not match"
+        )
+
+
+class InsufficientPermissionsError(BaseHTTPException):
+
+    def __init__(self, detail: str):
+        super().__init__(
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            detail=detail
         )

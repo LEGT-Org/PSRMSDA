@@ -99,7 +99,10 @@ def promote_user(
     current_user: AdminUser
 ) -> None:
 
-    service.demote_user(user_id)
+    service.demote_user(
+        user_id=user_id,
+        actor_id=current_user.id
+    )
 
     return {
         "message": f"User {user_id} has been successfully demoted"
@@ -133,7 +136,10 @@ def disable_user(
     current_user: AdminUser
 ) -> None:
 
-    service.disable_user(user_id)
+    service.disable_user(
+        user_id=user_id,
+        actor_id=current_user.id    
+    )
 
     return {
         "message": f"User {user_id} has been successfully disabled"

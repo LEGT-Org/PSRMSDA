@@ -36,7 +36,7 @@ class ProcurementAlert(Base):
 
     # Foreign Key
     request_id: Mapped[int] = mapped_column(ForeignKey("service_requests.id"), nullable=False)
-    part_id: Mapped[int] = mapped_column(ForeignKey("spare_parts.id"), nullable=True)
+    part_id: Mapped[int | None] = mapped_column(ForeignKey("spare_parts.id"), nullable=True)
 
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)

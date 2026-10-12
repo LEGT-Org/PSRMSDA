@@ -39,16 +39,18 @@ class ServiceRequest(Base):
     )
 
     # Foreign Key
-    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"))
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
+    customer_id: Mapped[int] = mapped_column(ForeignKey("customers.id"), nullable=False)
+    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), nullable=False)
+    approved_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    # Relationship
-    users: Mapped["User"] = relationship(back_populates="service_requests")
+    # Relationship  
+    users: Mapped["User"] = relationship(back_populates="service_requests", foreign_keys=[user_id])
+    approved_by: Mapped["User | None"] = relationship(foreign_keys=[approved_by_id])
     customers: Mapped["Customer"] = relationship(back_populates="service_requests")
     llm_diagnosis: Mapped[Optional["LLMDiagnosis"]] = relationship(back_populates="service_requests", uselist=False)
     request_parts: Mapped[list["RequestPart"]] = relationship(back_populates="service_requests")

@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -38,3 +40,14 @@ class SparePartRepository:
         statement = select(SparePart).where(SparePart.id == part_id)
 
         return self.db.scalar(statement)
+
+
+    def update_quantity(
+        self,
+        stored_spare_part: SparePart,
+        new_quantity: int,
+        now: datetime
+    ) -> None:
+
+        stored_spare_part.stock_quantity = new_quantity
+        stored_spare_part.updated_at = now

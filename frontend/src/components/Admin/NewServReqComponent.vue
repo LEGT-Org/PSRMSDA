@@ -15,6 +15,7 @@
 
     import { 
         isDiagnosing,
+        isConfirming,
         showDiagnosis,
         diagnosis,
         type DiagnosisRequest,
@@ -178,7 +179,7 @@
 
     const HandlePageHide = () => {
         
-        const serviceRequestId =diagnosis.value?.service_request_id;
+        const serviceRequestId = diagnosis.value?.service_request_id;
 
         if (serviceRequestId == null) {
 
@@ -774,9 +775,14 @@ Example:
                 <button
                     type="button"
                     class="Confirm-Button"
+                    :disabled="isConfirming"
                     @click="ConfirmRequest"
                 >
-                    Confirm
+                    {{ 
+                        isConfirming
+                            ? 'Confirm...'
+                            : 'Confirm'
+                    }}
                 </button>
 
                 <button

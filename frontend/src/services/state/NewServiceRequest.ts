@@ -104,6 +104,16 @@ export interface ConfirmServiceRequest {
     technician_notes: string | null;
 }
 
+
+// Run AI Diagnosis State
+
 export const isDiagnosing = ref<boolean>(false)
 export const showDiagnosis = ref<boolean>(false)
 export const diagnosis = ref<DiagnosisResponse | null>(null)
+
+
+// Confirm Service Request State
+
+export const isConfirming = ref<boolean>(false)
+
+

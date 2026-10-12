@@ -10,7 +10,9 @@ from app.modules.service_request.dependency import (
 from app.modules.service_request.schema import (
     ServiceRequestPageListResponse,
     ServiceRequestDetailsResponse,
+    ServiceRequestFinalizeRequest,
     LLMDiagnosticRequestPreview,
+    ServiceRequestStatusUpdate,
     CustomerRequestPreview,
     ServiceRequestResponse,
     ConfirmServiceRequest,
@@ -122,7 +124,59 @@ def cancel_request_on_unload(
 def service_request_detail(
     service_request_id: int,
     service: ServiceRequestService,
+    current_user: CurrentUser
 ) -> ServiceRequestDetailsResponse:
 
     return service.get_service_request_details(service_request_id)
+
+
+@router.post(
+    "/{service_request_id}/final-confirmation",
+    status_code=status.HTTP_200_OK
+)
+def finalized_service_request(
+    service_request_id: int,
+    request: ServiceRequestFinalizeRequest,
+    service: ServiceRequestService,
+    current_user: CurrentUser
+) -> dict[str, str]:
+
+    service.final_service_request_confirmation(
+        service_request_id=service_request_id,
+        approved_by=current_user,
+        request_data=request
+    )
+
+    return {
+        "message": (
+            f"Service request {service_request_id} "
+            f"status has been finalized into {request.status.value}."
+        )
+    }
+
+
+@router.patch(
+    "/{service_request_id}/status",
+    status_code=status.HTTP_200_OK
+)
+def update_service_request_status(
+    service_request_id: int,
+    request: ServiceRequestStatusUpdate,
+    service: ServiceRequestService,
+    current_user: CurrentUser
+) -> dict[str, str]:
+
+    service.update_service_request_status(
+        service_request_id=service_request_id,
+        status=request.status,
+        updated_by=current_user
+    )
+
+    return {
+        "message": (
+            f"Service request {service_request_id} "
+            f"status updated to {request.status.value}."
+        )
+    }
+
 

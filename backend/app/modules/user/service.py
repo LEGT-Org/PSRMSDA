@@ -26,6 +26,7 @@ from app.shared.security.password import (
 
 from app.shared.exception import (
     InvalidRegistrationTokenError,
+    InsufficientPermissionsError,
     InvalidEmailAddressError,
     EmailAlreadyExistsError, 
     InvalidCredentialsError,
@@ -328,8 +329,14 @@ class UserService:
 
     def disable_user(
         self,
-        user_id: int 
+        user_id: int,
+        actor_id: int 
     ) -> None:
+
+        if actor_id == user_id:
+            raise InsufficientPermissionsError(
+                detail="You cannot disable your own account"
+            )
 
         user = self.repository.get_by_id(user_id)
 
@@ -382,8 +389,14 @@ class UserService:
 
     def demote_user(
         self,
-        user_id: int
+        user_id: int,
+        actor_id: int
     ) -> None:
+
+        if actor_id == user_id:
+            raise InsufficientPermissionsError(
+                detail="You cannot demote your own account"
+            )
 
         user = self.repository.get_by_id(user_id)
 

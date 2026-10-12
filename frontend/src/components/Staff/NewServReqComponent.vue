@@ -1,7 +1,10 @@
 <script setup lang="ts">
+    import Swal from 'sweetalert2';
     import { onMounted, onUnmounted, ref } from 'vue';
     import { parseFaultDescriptions } from '@/helper/SymptomsParser';
-    import { validateDiagnosisForm } from '@/helper/ValidateServiceRequestForm';
+    import { ValidateDiagnosisForm } from '@/helper/ValidateServiceRequestForm';
+    import { HandleSuccess } from '@/helper/HandleSuccess';
+    
 
     import { 
         runAIDiagnosis, 
@@ -111,7 +114,7 @@
     
     const RunDiagnosis = async () => {
 
-        const isValid = validateDiagnosisForm(
+        const isValid = await ValidateDiagnosisForm(
             CustomerFirstName.value,
             CustomerLastName.value,
             CustomerEmail.value,
@@ -135,25 +138,15 @@
     const ConfirmRequest = async () => {
 
         const payload = BuildConfirmRequestPayload();
+        const response = await confirmServiceRequest(payload);
 
-        try {
+        ResetServiceRequest();
 
-            const response = await confirmServiceRequest(payload);
+        await HandleSuccess(
+            'Service request confirmed successfully.',
+            'Request Confirmed!'
+        )
 
-            ResetServiceRequest();
-
-            alert('Service request confirmed successfully.');
-
-        } catch (error) {
-
-            console.error('Confirm Request Error:', error);
-
-            alert(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to confirm service request.'
-            );
-        }
     };
 
 
@@ -172,13 +165,12 @@
 
         } catch (error) {
 
-            console.error('Cancel Request Error:', error);
 
-            alert(
-                error instanceof Error
-                    ? error.message
-                    : 'Failed to cancel service request.'
-            );
+            await Swal.fire({
+                title: 'Connection Error!',
+                text: 'Failed to cancel service request. Please try again later.',
+                icon: 'error',
+            });
 
         }
     };
@@ -186,7 +178,7 @@
 
     const HandlePageHide = () => {
         
-        const serviceRequestId =diagnosis.value?.service_request_id;
+        const serviceRequestId = diagnosis.value?.service_request_id;
 
         if (serviceRequestId == null) {
 

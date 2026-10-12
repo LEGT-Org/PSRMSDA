@@ -25,6 +25,8 @@ from app.shared.exception.llm_service import (
 )
 
 from app.shared.exception.service_request import (
+    ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError,
+    ServiceRequestStatusCanOnlyModifiedAgainError,
     ServiceRequestStatusIsNotPendingError,
     ServiceRequestDoesNotExistError,
     ServiceRequestFailedError
@@ -35,7 +37,16 @@ from app.shared.exception.procurement_alert import (
 )
 
 from app.shared.exception.request_part import (
+    RequestPartQuantityUsedMustGreaterThanZeroError,
+    RequestPartInvalidUsageConfirmationError,
+    RequestPartQuantityUsedMustBeZeroError,
+    RequestPartDuplicationError,
     RequestPartFailedError
+)
+
+from app.shared.exception.spare_part import (
+    SparePartInsufficientQuantityError,
+    SparePartUpdateQuantityError
 )
 
 from app.shared.exception.customer import (
@@ -59,11 +70,11 @@ from app.shared.exception.user import (
     PasswordMustContainUppercaseError,
     PasswordMustContainNumberError, 
     InvalidRegistrationTokenError, 
+    InsufficientPermissionsError,
     PasswordDoesNotMatchError,
     InvalidEmailAddressError, 
     InvalidPhoneNumberError,
     EmailAlreadyExistsError,
-    EmailServiceFailedError,
     SetupNewPasswordError,
     NoNameError
 )  
@@ -106,10 +117,10 @@ __all__ = [
     # User Exception
     "NameOnlyContainAlphabeticCharacterError", 
     "NameMustBeTwoToFiftyCharacterError", 
+    "InsufficientPermissionsError", 
     "InvalidEmailAddressError", 
     "EmailAlreadyExistsError",
-    "EmailServiceFailedError",
-    "InvalidPhoneNumberError", 
+    "InvalidPhoneNumberError",
     "NoNameError",
 
     # LLM Diagnosis Exception
@@ -119,6 +130,8 @@ __all__ = [
     "LLMDiagnosisInvalidStringError",
 
     # Service Request Exception
+    "ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError",
+    "ServiceRequestStatusCanOnlyModifiedAgainError",
     "ServiceRequestStatusIsNotPendingError",
     "ServiceRequestDoesNotExistError",
     "ServiceRequestFailedError",
@@ -130,9 +143,17 @@ __all__ = [
     "CategoryDoesNotExistError",
 
     # Request Part Exception
+    "RequestPartQuantityUsedMustGreaterThanZeroError",
+    "RequestPartInvalidUsageConfirmationError",
+    "RequestPartQuantityUsedMustBeZeroError",
+    "RequestPartDuplicationError",
     "RequestPartFailedError",
 
     # Procurement Alert Exception
     "ProcurementAlertFailedError",
+
+    # Spare Part Exception
+    "SparePartInsufficientQuantityError",
+    "SparePartUpdateQuantityError",
     
 ]

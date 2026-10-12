@@ -36,7 +36,6 @@ export const isLoadingServiceRequests = ref<boolean>(false);
 export const ServiceRequestError = ref<string | null>(null);
 
 
-
 /*  
 
     Service Request Detail State
@@ -111,4 +110,26 @@ export interface ServiceRequestDetail {
     customer: CustomerDetails;
     technician: TechnicianDetails;
     requested_part: RequestedPart[];
+}
+
+
+/*  
+
+    Service Request Detail Update (Status + Quantity)
+
+*/
+
+export type FinalServiceRequestStatus =
+    | 'Completed'
+    | 'Unsuccessful';
+
+export interface PartUsagePayload {
+    request_part_id: number;
+    parts_used: boolean;
+    quantity_used: number;
+}
+
+export interface ServiceRequestFinalizePayload {
+    status: FinalServiceRequestStatus;
+    parts_usage: PartUsagePayload[];
 }

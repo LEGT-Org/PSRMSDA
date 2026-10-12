@@ -11,6 +11,7 @@ import {
     type User 
 } from "./state/Auth";
 import Swal from "sweetalert2";
+import { HandleSuccess } from "@/helper/HandleSuccess";
 
 
 // Fetching the User
@@ -90,6 +91,11 @@ export async function login(Email: string, Password: string) {
 
         accessToken.value = data.access_token;
         await getCurrentUser(true);
+        
+        await HandleSuccess(
+            'You have successfully logged in.',
+            'Login Successful!'
+        );
 
         return true;
 

@@ -257,7 +257,7 @@ const routes = [
                 }
             },
             {
-                path: '/admin/requests/:id',
+                path: 'requests/:id',
                 name: 'Admin Service Request Details',
                 component: () => import('@/components/Stage/ServiceRequestDetailsComponent.vue'),
                 meta: {

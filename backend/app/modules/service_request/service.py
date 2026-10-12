@@ -8,18 +8,23 @@ from app.modules.service_request.model import ServiceRequest
 from app.modules.service_request.schema import (
     ServiceRequestPageListResponse,
     ServiceRequestDetailsResponse,
+    ServiceRequestFinalizeRequest,
     CustomerServiceRequestDetails,
     LLMDiagnosticRequestPreview,
-    ProcurementAlertTypeReview,
+    ProcurementAlertTypePreview,
     ServiceRequestListResponse,
     UserServiceRequestDetails,
+    LLMDiagnosisStatusPreview,
     LLMRecommendedSparePart,
+    ProcurementAlertRequest,
     MatchedSparePartPreview,
     ServiceRequestResponse,
     CustomerRequestPreview,
     ConfirmServiceRequest,
     ServiceRequestStatus,
     RequestPartDetails,
+    RequestPartRequest,
+    UserRolePreview,
     UserSchema 
 )
 
@@ -33,13 +38,21 @@ from app.modules.service_request.interface import (
 
 from app.shared.infrastructure.email import (
     JinjaEmailRendered,
-    EmailService
+    EmailService,
+    EmailMessage
 )
 
 from app.shared.exception import (
+    ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError,
+    RequestPartQuantityUsedMustGreaterThanZeroError,
+    ServiceRequestStatusCanOnlyModifiedAgainError,
+    RequestPartInvalidUsageConfirmationError,
+    RequestPartQuantityUsedMustBeZeroError,
     ServiceRequestStatusIsNotPendingError,
     ServiceRequestDoesNotExistError,
-    ServiceRequestFailedError
+    RequestPartDuplicationError,
+    ServiceRequestFailedError,
+    EmailServiceFailedError
 )
 
 
@@ -108,58 +121,46 @@ class ServiceRequestService:
             llm_diagnosis.request_id = service_request.id
 
             self.llm_diagnosis_interface.stage(llm_diagnosis)
-
             llm_recommendation = llm_diagnosis.llm_recommendation
 
-            matched_parts = []
+            matched_spare_parts = []
+            llm_recommended_part = None
 
             if llm_recommendation is not None:
+                
                 matched_parts = self.spare_part_interface.search_matched_spare_part(llm_recommendation.component)
 
-                in_stock = (
-                    matched_parts.stock_quantity is not None
-                    and matched_parts.stock_quantity >= 1
-                )
+                for part in matched_parts:
+                    in_stock = (
+                        part.stock_quantity is not None
+                        and part.stock_quantity >= 1
+                    )
 
-                matched_spare_parts = MatchedSparePartPreview(
-                    part_id=matched_parts.id,
-                    part_name=matched_parts.name,
-                    part_code=matched_parts.part_code,
-                    device_model=matched_parts.device_model,
-                    device_brand=matched_parts.device_brand,
-                    specifications=matched_parts.specifications,
-                    unit_cost=matched_parts.unit_cost,
-                    stock_quantity=matched_parts.stock_quantity,
-                    shelf_location=matched_parts.shelf_location,
-                    image_url=matched_parts.image_url,
-                    category_name=matched_parts.categories.name,
-                    is_available=in_stock
-                )
+                    matched_spare_parts.append(
+                      MatchedSparePartPreview(
+                            part_id=part.id,
+                            part_name=part.part_name,
+                            part_code=part.part_code,
+                            device_model=part.device_model,
+                            device_brand=part.device_brand,
+                            specifications=part.specifications,
+                            unit_cost=part.unit_cost,
+                            stock_quantity=part.stock_quantity,
+                            shelf_location=part.shelf_location,
+                            image_url=part.image_url,
+                            category_name=part.categories.name,
+                            is_available=in_stock,
+                        )
+                    )
 
                 llm_recommended_part = LLMRecommendedSparePart(
                     llm_component=llm_recommendation.component,
                     llm_reason=llm_recommendation.reason,
-                    compatibility_requirements=llm_recommendation.compatibility_requirements
-                )
-
-                self.procurement_alert_interface.create_procurement_alert(
-                    request_id=service_request.id,
-                    part_id=None,
-                    part_name_snapshot=llm_recommendation.component,
-                    is_resolved=False,
-                    created_at=now,
-                    alert_type=ProcurementAlertTypeReview.alert.REQUEST_STAGE,
-                    alert_message=(
-                        f"Service Request No. {service_request.id} created by "
-                        f"{service_request.user_id} has been staged and ready to "
-                        f"be review."
+                    compatibility_requirements=(
+                        llm_recommendation.compatibility_requirements
                     ),
                 )
-
-            else:
-                matched_spare_parts = []
-                llm_recommended_part = None
-
+                
             self.db.commit()
             self.db.refresh(service_request)
             self.db.refresh(llm_diagnosis)
@@ -177,9 +178,9 @@ class ServiceRequestService:
 
         except Exception as error:
 
-            print(error)
-
             self.db.rollback()
+
+            print(f"Diagnosis failed: {error}")
             raise ServiceRequestFailedError() from error
 
 
@@ -204,11 +205,6 @@ class ServiceRequestService:
         try:
 
             now = datetime.now(timezone.utc).replace(tzinfo=None)
-
-            # --------------------------------
-            # Find existing staged request
-            # --------------------------------
-
             service_request = None
 
             if request.service_request_id is not None:
@@ -233,10 +229,6 @@ class ServiceRequestService:
                         )
                     )
 
-            # --------------------------------
-            # Create request if it doesn't exist
-            # --------------------------------
-
             if service_request is None:
 
                 customer = self.customer_interface.find_or_create_customer(customer_request=request.customer_data)
@@ -257,11 +249,7 @@ class ServiceRequestService:
                 self.db.flush()
 
             else:
-                customer = service_request.customer
-
-            # --------------------------------
-            # Optional AI diagnosis
-            # --------------------------------
+                customer = service_request.customers
 
             llm_diagnosis = service_request.llm_diagnosis
 
@@ -269,37 +257,53 @@ class ServiceRequestService:
                 llm_diagnosis is not None
                 and request.diagnosis_verdict is not None
             ):
-                llm_diagnosis.status = request.diagnosis_verdict
+                llm_diagnosis.status = request.diagnosis_verdict.ACCEPTED
 
-            # --------------------------------
-            # Selected parts
-            # --------------------------------
+            if not request.selected_parts:
+                self.procurement_alert_interface.create_procurement_alert(
+                    data=ProcurementAlertRequest(
+                        request_id=service_request.id,
+                        part_id=None,
+                        part_name_snapshot=None,
+                        is_resolved=False,
+                        created_at=now,
+                        alert_type=ProcurementAlertTypePreview.NO_PART_MATCH,
+                        alert_message=(
+                            f"Service Request No. {service_request.id} "
+                            "has no selected spare parts. Admin review is required."
+                        ),
+                    )
+                )
 
             for selection in request.selected_parts:
 
                 if selection.part_id is None:
                     
                     self.request_part_interface.create_request(
-                        request_id=service_request.id,
-                        part_id=None,
-                        part_name_snapshot=selection.part_name,
-                        quantity=None,
-                        is_stock_validated=False,
+                        data=RequestPartRequest(
+                            request_id=service_request.id,
+                            part_id=None,
+                            quantity=None,
+                            part_name_snapshot=selection.part_name,
+                            is_stock_validated=False
+                        )
                     )
 
                     self.procurement_alert_interface.create_procurement_alert(
-                        request_id=service_request.id,
-                        part_id=None,
-                        part_name_snapshot=selection.part_name,
-                        is_resolved=False,
-                        created_at=now,
-                        alert_type=ProcurementAlertTypeReview.alert.NO_PART_MATCH,
-                        alert_message=(
-                            f"Service Request No. {service_request.id} created by "
-                            f"{service_request.user_id} needs {selection.part_name} "
-                            f"which no suitable part matches the recommendation "
-                            f"on the spare part inventory"
-                        ),
+                        data=ProcurementAlertRequest(
+                            request_id=service_request.id,
+                            part_id=None,
+                            part_name_snapshot=selection.part_name,
+                            is_resolved=False,
+                            created_at=now,
+                            alert_type=ProcurementAlertTypePreview.NO_PART_MATCH,
+                            alert_message=(
+                                f"Service Request No. {service_request.id} created by "
+                                f"{service_request.user_id} needs {selection.part_name} "
+                                f"which no suitable part matches the recommendation "
+                                f"on the spare part inventory"
+                            ),
+                        )
                     )
 
                     continue
@@ -309,18 +313,20 @@ class ServiceRequestService:
                 if part is None:
 
                     self.procurement_alert_interface.create_procurement_alert(
-                        request_id=service_request.id,
-                        part_id=None,
-                        part_name_snapshot=selection.part_name,
-                        is_resolved=False,
-                        created_at=now,
-                        alert_type=ProcurementAlertTypeReview.alert.PART_NOT_FOUND,
-                        alert_message=(
-                            f"Service Request No. {service_request.id} created by "
-                            f"{service_request.user_id} needs {selection.part_name} "
-                            f"which requested part record doesn't exist on the "
-                            f"spare part inventory"
-                        ),
+                        data=ProcurementAlertRequest(
+                            request_id=service_request.id,
+                            part_id=None,
+                            part_name_snapshot=selection.part_name,
+                            is_resolved=False,
+                            created_at=now,
+                            alert_type=ProcurementAlertTypePreview.PART_NOT_FOUND,
+                            alert_message=(
+                                f"Service Request No. {service_request.id} created by "
+                                f"{service_request.user_id} needs {selection.part_name} "
+                                f"which requested part record doesn't exist on the "
+                                f"spare part inventory"
+                            )
+                        )
                     )
 
                     continue
@@ -332,17 +338,19 @@ class ServiceRequestService:
                 )
 
                 self.request_part_interface.create_request(
-                    request_id=service_request.id,
-                    part_id=part.id,
-                    part_name_snapshot=part.part_name,
-                    quantity=selection.quantity,
-                    is_stock_validated=in_stock,
+                    data=RequestPartRequest(
+                        request_id=service_request.id,
+                        part_id=part.id,
+                        quantity=selection.quantity,
+                        part_name_snapshot=part.part_name,
+                        is_stock_validated=in_stock
+                    )
                 )
 
                 alert_type = (
-                    ProcurementAlertTypeReview.alert.PART_SELECTED
+                    ProcurementAlertTypePreview.PART_SELECTED
                     if in_stock
-                    else ProcurementAlertTypeReview.alert.INSUFFICIENT_STOCK
+                    else ProcurementAlertTypePreview.INSUFFICIENT_STOCK
                 )
 
                 if in_stock:
@@ -359,18 +367,16 @@ class ServiceRequestService:
                     )
 
                 self.procurement_alert_interface.create_procurement_alert(
-                    request_id=service_request.id,
-                    part_id=part.id,
-                    part_name_snapshot=part.part_name,
-                    is_resolved=False,
-                    created_at=now,
-                    alert_type=alert_type,
-                    alert_message=alert_message,
+                    data=ProcurementAlertRequest(
+                        request_id=service_request.id,
+                        part_id=part.id,
+                        part_name_snapshot=part.part_name,
+                        is_resolved=False,
+                        created_at=now,
+                        alert_type=alert_type,
+                        alert_message=alert_message
+                    )
                 )
-
-            # --------------------------------
-            # Finalize request
-            # --------------------------------
 
             self.repository.update_service_request(
                 now=now,
@@ -379,85 +385,120 @@ class ServiceRequestService:
                 technician_notes=request.technician_notes
             )
 
+            self.procurement_alert_interface.create_procurement_alert(
+                data=ProcurementAlertRequest(
+                    request_id=service_request.id,
+                    part_id=None,
+                    part_name_snapshot=(
+                        llm_diagnosis.llm_recommendation.component
+                        if (
+                            llm_diagnosis is not None
+                            and llm_diagnosis.llm_recommendation is not None
+                        )
+                        else None
+                    ),
+                    is_resolved=False,
+                    created_at=now,
+                    alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
+                    alert_message=(
+                        f"Service Request No. {service_request.id}, created by "
+                        f"user {service_request.user_id}, has been confirmed "
+                        "and is ready for admin review."
+                    ),
+                )
+            )
+
             self.db.commit()
             self.db.refresh(service_request)
 
-            # --------------------------------
-            # Notify Customer Through Email
-            # --------------------------------
+            try:
 
-            html = self.email_renderer.render(
-                "service_request.html",
+                html = self.email_renderer.render(
+                    "service_request.html",
 
-                preheader="Your service request has been created.",
-                company_name="Lightyear Electrical Goods Trading",
-                address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
-                first_name=customer.first_name,
-                last_name=customer.last_name,
-                intro="Your service request has been successfully created.",
-                service_request_id=service_request.id,
-                device_type=service_request.device_type,
-                device_brand=service_request.device_brand,
-                device_model=service_request.device_model,
-                status=service_request.status,
-                fault_description=service_request.fault_descriptions,
-                notice_title="What happens next?",
-                notice_body="A technician will review your service request and proceed with the necessary inspection.",
-                regards="Thanks,",
-                team="The LEGT Team",
-                footer="This is an automated message. Please do not reply directly to this email."
-            )
+                    preheader="Your service request has been created.",
+                    company_name="Lightyear Electrical Goods Trading",
+                    address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
+                    first_name=customer.first_name,
+                    last_name=customer.last_name,
+                    intro="Your service request has been successfully created.",
+                    service_request_id=service_request.id,
+                    device_type=service_request.device_type,
+                    device_brand=service_request.device_brand,
+                    device_model=service_request.device_model,
+                    status=service_request.status,
+                    fault_description=service_request.fault_description,
+                    notice_title="What happens next?",
+                    notice_body="A technician will review your service request and proceed with the necessary inspection.",
+                    regards="Thanks,",
+                    team="The LEGT Team",
+                    footer="This is an automated message. Please do not reply directly to this email."
+                )
 
-            message = EmailMessage(
-                to=customer.email,
-                subject="Service Request Created",
-                body=(
-                    "Your service request has been successfully created.\n\n"
-                    f"Service Request #: {service_request.id}\n"
-                    f"Device: {service_request.device_type}\n"
-                    f"Brand: {service_request.device_brand}\n"
-                    f"Model: {service_request.device_model}\n"
-                    f"Status: {service_request.status}\n\n"
-                    "Please wait for our team to contact you for further assistance."
-                ),
-                    html=html
-            )
+                message = EmailMessage(
+                    to=customer.email,
+                    subject="Service Request Created",
+                    body=(
+                        "Your service request has been successfully created.\n\n"
+                        f"Service Request #: {service_request.id}\n"
+                        f"Device: {service_request.device_type}\n"
+                        f"Brand: {service_request.device_brand}\n"
+                        f"Model: {service_request.device_model}\n"
+                        f"Status: {service_request.status}\n\n"
+                        "Please wait for our team to contact you for further assistance."
+                    ),
+                        html=html
+                )
 
-            # --------------------------------
-            # Prepare the Matched Items
-            # --------------------------------
+            except Exception as email_error:
+
+                print(f"Failed to send finalization email: {email_error}")
+                raise EmailServiceFailedError() from error
+
+            self.email_service.send(message)
 
             llm_recommendation = None
-            matched_parts = []
+            matched_spare_parts = []
+            llm_recommended_part = None
 
             if llm_diagnosis is not None:
                 llm_recommendation = llm_diagnosis.llm_recommendation
 
-                if llm_recommendation is not None:
-                    matched_parts = self.spare_part_interface.search_matched_spare_part(llm_recommendation.component)
+            if llm_recommendation is not None:
+                matched_parts = self.spare_part_interface.search_matched_spare_part(
+                    llm_recommendation.component
+                )
 
+                for part in matched_parts:
                     in_stock = (
-                        matched_parts.stock_quantity is not None
-                        and matched_parts.stock_quantity >= 1
+                        part.stock_quantity is not None
+                        and part.stock_quantity >= 1
                     )
 
-                    matched_spare_parts = MatchedSparePartPreview(
-                        part_id=matched_parts.id,
-                        part_name=matched_parts.name,
-                        part_code=matched_parts.part_code,
-                        device_model=matched_parts.device_model,
-                        device_brand=matched_parts.device_brand,
-                        specifications=matched_parts.specifications,
-                        unit_cost=matched_parts.unit_cost,
-                        stock_quantity=matched_parts.stock_quantity,
-                        shelf_location=matched_parts.shelf_location,
-                        image_url=matched_parts.image_url,
-                        category_name=matched_parts.categories.name,
-                        is_available=in_stock
+                    matched_spare_parts.append(
+                        MatchedSparePartPreview(
+                            part_id=part.id,
+                            part_name=part.name,
+                            part_code=part.part_code,
+                            device_model=part.device_model,
+                            device_brand=part.device_brand,
+                            specifications=part.specifications,
+                            unit_cost=part.unit_cost,
+                            stock_quantity=part.stock_quantity,
+                            shelf_location=part.shelf_location,
+                            image_url=part.image_url,
+                            category_name=part.categories.name,
+                            is_available=in_stock,
+                        )
                     )
 
-                else:
-                    matched_spare_parts = []
+                llm_recommended_part = LLMRecommendedSparePart(
+                    llm_component=llm_recommendation.component,
+                    llm_reason=llm_recommendation.reason,
+                    compatibility_requirements=(
+                        llm_recommendation.compatibility_requirements
+                    ),
+                )
 
 
             return build_service_request_response(
@@ -466,18 +507,18 @@ class ServiceRequestService:
             )
 
         except (
-            ServiceRequestDoesNotExistError,
-            ServiceRequestStatusIsNotPendingError
+            ServiceRequestStatusIsNotPendingError,
+            ServiceRequestDoesNotExistError
         ):
 
             self.db.rollback()
             raise
 
         except Exception as error:
-            
-            print(error)
 
             self.db.rollback()
+
+            print(f"Confirm service request failed: {error}")
             raise ServiceRequestFailedError() from error
 
 
@@ -505,16 +546,13 @@ class ServiceRequestService:
 
             if service_request is None:
                 raise ServiceRequestDoesNotExistError(
-                    detail=(
-                        f"Service request "
-                        f"{service_request_id} not found"
-                    )
+                    detail=f"Service request {service_request_id} not found"
                 )
 
-            if service_request.status in (
+            if service_request.status in {
                 ServiceRequestStatus.COMPLETED,
                 ServiceRequestStatus.UNSUCCESSFUL,
-            ):
+            }:
                 raise ServiceRequestStatusIsNotPendingError(
                     detail=(
                         f"Cannot cancel request in "
@@ -527,44 +565,48 @@ class ServiceRequestService:
             diagnostic_status = "No AI diagnosis"
 
             if service_request.llm_diagnosis is not None:
-                service_request.llm_diagnosis.status = (
-                    DiagnosisVerdict.REJECTED
-                )
-
-                diagnostic_status = str(
-                    service_request.llm_diagnosis.status
-                )
+                service_request.llm_diagnosis.status = (LLMDiagnosisStatusPreview.REJECTED)
+                diagnostic_status = (service_request.llm_diagnosis.status.value)
 
             self.procurement_alert_interface.cancel_by_request(
                 request_id=service_request.id,
                 alert_message=(
-                    f"Service Request No. {service_request.id} created by "
-                    f"{service_request.user_id} with a diagnostic status of "
-                    f"{diagnostic_status} has been cancelled."
-                )
+                    f"Service Request No. {service_request.id}, created by "
+                    f"user {service_request.user_id}, has been cancelled. "
+                    f"Diagnostic status: {diagnostic_status}."
+                ),
             )
 
             self.repository.update_service_request(
                 now=now,
                 stored_service_request=service_request,
                 final_status=ServiceRequestStatus.UNSUCCESSFUL,
-                technician_notes=None
+                technician_notes=None,
             )
 
             self.db.commit()
 
         except (
-            ServiceRequestDoesNotExistError, 
-            ServiceRequestStatusIsNotPendingError
+            ServiceRequestStatusIsNotPendingError,
+            ServiceRequestDoesNotExistError
         ):
+
             self.db.rollback()
             raise
 
         except Exception as error:
+
             self.db.rollback()
+
+            print(f"Cancel service request failed: {error}")
             raise ServiceRequestFailedError() from error
 
 
+    """  
+    
+        Get the List of Service Request
+    
+    """
     
     def get_all_service_requests(
         self,
@@ -614,6 +656,12 @@ class ServiceRequestService:
         }
 
 
+    """  
+    
+        Get the Service Request Details
+    
+    """
+
     def get_service_request_details(
         self,
         service_request_id: int
@@ -660,3 +708,351 @@ class ServiceRequestService:
         )
 
         return item
+
+
+    """  
+    
+        Finalize Service Request
+    
+    """
+
+    def final_service_request_confirmation(
+        self,
+        approved_by: UserSchema,
+        service_request_id: int,
+        request_data: ServiceRequestFinalizeRequest
+    ) -> None:
+
+        try:
+
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+            stored_service_request = self.repository.get_by_id(service_request_id)
+
+            if stored_service_request is None:
+                raise ServiceRequestDoesNotExistError(
+                    detail=f"Service request {service_request_id} not found"
+                )
+
+            final_statuses = {
+                ServiceRequestStatus.COMPLETED,
+                ServiceRequestStatus.UNSUCCESSFUL
+            }
+
+            is_admin = approved_by.role == UserRolePreview.ADMIN
+            is_finalized = stored_service_request.status in final_statuses
+
+            if request_data.status not in final_statuses:
+                raise ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError(
+                    detail=(
+                        "Final confirmation status can only be "
+                        f"{ServiceRequestStatus.COMPLETED} or "
+                        f"{ServiceRequestStatus.UNSUCCESSFUL}."
+                    )
+                )
+
+            if is_finalized and not is_admin:
+                raise ServiceRequestStatusCanOnlyModifiedAgain(
+                    detail=(
+                        f"Service request {service_request_id} has already "
+                        f"been finalized."
+                    )
+                )
+
+            usage_by_id = {
+                item.request_part_id: item
+                for item in request_data.parts_usage
+            }
+
+            if len(usage_by_id) != len(request_data.parts_usage):
+                raise RequestPartDuplicationError()
+
+            request_data_part_ids = {
+                item.request_part_id
+                for item in request_data.parts_usage
+            }
+
+            request_parts_by_id = {
+                request_part.id: request_part
+                for request_part in stored_service_request.request_parts
+            }
+
+            if set(usage_by_id) != set(request_parts_by_id):
+                raise RequestPartInvalidUsageConfirmationError()
+
+            for usage in request_data.parts_usage:
+                if usage.parts_used and (
+                    usage.quantity_used is None 
+                    or usage.quantity_used <= 0
+                ):
+                    raise RequestPartQuantityUsedMustGreaterThanZeroError()
+
+                if not usage.parts_used and usage.quantity_used != 0:
+                    raise RequestPartQuantityUsedMustBeZeroError()
+
+            request_parts_to_update = [
+                request_part
+                for request_part in stored_service_request.request_parts
+                if request_part.id in request_data_part_ids
+            ]
+
+            for request_part in request_parts_to_update:
+                usage = usage_by_id[request_part.id]
+
+                previous_quantity = (
+                    request_part.quantity_used
+                    if request_part.parts_used and request_part.quantity_used is not None
+                    else 0
+                )
+
+                new_quantity = (
+                    usage.quantity_used
+                    if usage.parts_used and usage.quantity_used is not None
+                    else 0
+                )
+
+                quantity_difference = new_quantity - previous_quantity
+
+                if quantity_difference != 0 and request_part.part_id is not None:
+
+                    if quantity_difference > 0:
+                        remaining_stock = self.spare_part_interface.update_spare_part_quantity(
+                            part_id=request_part.part_id,
+                            quantity_used=quantity_difference,
+                        )
+
+                        if remaining_stock <= 0:
+                            self.procurement_alert_interface.create_procurement_alert(
+                                data=ProcurementAlertRequest(
+                                    request_id=stored_service_request.id,
+                                    part_id=request_part.part_id,
+                                    part_name_snapshot=request_part.part_name_snapshot,
+                                    is_resolved=False,
+                                    created_at=now,
+                                    alert_type=ProcurementAlertTypePreview.FINALIZED_REQUEST,
+                                    alert_message=(
+                                        f"Spare part '{request_part.part_name_snapshot}' is out of stock "
+                                        f"after finalizing service request No. {stored_service_request.id}."
+                                    ),
+                                )
+                            )
+
+                    else:
+                        self.spare_part_interface.add_spare_part_quantity(
+                            part_id=request_part.part_id,
+                            quantity_used=abs(quantity_difference),
+                        )
+
+                request_part.parts_used = usage.parts_used
+                request_part.quantity_used = usage.quantity_used
+
+            self.repository.final_confirmation(
+                now=now,
+                approved_by=approved_by.id,
+                stored_service_request=stored_service_request,
+                final_status=request_data.status
+            )
+
+            self.procurement_alert_interface.create_procurement_alert(
+                data=ProcurementAlertRequest(
+                    request_id=stored_service_request.id,
+                    part_id=None,
+                    part_name_snapshot=None,
+                    is_resolved=False,
+                    created_at=now,
+                    alert_type=ProcurementAlertTypePreview.FINALIZED_REQUEST,
+                    alert_message=(
+                        f"Service request No. {stored_service_request.id} "
+                        f"has been finalized as {request_data.status.value}."
+                    ),
+                )
+            )
+
+
+            self.db.commit()
+            self.db.refresh(stored_service_request)
+
+            try:
+                
+                html = self.email_renderer.render(
+                    "service_request.html",
+                    preheader="Your service request has been finalized.",
+                    company_name="Lightyear Electrical Goods Trading",
+                    address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
+                    first_name=stored_service_request.customers.first_name,
+                    last_name=stored_service_request.customers.last_name,
+                    intro="Your service request has been finalized.",
+                    service_request_id=stored_service_request.id,
+                    device_type=stored_service_request.device_type,
+                    device_brand=stored_service_request.device_brand,
+                    device_model=stored_service_request.device_model,
+                    status=stored_service_request.status.value,
+                    fault_description=stored_service_request.fault_description,
+                    notice_title="Final Service Request Status",
+                    notice_body=(
+                        "Good news! Your device is repaired and ready to be picked up. "
+                        "Please visit our store to collect your device."
+                        if stored_service_request.status == ServiceRequestStatus.COMPLETED
+                        else (
+                            "Your service request has been marked as unsuccessful. "
+                            "Please contact our team to discuss the results and next steps."
+                        )
+                    ),
+                    regards="Thanks,",
+                    team="The LEGT Team",
+                    footer=(
+                        "This is an automated message. "
+                        "Please do not reply directly to this email."
+                    ),
+                )
+
+                message = EmailMessage(
+                    to=stored_service_request.customers.email,
+                    subject="Service Request Finalized",
+                    body=(
+                        "Your service request has been finalized.\n\n"
+                        f"Service Request #: {stored_service_request.id}\n"
+                        f"Device: {stored_service_request.device_type}\n"
+                        f"Brand: {stored_service_request.device_brand}\n"
+                        f"Model: {stored_service_request.device_model}\n"
+                        f"Status: {stored_service_request.status.value}\n\n"
+                        "Please contact our team if you have any questions."
+                    ),
+                    html=html,
+                )
+
+                self.email_service.send(message)
+
+            except Exception as email_error:
+
+                print(f"Failed to send finalization email: {email_error}")
+                raise EmailServiceFailedError() from error
+
+        except (
+            ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError,
+            RequestPartQuantityUsedMustGreaterThanZeroError,
+            ServiceRequestStatusCanOnlyModifiedAgain,
+            RequestPartInvalidUsageConfirmationError,
+            RequestPartQuantityUsedMustBeZeroError,
+            ServiceRequestDoesNotExistError,
+            RequestPartDuplicationError,
+        ):
+
+            self.db.rollback()
+            raise
+
+        except Exception as error:
+
+            self.db.rollback()
+
+            print(f"Status final confirmation failed: {error}")
+            raise ServiceRequestFailedError() from error
+
+
+    """  
+    
+        Update Reqular Service Request Status
+
+    """
+
+    def update_service_request_status(
+        self,
+        service_request_id: int,
+        status: ServiceRequestStatus,
+        updated_by: UserSchema,
+    ) -> None:
+
+        try:
+
+            service_request = self.repository.get_by_id(service_request_id)
+
+            if service_request is None:
+                raise ServiceRequestDoesNotExistError(
+                    detail=f"Service request {service_request_id} not found"
+                )
+
+            final_statuses = {
+                ServiceRequestStatus.COMPLETED,
+                ServiceRequestStatus.UNSUCCESSFUL,
+            }
+
+            regular_statuses = {
+                ServiceRequestStatus.PENDING,
+                ServiceRequestStatus.IN_PROGRESS,
+                ServiceRequestStatus.FOR_FURTHER_INSPECTION,
+            }
+
+            # Final statuses must go through final confirmation.
+            if status not in regular_statuses:
+                raise ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError(
+                    detail=(
+                        "Completed and Unsuccessful must be set through "
+                        "the final-confirmation endpoint."
+                    )
+                )
+
+            is_finalized = service_request.status in final_statuses
+            is_admin = updated_by.role == UserRolePreview.ADMIN
+
+            # Only admins can reopen finalized requests, and only as In Progress.
+            if is_finalized:
+                if not is_admin:
+                    raise ServiceRequestStatusCanOnlyModifiedAgainError(
+                        detail=(
+                            f"Service request {service_request_id} "
+                            "has already been finalized."
+                        )
+                    )
+
+                if status != ServiceRequestStatus.IN_PROGRESS:
+                    raise ServiceRequestStatusCanOnlyModifiedAgainError(
+                        detail=(
+                            "A finalized service request can only be "
+                            "reopened as In Progress."
+                        )
+                    )
+
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+            self.repository.update_service_request(
+                now=now,
+                stored_service_request=service_request,
+                final_status=status,
+                technician_notes=service_request.technician_notes,
+            )
+
+            self.procurement_alert_interface.create_procurement_alert(
+                ProcurementAlertRequest(
+                    request_id=service_request_id,
+                    part_id=None,
+                    part_name_snapshot=None,
+                    alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
+                    alert_message=(
+                        f"Service Request No. {service_request_id} "
+                        f"status updated to {status.value}."
+                    ),
+                    created_at=datetime.now(),
+                )
+            )
+
+
+            self.db.commit()
+
+        except (
+            ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError,
+            ServiceRequestStatusCanOnlyModifiedAgainError,
+            ServiceRequestDoesNotExistError
+        ):
+
+            print(ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError)
+            print(ServiceRequestStatusCanOnlyModifiedAgainError)
+            print(ServiceRequestDoesNotExistError)
+
+            self.db.rollback()
+            raise
+
+        except Exception as error:
+
+            self.db.rollback()
+
+            print(f"Status update failed: {error}") 
+            raise ServiceRequestFailedError() from error

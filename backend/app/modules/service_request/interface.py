@@ -81,6 +81,22 @@ class SparePartInterface(Protocol):
 
         pass
 
+    def deduct_spare_part_quantity(
+        self,
+        part_id: int,
+        quantity_used: int
+    ) -> None:
+
+        pass
+
+    def add_spare_part_quantity(
+        self,
+        part_id: int,
+        quantity_to_add: int
+    ) -> None:
+
+        pass
+
 
 class RequestPartInterface(Protocol):
 

@@ -9,6 +9,8 @@ from pydantic import (
 )
 
 from app.modules.procurement_alert.schema import ProcurementAlertType
+from app.modules.request_part.schema import RequestPartUsage
+from app.modules.user.schema import UserRole
 from app.modules.llm_diagnosis.schema import (
     StandardOperatingProcedure,
     LLMDiagnosticResponse, 
@@ -24,9 +26,32 @@ class ServiceRequestStatus(StrEnum):
     UNSUCCESSFUL = "Unsuccessful"
 
 
-class ProcurementAlertTypeReview(StrEnum):
+class ProcurementAlertTypePreview(StrEnum):
 
-    alert: ProcurementAlertType
+    FINALIZED_REQUEST = ProcurementAlertType.FINALIZED_REQUEST
+    REQUEST_STAGE = ProcurementAlertType.REQUEST_STAGE
+    PART_SELECTED = ProcurementAlertType.PART_SELECTED
+    NO_PART_MATCH = ProcurementAlertType.NO_PART_MATCH
+    PART_NOT_FOUND = ProcurementAlertType.PART_NOT_FOUND
+    INSUFFICIENT_STOCK = ProcurementAlertType.INSUFFICIENT_STOCK
+
+
+class UserRolePreview(StrEnum):
+
+    USER = UserRole.USER
+    ADMIN = UserRole.ADMIN
+
+
+class LLMDiagnosisStatusPreview(StrEnum):
+
+    DRAFT = LLMDiagnosisStatus.DRAFT
+    ACCEPTED = LLMDiagnosisStatus.ACCEPTED
+    REJECTED = LLMDiagnosisStatus.REJECTED
+
+
+class ServiceRequestStatusUpdate(BaseModel):
+
+    status: ServiceRequestStatus
 
 
 class SelectedPart(BaseModel):
@@ -65,7 +90,7 @@ class ConfirmServiceRequest(BaseModel):
     selected_parts: list[SelectedPart] = Field(default_factory=list)
     final_status: ServiceRequestStatus
     technician_notes: str | None = None
-    diagnosis_verdict: LLMDiagnosisStatus = LLMDiagnosisStatus.ACCEPTED
+    diagnosis_verdict: LLMDiagnosisStatusPreview
 
 
 class CancelServiceRequest(BaseModel):
@@ -133,6 +158,25 @@ class UserSchema(BaseModel):
     role: str
 
 
+class ProcurementAlertRequest(BaseModel):
+
+    request_id: int
+    part_id: int | None = None
+    part_name_snapshot: str | None = None
+    is_resolved: bool = False
+    created_at: datetime
+    alert_type: ProcurementAlertType
+    alert_message: str | None = None
+
+
+class RequestPartRequest(BaseModel):
+
+    request_id: int
+    part_id: int
+    quantity: int | None = None
+    part_name_snapshot: str
+    is_stock_validated: bool = False
+
 class ServiceRequestListResponse(BaseModel):
 
     id: int
@@ -185,3 +229,9 @@ class ServiceRequestDetailsResponse(BaseModel):
     customer: CustomerServiceRequestDetails
     technician: UserServiceRequestDetails
     requested_part: list[RequestPartDetails]
+
+
+class ServiceRequestFinalizeRequest(BaseModel):
+
+    status: ServiceRequestStatus
+    parts_usage: list[RequestPartUsage]
