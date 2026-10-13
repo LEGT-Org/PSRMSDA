@@ -1,0 +1,265 @@
+.Procurement-Alert-Page {
+    color: var(--main-color);
+    margin: 0;
+}
+
+.Page-Header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.Page-Header h1 {
+    margin: 0;
+    font-size: 1.8rem;
+}
+
+.Page-Header p {
+    margin: 0.5rem 0 0;
+    color: #666666;
+    font-size: 0.95rem;
+}
+
+.Alert-List-Header h2 {
+    margin: 0;
+}
+
+.Alert-List-Header p {
+    margin: 0.5rem 0 0;
+    color: #666666;
+    font-size: 0.90rem;
+}
+
+/* Summary */
+
+.Alert-Summary {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+    color: var(--main-color);
+}
+
+.Summary-Card {
+    display: flex;
+    flex-direction: column;
+    gap: 0.55rem;
+    padding: 1.25rem;
+    background: #eeeeee;
+    border: 2px solid var(--third-color);
+    border-radius: 0.375rem;
+}
+
+.Summary-Label {
+    font-size: 0.9rem;
+}
+
+.Summary-Card strong {
+    font-size: 1.8rem;
+}
+
+.Summary-Description {
+    font-size: 0.8rem;
+}
+
+.Unresolved-Summary {
+    border-left: 6px solid #ff0000;
+}
+
+.Resolved-Summary {
+    border-left: 6px solid #0000ff;
+}
+
+/* Alert List */
+
+.Alert-List-Section {
+    padding: 1.25rem;
+    background: #eeeeee;
+    border: 2px solid var(--main-color);
+    border-radius: 0.375rem;
+}
+
+.Alert-List-Header {
+    margin-bottom: 1rem;
+}
+
+.Alert-List-Section .Alert-Filters {
+    display: grid;
+    grid-template-columns: 2fr 0.50fr 0fr;
+    gap: 1rem;
+    margin: 2rem 0 1.25rem ;
+    padding: 0 1rem;
+}
+
+/* Table */
+
+.Alert-Table-Wrapper {
+    width: 100%;
+    overflow-x: auto;
+    border-radius: 0.375rem;
+}
+
+.Alert-Table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    background: var(--normal-text-color);
+}
+
+.Alert-Table th {
+    padding: 0.9rem 0.75rem;
+    background: var(--main-color);
+    color: var(--normal-text-color);
+    font-size: 0.82rem;
+    font-weight: 600;
+    white-space: nowrap;
+
+    font-size: 0.80rem;
+    font-weight: 700;
+
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+
+    box-sizing: border-box;
+}
+
+.Alert-Table td {
+    padding: 1rem 0.75rem;
+    border-bottom: 1px solid #e8e8e8;
+    font-size: 0.9rem;
+    font-weight: 500;
+    vertical-align: top;
+}
+
+.Alert-Message-Cell {
+    min-width: 250px;
+    max-width: 400px;
+}
+
+.Alert-Message-Cell strong {
+    display: block;
+    margin-bottom: 0.4rem;
+}
+
+.Alert-Message-Cell p {
+    margin: 0;
+    color: #666;
+    line-height: 1.5;
+    overflow-wrap: anywhere;
+    font-size: 0.85rem;
+}
+
+.Alert-Type,
+.Alert-Request-ID {
+    display: inline-block;
+    padding: 0.35rem 0.55rem;
+    border-radius: 0.3rem;
+    font-size: 0.8rem;
+    font-weight: bold;
+    white-space: nowrap;
+}
+
+.Alert-Date {
+    display: inline-block;
+    padding: 0.35rem 0.55rem;
+    min-width: 150px;
+    white-space: nowrap;
+    color: #555;
+}
+
+.Alert-Status {
+    display: inline-block;
+    padding: 0.35rem 0.55rem;
+    border-radius: 1rem;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.Status-Unresolved {
+    background: #fff0d9;
+    color: #8b570b;
+}
+
+.Status-Resolved {
+    background: #e2f4e8;
+    color: #236740;
+}
+
+/* Actions */
+
+.Alert-Action-Button {
+    padding: 0.5rem 0.7rem;
+    border: 1px solid transparent;
+    border-radius: 0.35rem;
+    cursor: pointer;
+    font: inherit;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.Mark-Resolved {
+    background: #e2f4e8;
+    color: #236740;
+}
+
+.Mark-Unresolved {
+    background: #f0f0f0;
+    color: #444;
+}
+
+.Alert-Action-Button:hover {
+    filter: brightness(0.96);
+}
+
+.Alert-Action-Button:focus-visible {
+    outline: 2px solid #2456a6;
+    outline-offset: 2px;
+}
+
+/* Empty State */
+
+.Alert-Empty-State {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.Alert-Empty-State h3 {
+    margin: 0 0 0.5rem;
+}
+
+.Alert-Empty-State p {
+    margin: 0;
+    color: #777;
+}
+
+/* Responsive */
+
+@media (max-width: 900px) {
+    .Alert-Table {
+        min-width: 850px;
+    }
+}
+
+@media (max-width: 600px) {
+    .Procurement-Alert-Page {
+        padding: 1rem;
+    }
+
+    .Alert-Summary {
+        grid-template-columns: 1fr;
+    }
+
+    .Alert-Filters {
+        flex-direction: column;
+    }
+
+    .Alert-Filter-Select {
+        width: 100%;
+    }
+
+    .Alert-List-Section {
+        padding: 0.75rem;
+    }
+}

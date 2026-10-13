@@ -256,8 +256,8 @@ export const DemoteUser = async (userId: number): Promise<boolean> => {
         confirmButtonText: 'Yes, demote user',
         cancelButtonText: 'Cancel',
         customClass: {
-            confirmButton: 'success-button',
-            cancelButton: 'error-button'
+            confirmButton: 'error-button',
+            cancelButton: 'success-button'
         },
         reverseButtons: true,
         focusCancel: true,
@@ -315,8 +315,8 @@ export const DisableUser = async (userId: number): Promise<boolean> => {
         confirmButtonText: 'Yes, disable user',
         cancelButtonText: 'Cancel',
         customClass: {
-            confirmButton: 'success-button',
-            cancelButton: 'error-button'
+            confirmButton: 'error-button',
+            cancelButton: 'success-button'
         },
         reverseButtons: true,
         focusCancel: true,

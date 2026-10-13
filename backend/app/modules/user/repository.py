@@ -1,4 +1,6 @@
 from datetime import datetime
+from typing import Literal
+
 from sqlalchemy import select, func, or_
 from sqlalchemy.orm import Session
 
@@ -24,13 +26,15 @@ class UserRepository:
         page: int,
         limit: int,
         search: str | None = None,
-        role: str | None = None,
-        status: str | None = None,
+        role: UserRole | None = None,
+        status: Literal["active", "disabled"] | None = None,
     ) -> tuple[list[User], int]:
 
-        statement = select(User).where(User.deleted_at.is_(None))
+        statement = select(User).where(
+            User.deleted_at.is_(None)
+        )
 
-        if search:
+        if search and search.strip():
             search_value = f"%{search.strip()}%"
 
             statement = statement.where(
@@ -41,7 +45,7 @@ class UserRepository:
                 )
             )
 
-        if role:
+        if role is not None:
             statement = statement.where(User.role == role)
 
         if status == "active":
@@ -49,9 +53,12 @@ class UserRepository:
 
         elif status == "disabled":
             statement = statement.where(User.is_active.is_(False))
-            
 
-        count_statement = select(func.count()).select_from(statement.subquery())
+        count_statement = (
+            select(func.count())
+            .select_from(statement.subquery())
+        )
+        
         total = self.db.scalar(count_statement) or 0
 
         statement = (

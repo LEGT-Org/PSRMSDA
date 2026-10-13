@@ -28,16 +28,34 @@
 
     const ServiceRequest = ref<ServiceRequestDetail | null>(null);
 
-    const IsRequestClosed = computed<boolean>(() => {
-        const IsFinalized = [
-            'Completed',
-            'Unsuccessful',
-        ].includes(ServiceRequest.value?.status ?? '');
-
-        const IsAdmin = currentUser.value?.role === 'Admin';
-
-        return IsFinalized && !IsAdmin;
+    const IsRequestFinalized = computed<boolean>(() => {
+        return ['Completed', 'Unsuccessful'].includes(
+            ServiceRequest.value?.status ?? ''
+        );
     });
+
+    const IsAdmin = computed<boolean>(() => {
+        return currentUser.value?.role === 'admin';
+    });
+
+    const IsRequestClosed = computed<boolean>(() => {
+        return IsRequestFinalized.value && !IsAdmin.value;
+    });
+
+    const CanReopenRequest = computed<boolean>(() => {
+        return IsRequestFinalized.value && IsAdmin.value;
+    });
+
+
+    const ReopenRequest = async (
+        Status: ServiceRequestStatus
+    ): Promise<void> => {
+
+        SelectedStatus.value = Status;
+        await UpdateServiceRequestStatus();
+
+    };
+
 
     const UpdateServiceRequestStatus = async (): Promise<void> => {
 
@@ -111,24 +129,28 @@
 
             } else {
 
-                const Confirmation = await Swal.fire({
-                    title: 'Update Service Request?',
-                    text: `Do you want to update the status of 
-                        Service Request No. ${ServiceRequestId.value} into ${Status} status?`,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Yes, update request',
-                    cancelButtonText: 'Cancel',
-                    customClass: {
-                        confirmButton: 'success-button',
-                        cancelButton: 'error-button'
-                    },
-                    reverseButtons: true,
-                    focusCancel: true,
-                });
+                if (!IsReopeningRequest) {
 
-                if (!Confirmation.isConfirmed) {
-                    return;
+                    const Confirmation = await Swal.fire({
+                        title: 'Update Service Request?',
+                        text: `Do you want to update the status of 
+                            Service Request No. ${ServiceRequestId.value} into ${Status} status?`,
+                        icon: 'question',
+                        showCancelButton: true,
+                        confirmButtonText: 'Yes, update request',
+                        cancelButtonText: 'Cancel',
+                        customClass: {
+                            confirmButton: 'success-button',
+                            cancelButton: 'error-button'
+                        },
+                        reverseButtons: true,
+                        focusCancel: true,
+                    });
+
+                    if (!Confirmation.isConfirmed) {
+                        return;
+                    }
+
                 }
 
                 // 3. Ordinary statuses use the regular status endpoint.
@@ -605,6 +627,24 @@
                 <p>
                     This service request is closed and can no longer be edited.
                 </p>
+            </section>
+
+            <section
+                v-else-if="CanReopenRequest"
+                class="Request-Closed-Details"
+            >
+                <p>
+                    This request has been finalized. You can reopen it if further
+                    work or inspection is required.
+                </p>
+
+                <button
+                    type="button"
+                    @click="ReopenRequest('In Progress')"
+                >
+                    Reopen Service Request
+                </button>
+
             </section>
 
             <div v-else class="Service-Request-Actions-Details">

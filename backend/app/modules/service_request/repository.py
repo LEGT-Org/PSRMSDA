@@ -9,7 +9,10 @@ from app.modules.request_part.model import RequestPart
 from app.modules.customer.model import Customer
 from app.modules.user.model import User
 
-from app.modules.service_request.schema import LLMDiagnosisStatusPreview
+from app.modules.service_request.schema import (
+    LLMDiagnosisStatusPreview, 
+    ServiceRequestStatus
+)
 
 
 class ServiceRequestRepository:
@@ -32,7 +35,7 @@ class ServiceRequestRepository:
         page: int,
         limit: int,
         search: str | None = None,
-        status: str | None = None,
+        status: ServiceRequestStatus | None = None,
         created_date: date | None = None,
     ) -> tuple[list[ServiceRequest], int]:
 

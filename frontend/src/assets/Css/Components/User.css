@@ -317,6 +317,21 @@
     background: #fafafa;
 }
 
+.User-Empty-State {
+    padding: 3rem 1rem;
+    text-align: center;
+}
+
+.User-Empty-State h3 {
+    margin: 0 0 0.5rem;
+}
+
+.User-Empty-State p {
+    margin: 0;
+    color: #777;
+}
+
+
 
 /* ============================= */
 /* User Identity                 */
@@ -436,7 +451,7 @@
 .User-Actions .Users-Button-Blue-Border {
     border: 1.5px solid var(--secondary-color);
 
-    background: white;
+    background: var(--normal-text-color);
     color: var(--secondary-color);
 }
 

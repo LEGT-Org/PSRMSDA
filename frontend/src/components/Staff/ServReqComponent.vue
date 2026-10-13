@@ -140,7 +140,6 @@
                     v-model="Search"
                     type="text"
                     placeholder="Search requests..."
-                    class="Request-Search"
                     @input="HandleSearch"
                 />
             </div>
@@ -153,7 +152,6 @@
                 <select
                     id="request-status-filter"
                     v-model="StatusFilter"
-                    class="Request-Filter"
                     @change="ApplyServiceRequestFilters"
                 >
                     <option value="">
@@ -189,6 +187,7 @@
                 </label>
 
                 <input
+                    id="request-date-filter"
                     v-model="CreatedDate"
                     type="date"
                     class="Request-Filter"
@@ -267,6 +266,19 @@
                             </button>
                         </td>
                     </tr>
+
+                    <tr v-if="ServiceRequests.length === 0">
+                        <td colspan="6">
+                            <div class="Request-Empty-State">
+                                <h3>No service requests found</h3>
+                                <p>
+                                    No service requests match your
+                                    current search or filter.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+
                 </tbody>
 
             </table>

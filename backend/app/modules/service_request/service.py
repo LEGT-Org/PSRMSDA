@@ -613,7 +613,7 @@ class ServiceRequestService:
         page: int,
         limit: int,
         search: str | None = None,
-        status: str | None = None,
+        status: ServiceRequestStatus | None = None,
         created_date: date | None = None,
     ) -> ServiceRequestPageListResponse:
     
@@ -992,9 +992,14 @@ class ServiceRequestService:
 
             is_finalized = service_request.status in final_statuses
             is_admin = updated_by.role == UserRolePreview.ADMIN
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+            if service_request.status == status:
+                return
 
             # Only admins can reopen finalized requests, and only as In Progress.
             if is_finalized:
+
                 if not is_admin:
                     raise ServiceRequestStatusCanOnlyModifiedAgainError(
                         detail=(
@@ -1011,7 +1016,31 @@ class ServiceRequestService:
                         )
                     )
 
-            now = datetime.now(timezone.utc).replace(tzinfo=None)
+                self.repository.update_service_request(
+                    now=now,
+                    stored_service_request=service_request,
+                    final_status=status,
+                    technician_notes=service_request.technician_notes,
+                )
+
+                self.procurement_alert_interface.create_procurement_alert(
+                    ProcurementAlertRequest(
+                        request_id=service_request_id,
+                        part_id=None,
+                        part_name_snapshot=None,
+                        alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
+                        alert_message=(
+                            f"Service Request No. {service_request_id} "
+                            f"has been reopened by an admin and set to"
+                            f"{status.value}."
+                        ),
+                        created_at=now,
+                    )
+                )
+
+                self.db.commit()
+
+                return
 
             self.repository.update_service_request(
                 now=now,
@@ -1030,10 +1059,9 @@ class ServiceRequestService:
                         f"Service Request No. {service_request_id} "
                         f"status updated to {status.value}."
                     ),
-                    created_at=datetime.now(),
+                    created_at=now,
                 )
             )
-
 
             self.db.commit()
 

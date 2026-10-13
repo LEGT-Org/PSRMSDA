@@ -1,3 +1,4 @@
+from typing import Literal
 from math import ceil
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
@@ -216,8 +217,8 @@ class UserService:
         page: int,
         limit: int,
         search: str | None = None,
-        role: str | None = None,
-        status: str | None = None,
+        role: UserRole | None = None,
+        status: Literal["active", "disabled"] | None = None,
     ) -> UserPageListResponse:
     
         users, total = self.repository.get_all(

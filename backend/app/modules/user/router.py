@@ -1,3 +1,4 @@
+from typing import Literal
 from fastapi import (
     APIRouter,  
     status, 
@@ -6,8 +7,9 @@ from fastapi import (
 
 from app.modules.user.schema import (
     UserPageListResponse,
-    UserResponse, 
-    UserCreate
+    UserResponse,
+    UserCreate,
+    UserRole 
 )
 
 from app.modules.user.dependency import (
@@ -45,9 +47,15 @@ def get_users(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     search: str | None = Query(None),
-    role: str | None = Query(None),
-    status: str | None = Query(None),
-):
+    role: UserRole | None = Query(None),
+    status: Literal["all", "active", "disabled"] = "all",
+) -> dict:
+
+    status_filter = {
+        "all": None,
+        "active": "active",
+        "disabled": "disabled",
+    }[status]
 
     return service.get_all_users(
         page=page,

@@ -1,10 +1,21 @@
+from math import ceil
+from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
-from app.shared.exception import ProcurementAlertFailedError
-
 from app.modules.procurement_alert.repository import ProcurementAlertRepository
-from app.modules.procurement_alert.schema import ProcurementAlertSchema
 from app.modules.procurement_alert.model import ProcurementAlert
+
+from app.modules.procurement_alert.schema import (
+    ProcurementAlertPageListResponse,
+    ProcurementAlertSchema,
+    ProcurementAlertType
+)
+
+from app.shared.exception import (
+    ProcurementAlertIsAlreadyBeenResolvedError,
+    ProcurementAlertDoesNotExistError,
+    ProcurementAlertFailedError
+)
 
 
 class ProcurementAlertService:
@@ -31,7 +42,8 @@ class ProcurementAlertService:
             alert_message=data.alert_message,
             alert_type=data.alert_type,
             is_resolved=data.is_resolved,
-            created_at=data.created_at
+            created_at=data.created_at,
+            updated_at=data.created_at
         )
 
         try:
@@ -45,4 +57,69 @@ class ProcurementAlertService:
 
             print(error)
 
+            raise ProcurementAlertFailedError() from error
+
+
+    def get_procurement_alerts(
+        self,
+        page: int,
+        limit: int,
+        search: str | None = None,
+        is_resolved: bool | None = None,
+        alert_type: ProcurementAlertType | None = None,
+    ) -> ProcurementAlertPageListResponse:
+
+        alerts, total = self.repository.get_all(
+            page=page,
+            limit=limit,
+            search=search,
+            is_resolved=is_resolved,
+            alert_type=alert_type,
+        )
+
+        pages = ceil(total / limit) if total else 0
+
+        return {
+            "items": alerts,
+            "total": total,
+            "page": page,
+            "limit": limit,
+            "pages": pages,
+        }
+
+
+    def update_resolution(
+        self,
+        alert_id: int,
+        is_resolved: bool,
+    ) -> None:
+
+        if alert.is_resolved == is_resolved:
+            return
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        alert = self.repository.get_by_id(alert_id)
+
+        if alert is None:
+            raise ProcurementAlertDoesNotExistError(
+                detail=f"Procurement alert {alert_id} not found.",
+            )
+
+        if alert.is_resolved == True:
+            raise ProcurementAlertIsAlreadyBeenResolvedError()
+
+        try:
+
+            self.repository.update(
+                stored_procurement_alert=alert,
+                is_resolved=is_resolved,
+                now=now
+            )
+
+            self.db.commit()
+            self.db.refresh(alert)
+
+        except Exception as error:
+
+            self.db.rollback()
             raise ProcurementAlertFailedError() from error

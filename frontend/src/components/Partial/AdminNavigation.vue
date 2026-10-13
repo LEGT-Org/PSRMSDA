@@ -17,6 +17,8 @@
     import InventoryWhite from '@/assets/Images/Icons/White/inventory-reference-white.png';
     import ReportBlue from '@/assets/Images/Icons/Blue/reports-blue.png';
     import ReportWhite from '@/assets/Images/Icons/White/reports-white.png';
+    import AlertBlue from '@/assets/Images/Icons/Blue/procurement-alert-blue.png';
+    import AlertWhite from '@/assets/Images/Icons/White/procurement-alert-white.png';
     import CustomerBlue from '@/assets/Images/Icons/Blue/customers-management-blue.png';
     import CustomerWhite from '@/assets/Images/Icons/White/customers-management-white.png';
     import UserBlue from '@/assets/Images/Icons/Blue/user-management-blue.png';
@@ -133,6 +135,22 @@
                     alt="Reports"
                 />
                 <span>Reports</span>
+            </RouterLink>
+
+            <RouterLink 
+                to="/admin/alerts"
+                class="Navigation-Link"
+                exact-active-class="Navigation-Link-Active"
+                @click="CloseNavigation"
+            >
+                <img 
+                    :src="Route.path === '/admin/alerts'
+                        ? AlertBlue
+                        : AlertWhite
+                    "  
+                    alt="Procurement Alerts"
+                />
+                <span>Procurement Alerts</span>
             </RouterLink>
 
             <RouterLink 

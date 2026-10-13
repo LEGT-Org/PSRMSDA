@@ -33,6 +33,8 @@ from app.shared.exception.service_request import (
 )
 
 from app.shared.exception.procurement_alert import (
+    ProcurementAlertIsAlreadyBeenResolvedError,
+    ProcurementAlertDoesNotExistError,
     ProcurementAlertFailedError
 )
 
@@ -150,6 +152,8 @@ __all__ = [
     "RequestPartFailedError",
 
     # Procurement Alert Exception
+    "ProcurementAlertIsAlreadyBeenResolvedError",
+    "ProcurementAlertDoesNotExistError",
     "ProcurementAlertFailedError",
 
     # Spare Part Exception

@@ -244,7 +244,12 @@
 <template>
     <div class="Service-Request">
 
-        <h1>New Service Request</h1>
+        <div class="Service-Request-Title">
+            <h1>New Service Request</h1>
+            <p>
+                Create new service requests.
+            </p>w
+        </div>
 
         <!-- ============================= -->
         <!-- Request Information            -->

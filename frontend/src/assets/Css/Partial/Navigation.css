@@ -239,12 +239,24 @@
     text-decoration: none;
 
     cursor: pointer;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
 }
 
 .Sidebar-Profile-Menu a:hover,
 .Sidebar-Profile-Menu button:hover {
+    transform: translateY(-1px);
     border-color: var(--normal-text-color);
     background-color: var(--error-handler-color);
+}
+
+.Sidebar-Profile-Menu a:active,
+.Sidebar-Profile-Menu button:active {
+    transform: translateY(2px);
 }
 
 
