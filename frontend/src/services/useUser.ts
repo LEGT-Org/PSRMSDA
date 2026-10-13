@@ -196,6 +196,10 @@ export const PromoteUser = async (userId: number): Promise<boolean> => {
         showCancelButton: true,
         confirmButtonText: 'Yes, promote user',
         cancelButtonText: 'Cancel',
+        customClass: {
+            confirmButton: 'success-button',
+            cancelButton: 'error-button'
+        },
         reverseButtons: true,
         focusCancel: true,
     });
@@ -251,6 +255,10 @@ export const DemoteUser = async (userId: number): Promise<boolean> => {
         showCancelButton: true,
         confirmButtonText: 'Yes, demote user',
         cancelButtonText: 'Cancel',
+        customClass: {
+            confirmButton: 'success-button',
+            cancelButton: 'error-button'
+        },
         reverseButtons: true,
         focusCancel: true,
     });
@@ -306,6 +314,10 @@ export const DisableUser = async (userId: number): Promise<boolean> => {
         showCancelButton: true,
         confirmButtonText: 'Yes, disable user',
         cancelButtonText: 'Cancel',
+        customClass: {
+            confirmButton: 'success-button',
+            cancelButton: 'error-button'
+        },
         reverseButtons: true,
         focusCancel: true,
     });
@@ -361,6 +373,10 @@ export const EnableUser = async (userId: number): Promise<boolean> => {
         showCancelButton: true,
         confirmButtonText: 'Yes, enable user',
         cancelButtonText: 'Cancel',
+        customClass: {
+            confirmButton: 'success-button',
+            cancelButton: 'error-button'
+        },
         reverseButtons: true,
         focusCancel: true,
     });
@@ -378,6 +394,65 @@ export const EnableUser = async (userId: number): Promise<boolean> => {
             await HandleApiError(
                 response,
                 'Failed to enable user.'
+            );
+            
+            return false;
+            
+        }
+        
+        const data = await response.json();
+        await GetUsers();
+
+        await HandleSuccess(data.message);
+
+        return true;
+
+    } catch (error) {
+
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Unable to connect to the server. Please try again later.',
+            icon: 'error',
+        });
+
+        return false;
+
+    }
+};
+
+
+// Enable a User
+
+export const DeleteUser = async (userId: number): Promise<boolean> => {
+
+    const Confirmation = await Swal.fire({
+        title: 'Delete this user?',
+        text: 'This user will lose access to the system. This action cannot be undone.',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Yes, delete user',
+        cancelButtonText: 'Cancel',
+        customClass: {
+            confirmButton: 'error-button',
+            cancelButton: 'success-button'
+        },
+        reverseButtons: true,
+        focusCancel: true,
+    });
+
+    if (!Confirmation.isConfirmed) {
+        return false;
+    }
+
+    try {
+
+        const response = await ApiFetch(`/user/admin/${userId}/delete`,{ method: 'PATCH' });
+        
+        if (!response.ok) {
+            
+            await HandleApiError(
+                response,
+                'Failed to permanently delete a user.'
             );
             
             return false;

@@ -129,8 +129,8 @@ export const GetServiceRequests = async (
 export const GetServiceRequestDetail = async (
     serviceRequestId: number,
 ): Promise<ServiceRequestDetail> => {
-    const Response = await ApiFetch(
-        `/service-requests/${serviceRequestId}/detail`,
+
+    const Response = await ApiFetch(`/service-requests/${serviceRequestId}/detail`,
         {
             method: 'GET',
         },
@@ -228,7 +228,6 @@ export const RegularStatusUpdate = async (
         return true;
 
     } catch (error) {
-        console.error('Failed to update service request:', error);
 
         await Swal.fire({
             title: 'Connection Error!',

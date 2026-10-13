@@ -142,5 +142,25 @@ def disable_user(
     )
 
     return {
-        "message": f"User {user_id} has been successfully disabled"
+        "message": f"User {user_id} has been temporarily disabled"
+    }
+
+
+@router.patch(
+    "/admin/{user_id}/delete",
+    status_code=status.HTTP_200_OK
+)
+def delete_user(
+    user_id: int,
+    service: UserService,
+    current_user: AdminUser
+) -> dict[str, str]:
+
+    service.delete_user(
+        user_id=user_id,
+        actor_id=current_user.id
+    )
+
+    return {
+        "message": f"User {user_id} has been permanently deleted"
     }

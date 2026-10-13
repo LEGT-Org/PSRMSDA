@@ -9,13 +9,19 @@ class CustomerRepository:
 
         self.db = db
 
-    def create(self, customer: Customer) -> Customer:
+    def create(
+        self, 
+        customer: Customer
+    ) -> Customer:
         
         self.db.add(customer)
         return customer
 
 
-    def get_customer_by_email(self, email: str) -> Customer | None:
+    def get_customer_by_email(
+        self, 
+        email: str
+    ) -> Customer | None:
 
         statement = select(Customer).where(Customer.email == email)
         return self.db.scalar(statement)

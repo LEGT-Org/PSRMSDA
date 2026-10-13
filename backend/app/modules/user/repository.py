@@ -28,7 +28,7 @@ class UserRepository:
         status: str | None = None,
     ) -> tuple[list[User], int]:
 
-        statement = select(User)
+        statement = select(User).where(User.deleted_at.is_(None))
 
         if search:
             search_value = f"%{search.strip()}%"
@@ -49,6 +49,7 @@ class UserRepository:
 
         elif status == "disabled":
             statement = statement.where(User.is_active.is_(False))
+            
 
         count_statement = select(func.count()).select_from(statement.subquery())
         total = self.db.scalar(count_statement) or 0
@@ -85,7 +86,7 @@ class UserRepository:
         )
 
         return self.db.scalar(statement)
-    
+
 
     def get_user_by_token_hash(self, hash_token: str) -> User | None:
 
@@ -97,6 +98,20 @@ class UserRepository:
         )
 
         return self.db.scalar(statement)
+
+
+    def get_by_id_for_soft_deletion(
+        self,
+        user_id: int    
+    ) -> User | None:
+
+        statement = select(User).where(
+            User.id == user_id,
+            User.deleted_at.is_(None)
+        )
+
+        return self.db.scalar(statement)
+    
 
     
     def set_hash_password(
@@ -173,6 +188,25 @@ class UserRepository:
 
         stored_user.role = UserRole.USER
         stored_user.updated_at = now
+
+    
+    def delete(
+        self,
+        stored_user: User,
+        deleted_by: int,
+        now: datetime
+    ) -> None:
+
+        stored_user.password_hash = None
+        stored_user.token_expire = None
+        stored_user.token_hash = None
+        stored_user.is_active = False
+        stored_user.email = None
+
+        stored_user.deleted_by_id = deleted_by
+        stored_user.updated_at = now
+        stored_user.deleted_at = now
+
 
 
 

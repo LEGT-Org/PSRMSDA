@@ -60,3 +60,55 @@ img:active {
     color: var(--placeholder-color);
     font-size: 0.95rem;
 }
+
+
+/* Sweet Alert Custom Buttons */
+
+.success-button {
+    border: 1.50px solid var(--secondary-color) !important;
+    background-color: var(--normal-text-color) !important;
+    color: var(--secondary-color) !important;
+    font-weight: bold;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;;
+}
+
+.success-button:hover {
+    background-color: var(--secondary-color) !important;
+    color: var(--normal-text-color) !important;
+    border-color: var(--secondary-hover-color) !important;
+    transform: translateY(-1px) !important;
+}
+
+.success-button:active {
+    transform: translateY(2px) !important;
+}
+
+
+.error-button {
+    border: 1.50px solid var(--error-handler-color) !important;
+    background-color: var(--normal-text-color) !important;
+    color: var(--error-handler-color) !important;
+    font-weight: bold;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.error-button:hover {
+    background-color: var(--error-handler-color) !important;
+    color: var(--normal-text-color) !important;
+    border-color: var(--seventh-color) !important;
+    transform: translateY(-1px) !important;
+}
+
+.error-button:active {
+    transform: translateY(2px) !important;
+}

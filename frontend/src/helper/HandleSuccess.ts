@@ -9,7 +9,10 @@ export const HandleSuccess = async (
         text: Message,
         icon: 'success',
         confirmButtonText: 'OK',
-        timer: 2000,
+        customClass: {
+            confirmButton: 'success-button'
+        },
+        timer: 1500,
         timerProgressBar: true,
     });
-};
+}; 

@@ -136,7 +136,7 @@ const routes = [
                 }
             },
             {
-                path: '/requests/:id',
+                path: '/request/:id',
                 name: 'ServiceRequestDetails',
                 component: () => import('@/components/Stage/ServiceRequestDetailsComponent.vue'),
                 meta: {

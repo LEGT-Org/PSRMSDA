@@ -1,4 +1,5 @@
 <script setup lang="ts">
+    import Swal from 'sweetalert2';
     import { ref } from 'vue';
     import { useRouter } from 'vue-router';
 

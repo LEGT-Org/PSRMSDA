@@ -72,5 +72,8 @@ export const HandleApiError = async (
         text: Message,
         icon: 'error',
         confirmButtonText: 'OK',
+        customClass: {
+            confirmButton: 'error-button'
+        }
     });
 };

@@ -3,156 +3,87 @@
 ================================ */
 
 .Header-Container {
-
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
     align-items: center;
 
-    background-color: var(--third-color);
-
+    background-color: var(--main-color);
     padding: 0;
+    border-bottom: 1px solid var(--fourth-color);
 
     position: fixed;
     top: 0;
     left: 0;
 
-    width: 100%;
+    width: 15rem;
     height: 5rem;
-
+    box-sizing: border-box;
     z-index: 100;
 }
-
 
 /* ================================
    Header Logo
 ================================ */
 
 .Header-Logo {
-
     display: flex;
     flex-direction: row;
     align-items: center;
+    gap: 0.75rem;
 
-    gap: 1rem;
-
-    margin-left: 0.50rem;
+    margin-left: 2.50rem;
 }
 
-.Header-Logo img {
+.Header-Logo-Link {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
 
+    color: inherit;
+    text-decoration: none;
+}
+
+.Header-Logo-Link img {
+    display: block;
     width: 4rem;
     height: 4rem;
+    object-fit: contain;
+    flex-shrink: 0;
 }
 
-.Header-Logo h2 {
-
+.Header-Logo-Link h2 {
     margin: 0;
+    line-height: 1;
 }
-
 
 /* ================================
    Mobile Navigation Button
 ================================ */
 
 .Mobile-Navigation-Button {
-
     display: none;
-
     align-items: center;
     justify-content: center;
 
     width: 2.5rem;
     height: 2.5rem;
+    flex-shrink: 0;
 
     margin: 0;
     padding: 0;
 
     background: transparent;
     border: none;
-
     cursor: pointer;
 }
 
 .Mobile-Navigation-Button img {
-
+    display: block;
     width: 1.75rem;
     height: 1.75rem;
-
     object-fit: contain;
 }
-
-
-/* ================================
-   Header Search
-================================ */
-
-.Header-Search {
-
-    display: flex;
-    flex-direction: row;
-
-    margin: 0;
-}
-
-.Header-Search input {
-
-    width: 22rem;
-
-    padding: 0.75rem;
-
-    border-radius: 5rem 0 0 5rem;
-    border: none;
-
-    color: var(--normal-text-color);
-    background-color: var(--fourth-color);
-}
-
-.Header-Search input::placeholder {
-
-    color: var(--normal-text-color);
-}
-
-.Header-Search input:focus {
-
-    outline-color: var(--third-color);
-}
-
-.Header-Search button {
-
-    background: var(--fourth-color);
-
-    border: none;
-
-    border-radius: 0 5rem 5rem 0;
-
-    padding: 0 1rem 0 0.75rem;
-}
-
-.Header-Search img {
-
-    width: 1rem;
-}
-
-.Header-Search-Divider {
-
-    background-color: var(--background-color);
-
-    width: 2px;
-}
-
-
-/* ================================
-   Notifications
-================================ */
-
-.Header-Notification img {
-
-    width: 1.75rem;
-
-    margin-right: 0.50rem;
-}
-
 
 /* ================================
    Mobile
@@ -160,12 +91,18 @@
 
 @media (max-width: 768px) {
 
+    .Header-Container {
+        width: 100%;
+        border-bottom: 1px solid var(--fourth-color);
+    }
+
     .Mobile-Navigation-Button {
         display: flex;
     }
 
     .Header-Logo {
         gap: 0.35rem;
+        margin-left: 0.80rem;
     }
 
     .Header-Logo > img {
