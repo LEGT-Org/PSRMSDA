@@ -59,3 +59,6 @@ class ProcurementAlertPageListResponse(BaseModel):
     limit: int
     total: int
     pages: int
+    total_alerts: int
+    unresolved_alerts: int
+    resolved_alerts: int

@@ -503,6 +503,7 @@
     background: transparent;
 
     border: 1.5px solid var(--secondary-color);
+    color: var(--secondary-color);
     border-radius: 0.375rem;
 
     cursor: pointer;

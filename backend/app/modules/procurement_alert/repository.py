@@ -47,17 +47,24 @@ class ProcurementAlertRepository:
             )
 
         if is_resolved is not None:
-            statement = statement.where(ProcurementAlert.is_resolved.is_(is_resolved))
+            statement = statement.where(
+                ProcurementAlert.is_resolved.is_(is_resolved)
+            )
 
         if alert_type is not None:
-            statement = statement.where(ProcurementAlert.alert_type == alert_type)
+            statement = statement.where(
+                ProcurementAlert.alert_type == alert_type
+            )
 
-        count_statement = select(
-            func.count(ProcurementAlert.id)
-        ).select_from(statement.subquery())
+        # Count records matching the current filters.
+        count_statement = (
+            select(func.count())
+            .select_from(statement.subquery())
+        )
 
         total = self.db.scalar(count_statement) or 0
 
+        # Fetch only the requested page.
         statement = (
             statement
             .order_by(
@@ -72,6 +79,31 @@ class ProcurementAlertRepository:
 
         return alerts, total
 
+
+    def get_summary(
+        self
+    ) -> dict[str, int]:
+
+        total_alerts = self.db.scalar(select(func.count()).select_from(ProcurementAlert)) or 0
+        unresolved_alerts = self.db.scalar(
+            select(func.count())
+            .select_from(ProcurementAlert)
+            .where(ProcurementAlert.is_resolved.is_(False))
+        ) or 0
+
+        resolved_alerts = self.db.scalar(
+            select(func.count())
+            .select_from(ProcurementAlert)
+            .where(ProcurementAlert.is_resolved.is_(True))
+        ) or 0
+
+        return {
+            "total_alerts": total_alerts,
+            "unresolved_alerts": unresolved_alerts,
+            "resolved_alerts": resolved_alerts,
+        }
+
+
     def get_by_id(
         self,
         alert_id: int,
@@ -85,6 +117,7 @@ class ProcurementAlertRepository:
 
 
     def update(
+        self,
         stored_procurement_alert: ProcurementAlert,
         is_resolved: bool,
         now: datetime

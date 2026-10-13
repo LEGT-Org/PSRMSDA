@@ -1,109 +1,73 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed, onMounted } from 'vue';
 
-interface ProcurementAlert {
-    id: number;
-    request_id: number;
-    part_id: number | null;
-    part_name_snapshot: string | null;
-    alert_type: string;
-    alert_message: string;
-    is_resolved: boolean;
-    created_at: string;
-}
+import {
+    GetProcurementAlerts,
+    ApplyProcurementAlertFilters,
+    HandleSearch,
+    UpdateProcurementAlertResolution,
+} from '@/services/useProcurementAlert';
 
-type AlertFilter = 'all' | 'unresolved' | 'resolved';
+import {
+    ProcurementAlerts,
+    CurrentPage,
+    ProcurementAlertsPerPage,
+    TotalAlerts,
+    UnresolvedAlerts,
+    ResolvedAlerts,
+    IsLoading,
+    TotalPages,
+    Total,
+    Search,
+    StatusFilter,
+    TypeFilter,
+} from '@/services/state/ProcurementAlert';
 
-const SearchQuery = ref('');
-const SelectedFilter = ref<AlertFilter>('unresolved');
+// The backend already handles searching and filtering.
+const FilteredAlerts = computed(() => ProcurementAlerts.value);
 
-// Temporary demo data. Replace this with your API response.
-const ProcurementAlerts = ref<ProcurementAlert[]>([
-    {
-        id: 1,
-        request_id: 9,
-        part_id: 3,
-        part_name_snapshot: 'Capacitor 35uF',
-        alert_type: 'FINALIZED_REQUEST',
-        alert_message:
-            "Spare part 'Capacitor 35uF' is out of stock after finalizing service request No. 9.",
-        is_resolved: false,
-        created_at: '2026-10-13T08:30:00',
-    },
-    {
-        id: 2,
-        request_id: 12,
-        part_id: null,
-        part_name_snapshot: null,
-        alert_type: 'REQUEST_STAGE',
-        alert_message:
-            'Service request #12 has been finalized as Completed.',
-        is_resolved: false,
-        created_at: '2026-10-13T09:00:00',
-    },
-    {
-        id: 3,
-        request_id: 7,
-        part_id: 5,
-        part_name_snapshot: 'Thermostat',
-        alert_type: 'FINALIZED_REQUEST',
-        alert_message:
-            "Spare part 'Thermostat' is out of stock after finalizing service request No. 7.",
-        is_resolved: true,
-        created_at: '2026-10-12T14:15:00',
-    },
-]);
+const GetAlerts = async (): Promise<void> => {
 
-const UnresolvedCount = computed(() =>
-    ProcurementAlerts.value.filter(
-        (Alert) => !Alert.is_resolved
-    ).length
-);
+    const Response = await GetProcurementAlerts(
+        CurrentPage.value,
+        ProcurementAlertsPerPage.value,
+        Search.value,
+        StatusFilter.value,
+        TypeFilter.value
+    );
 
-const ResolvedCount = computed(() =>
-    ProcurementAlerts.value.filter(
-        (Alert) => Alert.is_resolved
-    ).length
-);
+    if (!Response) {
+        return;
+    }
 
-const FilteredAlerts = computed(() => {
-    const Query = SearchQuery.value.trim().toLowerCase();
+    ProcurementAlerts.value = Response.items;
+    Total.value = Response.total;
+    TotalPages.value = Response.total_pages;
+    CurrentPage.value = Response.page;
 
-    return ProcurementAlerts.value
-        .filter((Alert) => {
-            if (
-                SelectedFilter.value === 'unresolved' &&
-                Alert.is_resolved
-            ) {
-                return false;
-            }
+};
 
-            if (
-                SelectedFilter.value === 'resolved' &&
-                !Alert.is_resolved
-            ) {
-                return false;
-            }
+const ToggleResolved = async (AlertId: number): Promise<void> => {
 
-            if (!Query) {
-                return true;
-            }
+    const Alert = ProcurementAlerts.value.find((Item) => Item.id === AlertId);
 
-            return [
-                Alert.alert_message,
-                Alert.alert_type,
-                Alert.part_name_snapshot ?? '',
-                String(Alert.request_id),
-            ].some((Value) => Value.toLowerCase().includes(Query));
-        })
-        .sort(
-            (A, B) =>
-                new Date(B.created_at).getTime() -
-                new Date(A.created_at).getTime()
-        );
-});
+    if (!Alert) {
+        return;
+    }
+
+    const Success = await UpdateProcurementAlertResolution(
+        AlertId,
+        !Alert.is_resolved,
+    );
+
+    if (Success) {
+        await GetAlerts();
+    }
+
+};
 
 const FormatAlertType = (Type: string): string => {
+    
     return Type
         .toLowerCase()
         .split('_')
@@ -115,16 +79,39 @@ const FormatDate = (DateValue: string): string => {
     return new Date(DateValue).toLocaleString();
 };
 
-// Demo interaction only. Connect this to your backend later.
-const ToggleResolved = (AlertId: number): void => {
-    const Alert = ProcurementAlerts.value.find(
-        (Item) => Item.id === AlertId
+const GoToNextPage = async () => {
+
+    if (CurrentPage.value >= TotalPages.value) return;
+
+    await GetProcurementAlerts(
+        CurrentPage.value + 1,
+        ProcurementAlertsPerPage.value,
+        Search.value,
+        StatusFilter.value,
+        TypeFilter.value
     );
 
-    if (Alert) {
-        Alert.is_resolved = !Alert.is_resolved;
-    }
 };
+
+
+const GoToPreviousPage = async () => {
+
+    if (CurrentPage.value <= 1) return;
+
+    await GetProcurementAlerts(
+        CurrentPage.value - 1,
+        ProcurementAlertsPerPage.value,
+        Search.value,
+        StatusFilter.value,
+        TypeFilter.value
+    );
+
+};
+
+onMounted(async () => {
+    await GetAlerts();
+});
+
 </script>
 
 <template>
@@ -144,7 +131,7 @@ const ToggleResolved = (AlertId: number): void => {
         <section class="Alert-Summary">
             <article class="Summary-Card">
                 <span class="Summary-Label">Total Alerts</span>
-                <strong>{{ ProcurementAlerts.length }}</strong>
+                <strong>{{ TotalAlerts }}</strong>
                 <span class="Summary-Description">
                     All recorded notifications
                 </span>
@@ -152,7 +139,7 @@ const ToggleResolved = (AlertId: number): void => {
 
             <article class="Summary-Card Unresolved-Summary">
                 <span class="Summary-Label">Unresolved</span>
-                <strong>{{ UnresolvedCount }}</strong>
+                <strong>{{ UnresolvedAlerts }}</strong>
                 <span class="Summary-Description">
                     Requires attention
                 </span>
@@ -160,7 +147,7 @@ const ToggleResolved = (AlertId: number): void => {
 
             <article class="Summary-Card Resolved-Summary">
                 <span class="Summary-Label">Resolved</span>
-                <strong>{{ ResolvedCount }}</strong>
+                <strong>{{ ResolvedAlerts }}</strong>
                 <span class="Summary-Description">
                     Already addressed
                 </span>
@@ -187,26 +174,51 @@ const ToggleResolved = (AlertId: number): void => {
 
                     <input
                         id="search-filter"
-                        v-model="SearchQuery"
+                        v-model="Search"
                         type="search"
                         placeholder="Search alerts, parts, or request ID..."
                         aria-label="Search procurement alerts"
                         class="Alert-Search"
+                        @input="HandleSearch"
                     />
 
                 </div>
 
                 <div class="Filter-Field">
 
+                    <label for="type-filter">
+                        Type
+                    </label>
+
+                    <select
+                        id="type-filter"
+                        v-model="TypeFilter"
+                        class="Alert-Filter-Select"
+                        aria-label="Filter alerts by resolution"
+                        @change="ApplyProcurementAlertFilters"
+                    >
+                        <option value="all">All Alerts</option>
+                        <option value="Request Stage">Request Stage</option>
+                        <option value="No Part Match">No Part Matched</option>
+                        <option value="Part Not Found">Part Not Found</option>
+                        <option value="Finalized Request">Finalized Request</option>
+                        <option value="Insufficient Stock">Insufficient Stock</option>
+                    </select>
+
+                </div>
+
+                <div class="Filter-Field">
+
                     <label for="status-filter">
-                        status
+                        Status
                     </label>
 
                     <select
                         id="status-filter"
-                        v-model="SelectedFilter"
+                        v-model="StatusFilter"
                         class="Alert-Filter-Select"
                         aria-label="Filter alerts by resolution"
+                        @change="ApplyProcurementAlertFilters"
                     >
                         <option value="all">All Alerts</option>
                         <option value="unresolved">Unresolved</option>
@@ -280,19 +292,16 @@ const ToggleResolved = (AlertId: number): void => {
 
                             <td>
                                 <button
+                                    v-if="!Alert.is_resolved"
                                     type="button"
                                     class="Alert-Action-Button"
-                                    :class="
-                                        Alert.is_resolved
-                                            ? 'Mark-Unresolved'
-                                            : 'Mark-Resolved'
-                                    "
+                                    :disabled="IsLoading"
                                     @click="ToggleResolved(Alert.id)"
                                 >
                                     {{
-                                        Alert.is_resolved
-                                            ? 'Reopen'
-                                            : 'Resolve'
+                                        Alert.alert_type === 'Request Stage'
+                                            ? 'Mark as Read'
+                                            : 'Mark as Resolve'
                                     }}
                                 </button>
                             </td>
@@ -312,6 +321,34 @@ const ToggleResolved = (AlertId: number): void => {
                     </tbody>
                 </table>
             </div>
+
+            <div class="Alert-Pagination">
+
+            <button
+                type="button"
+                :disabled="
+                    CurrentPage <= 1 || IsLoading
+                "
+                @click="GoToPreviousPage"
+            >
+                Previous
+            </button>
+
+            <span>
+                Page {{ CurrentPage }} of {{ TotalPages }}
+            </span>
+
+            <button
+                type="button"
+                :disabled="
+                    CurrentPage >= TotalPages || IsLoading
+                "
+                @click="GoToNextPage"
+            >
+                Next
+            </button>
+
+        </div>
         </section>
     </main>
 </template>

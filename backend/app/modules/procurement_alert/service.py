@@ -77,6 +77,8 @@ class ProcurementAlertService:
             alert_type=alert_type,
         )
 
+        summary = self.repository.get_summary()
+
         pages = ceil(total / limit) if total else 0
 
         return {
@@ -85,6 +87,7 @@ class ProcurementAlertService:
             "page": page,
             "limit": limit,
             "pages": pages,
+            **summary
         }
 
 
@@ -94,11 +97,11 @@ class ProcurementAlertService:
         is_resolved: bool,
     ) -> None:
 
-        if alert.is_resolved == is_resolved:
-            return
-
         now = datetime.now(timezone.utc).replace(tzinfo=None)
         alert = self.repository.get_by_id(alert_id)
+
+        if alert.is_resolved == is_resolved:
+            return
 
         if alert is None:
             raise ProcurementAlertDoesNotExistError(
@@ -122,4 +125,6 @@ class ProcurementAlertService:
         except Exception as error:
 
             self.db.rollback()
+
+            print(error)
             raise ProcurementAlertFailedError() from error
