@@ -39,8 +39,6 @@ class ProcurementAlertService:
             self.repository.create(procurement_alert)
             self.db.flush()
 
-            print("Created procurement alert ID:", procurement_alert.id)
-
             return procurement_alert
 
         except Exception as error:

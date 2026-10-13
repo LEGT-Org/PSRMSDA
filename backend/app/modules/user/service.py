@@ -418,3 +418,41 @@ class UserService:
 
             self.db.rollback()
             raise InvalidCredentialsError() from error
+
+
+    def delete_user(
+        self,
+        user_id: int,
+        actor_id: int
+    ) -> None:
+
+        if actor_id == user_id:
+            raise InsufficientPermissionsError(
+                detail="You cannot permanently delete your own account"
+            )
+
+        user = self.repository.get_by_id_for_soft_deletion(user_id)
+
+        if user is None:
+            raise InvalidCredentialsError()
+
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        try:
+
+            self.repository.delete(
+                stored_user=user,
+                deleted_by=actor_id,
+                now=now
+            )
+
+            self.db.commit()
+
+        except Exception as error:
+
+            self.db.rollback()
+
+            print(f"Soft deletion failed: {error!r}")
+
+            raise InvalidCredentialsError() from error
+

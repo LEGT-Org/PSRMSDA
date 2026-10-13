@@ -52,7 +52,7 @@
 /* Base status badge */
 .Status-Badge {
     display: inline-block;
-    padding: 0.35rem 0.75rem;
+    padding: 0.30rem 0.60rem;
     border-radius: 999px;
     font-size: 0.85rem;
     font-weight: 600;
@@ -67,7 +67,7 @@
 /* In Progress - Blue */
 .Status-In-Progress {
     background-color: #dbeafe;
-    color: #1d4ed8;
+    color: var(--secondary-color);
 }
 
 /* For Further Inspection - Orange */
@@ -85,7 +85,7 @@
 /* Unsuccessful - Red */
 .Status-Unsuccessful {
     background-color: #fee2e2;
-    color: #b91c1c;
+    color: var(--error-handler-color);
 }
 
 /* ================================
@@ -168,7 +168,7 @@
 
 .Overall-Confidence {
     display: inline-block;
-    padding: 0.20rem 0.75rem;
+    padding: 0.20rem 0.60rem;
     margin-left: 0.50rem;
     border-radius: 999px;
     font-size: 0.85rem;
@@ -211,7 +211,7 @@
 }
 
 .Diagnostic-Hypotheses-Details article h4 {
-    color: #00167a;
+    color: var(--secondary-color);
 }
 
 .Diagnostic-Hypotheses-Details article p {
@@ -227,11 +227,11 @@
 
 .Fault-Badge {
     display: inline-block;
-    padding: 4px 10px;
+    padding: 0.20rem 0.40rem;
     background-color: #dbeafe;
     color: var(--secondary-color);
     border: 1px solid #bfdbfe;
-    border-radius: 6px;
+    border-radius: 0.375rem;
     font-size: 0.65rem;
     font-weight: 600;
 }
@@ -349,18 +349,28 @@
 .Service-Request-Details button {
     min-height: 44px;
     padding: 0.7rem 1rem;
-    color: #ffffff;
-    background: #00167a;
-    border: none;
+    color: var(--secondary-color);
+    background: none;
+    border: 2px solid var(--secondary-color);
     border-radius: 0.375rem;
     font: inherit;
     font-weight: 600;
     cursor: pointer;
-    transition: background 0.2s ease;
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
 }
 
 .Service-Request-Details button:hover:not(:disabled) {
-    background: #102da8;
+    background: var(--secondary-color);
+    color: var(--normal-text-color);
+    transform: translateY(-1px);
+}
+
+.Service-Request-Details button:active:not(:disabled) {
+    transform: translateY(2px);
 }
 
 .Service-Request-Details button:disabled {

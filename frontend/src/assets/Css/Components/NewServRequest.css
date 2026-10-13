@@ -91,16 +91,27 @@
     color: var(--normal-text-color);
     font-weight: 550;
     cursor: pointer;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
 }
 
 .Run-Diagnosis-Button:hover {
     background-color: var(--secondary-hover-color);
     border: 1.5px solid var(--normal-text-color);
+    transform: translateY(-1px);
 }
 
 .Run-Diagnosis-Button:disabled {
     opacity: 0.6;
     cursor: not-allowed;
+}
+
+.Run-Diagnosis-Button:active {
+    transform: translateY(2px);
 }
 
 
@@ -597,6 +608,20 @@
     font-weight: 550;
 
     cursor: pointer;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.Service-Request-Action-Buttons button:hover {
+    transform: translateY(-1px);
+}
+
+.Service-Request-Action-Buttons button:active {
+    transform: translateY(2px);
 }
 
 

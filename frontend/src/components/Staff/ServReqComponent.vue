@@ -88,8 +88,9 @@
     };
 
     const GoToServiceRequestDetail = (id: number): void => {
-        Router.push(`/requests/${id}`);
+        Router.push(`/request/${id}`);
     }
+
 
     onMounted(async () => {
 
@@ -111,7 +112,7 @@
         <!-- Title -->
         <div class="Service-Requests-Title">
             <div>
-                <h1>Service Requests Management</h1>
+                <h1>Service Request Management</h1>
                 <p>
                     View and manage service requests.
                 </p>
@@ -119,7 +120,7 @@
 
             <button
                 type="button"
-                class="Create-Request-Button"
+                class="Create-Request-Button"   
                 @click="GoToNewServiceRequest"
             >
                 + New Service Request

@@ -32,10 +32,13 @@ export const ValidateDiagnosisForm = async (
 
     if (MissingField) {
         await Swal.fire({
-            title: 'Validation Error',
+            title: 'Error',
             text: MissingField.Message,
-            icon: 'warning',
+            icon: 'error',
             confirmButtonText: 'OK',
+            customClass: {
+                confirmButton: 'error-button'
+            }
         });
 
         return false;

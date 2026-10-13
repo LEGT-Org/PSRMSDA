@@ -38,14 +38,21 @@
     white-space: nowrap;
 
     transition:
+        opacity 0.15s ease,
         transform 0.15s ease,
-        opacity 0.15s ease;
+        background 0.15s ease,
+        color 0.15s ease;
 }
 
 .Register-User-Button:hover {
     border: 1.5px solid var(--normal-text-color);
+    background-color: var(--secondary-hover-color);
     transform: translateY(-1px);
     opacity: 0.9;
+}
+
+.Register-User-Button:active {
+    transform: translateY(2px);
 }
 
 /* ============================= */
@@ -102,12 +109,18 @@
 
     transition:
         opacity 0.15s ease,
-        transform 0.15s ease;
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
 }
 
 .Modal-Close:hover {
     opacity: 0.9;
     transform: translateY(-1px);
+}
+
+.Modal-Close:active {
+    transform: translateY(2px);
 }
 
 /* ============================= */
@@ -166,12 +179,18 @@
 
     transition:
         opacity 0.15s ease,
-        transform 0.15s ease;
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
 }
 
 .Modal-Actions button:hover {
     opacity: 0.9;
     transform: translateY(-1px);
+}
+
+.Modal-Actions button:active {
+    transform: translateY(2px);
 }
 
 .Modal-Actions .Modal-Cancel-Button {
@@ -195,6 +214,7 @@
 
 .Modal-Actions .Modal-Confirm-Button:hover {
     border: 1.5px solid var(--normal-text-color);
+    background-color: var(--secondary-hover-color);
 }
 
 .Modal-Actions button:disabled {
@@ -388,7 +408,9 @@
 
     transition:
         opacity 0.15s ease,
-        transform 0.15s ease;
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
 }
 
 
@@ -435,6 +457,10 @@
     opacity: 0.5;
 }
 
+.User-Actions button:active {
+    transform: translateY(2px);
+}
+
 /* ============================= */
 /* Pagination                    */
 /* ============================= */
@@ -468,12 +494,19 @@
 
     font-size: 0.75rem;
     font-weight: 600;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
 }
 
 .Users-Pagination button:hover {
     background: var(--secondary-color);
     color: var(--normal-text-color);
     border-color: var(--normal-text-color);
+    transform: translateY(-1px);
 }
 
 .Users-Pagination button:hover:not(:disabled) {
@@ -485,6 +518,10 @@
     opacity: 0.35;
 }
 
+.Users-Pagination button:active {
+    transform: translateY(2px);
+}
+
 /* ============================= */
 /* Register User Transition      */
 /* ============================= */
@@ -493,7 +530,9 @@
 .register-user-leave-active {
     transition:
         opacity 0.25s ease,
-        transform 0.25s ease;
+        transform 0.35s ease,
+        background 0.35s ease,
+        color 0.35s ease;
 }
 
 .register-user-enter-from,

@@ -1,7 +1,8 @@
 <script setup lang="ts">
-
+    import Swal from 'sweetalert2';
     import { ref, onMounted } from 'vue';
 
+    import { accessToken, currentUser, isFetched } from '@/services/state/Auth';
     import { capitalizeFirstLetter } from '@/helper/Capitalize';
     import { 
         RegisterUser, 
@@ -11,7 +12,8 @@
         DisableUser,
         EnableUser,
         HandleSearch,
-        ApplyUserFilters
+        ApplyUserFilters,
+        DeleteUser
     } from '@/services/useUser.ts';
 
     import {
@@ -28,7 +30,6 @@
         ShowRegisterUser,
         type RegisterUserRequest
     } from '@/services/state/User.ts';
-import { accessToken, currentUser, isFetched } from '@/services/state/Auth';
 
 
     const FirstName = ref('');
@@ -56,6 +57,25 @@ import { accessToken, currentUser, isFetched } from '@/services/state/Auth';
 
 
     const SubmitRegisterUser = async () => {
+
+        const Confirmation = await Swal.fire({
+            title: 'Register this user?',
+            text: `Double-check the details below. You can go back and edit if anything looks wrong.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Create account',
+            cancelButtonText: 'Go back and edit',
+            customClass: {
+                confirmButton: 'success-button',
+                cancelButton: 'error-button'
+            },
+            reverseButtons: true,
+            focusCancel: true,
+        });
+
+        if (!Confirmation.isConfirmed) {
+            return;
+        }
 
         const payload: RegisterUserRequest = {
             first_name: FirstName.value,
@@ -448,6 +468,14 @@ import { accessToken, currentUser, isFetched } from '@/services/state/Auth';
                             @click="EnableUser(user.id)"
                         >
                             Enable
+                        </button>
+
+                        <button
+                            type="button"
+                            class="Users-Button-Red-Border"
+                            @click="DeleteUser(user.id)"
+                        >
+                            Delete
                         </button>
 
                     </div>

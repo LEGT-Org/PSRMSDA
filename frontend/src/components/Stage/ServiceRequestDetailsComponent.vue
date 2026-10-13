@@ -68,6 +68,10 @@
                     showCancelButton: true,
                     confirmButtonText: 'Yes, reopen request',
                     cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'success-button',
+                        cancelButton: 'error-button'
+                    },
                     reverseButtons: true,
                     focusCancel: true,
                 });
@@ -107,6 +111,26 @@
 
             } else {
 
+                const Confirmation = await Swal.fire({
+                    title: 'Update Service Request?',
+                    text: `Do you want to update the status of 
+                        Service Request No. ${ServiceRequestId.value} into ${Status} status?`,
+                    icon: 'question',
+                    showCancelButton: true,
+                    confirmButtonText: 'Yes, update request',
+                    cancelButtonText: 'Cancel',
+                    customClass: {
+                        confirmButton: 'success-button',
+                        cancelButton: 'error-button'
+                    },
+                    reverseButtons: true,
+                    focusCancel: true,
+                });
+
+                if (!Confirmation.isConfirmed) {
+                    return;
+                }
+
                 // 3. Ordinary statuses use the regular status endpoint.
                 const Success = await RegularStatusUpdate(
                     ServiceRequestId.value,
@@ -126,6 +150,10 @@
                     ? 'Service request has been finalized.'
                     : 'Service request status updated successfully.',
                 icon: 'success',
+                confirmButtonText: 'OK',
+                customClass: {
+                    confirmButton: 'success-button'
+                }
             });
 
             // 5. Refresh the displayed request.
@@ -210,6 +238,10 @@
             showCancelButton: true,
             confirmButtonText: 'Confirm Finalization',
             cancelButtonText: 'Cancel',
+            customClass: {
+                confirmButton: 'success-button',
+                cancelButton: 'error-button'
+            },
             reverseButtons: true,
             focusCancel: true,
 
