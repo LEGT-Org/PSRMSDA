@@ -1,6 +1,6 @@
 <script setup lang="ts">
     import Swal from 'sweetalert2';
-    import { ref, onMounted } from 'vue';
+    import { ref, onMounted, useShadowRoot } from 'vue';
 
     import { accessToken, currentUser, isFetched } from '@/services/state/Auth';
     import { capitalizeFirstLetter } from '@/helper/Capitalize';
@@ -480,6 +480,18 @@
 
                     </div>
 
+                </div>
+
+                <div v-if="Users.length === 0">
+                    <div colspan="6">
+                        <div class="User-Empty-State">
+                            <h3>No users found</h3>
+                            <p>
+                                No users match your
+                                current search or filter.
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
             </div>

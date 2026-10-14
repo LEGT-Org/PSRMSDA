@@ -257,7 +257,19 @@ const routes = [
                 }
             },
             {
-                path: 'requests/:id',
+                path: 'alerts',
+                name: 'Admin Procurement Alert Management',
+                component: () => import('@/components/Admin/AlertsComponent.vue'),
+                meta: {
+                    requiresAuth: true,
+                    requiresToken: false,
+                    requiresAdmin: true,
+                    requiresStaff: false,
+                    title: 'Procurement Alert Management'
+                }
+            },
+            {
+                path: 'request/:id',
                 name: 'Admin Service Request Details',
                 component: () => import('@/components/Stage/ServiceRequestDetailsComponent.vue'),
                 meta: {

@@ -40,6 +40,7 @@ class ProcurementAlert(Base):
 
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
 
     # Relationship
     service_requests: Mapped["ServiceRequest"] = relationship(back_populates="procurement_alerts")

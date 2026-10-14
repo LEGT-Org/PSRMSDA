@@ -17,6 +17,7 @@ from app.modules.service_request.schema import (
     ServiceRequestResponse,
     ConfirmServiceRequest,
     CancelServiceRequest,
+    ServiceRequestStatus,
     UserSchema
 )
 
@@ -38,7 +39,7 @@ def list_of_service_requests(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     search: str | None = Query(None),
-    status: str | None = Query(None),
+    status: ServiceRequestStatus | None = Query(None),
     created_date: date | None = Query(None),
 ) -> ServiceRequestPageListResponse:
 

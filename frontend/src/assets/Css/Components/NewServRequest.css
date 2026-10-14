@@ -7,10 +7,20 @@
     box-sizing: border-box;
 }
 
-.Service-Request h1 {
-    margin: 0 0 0.75rem;
+.Service-Request-Title h1 {
+    margin: 0;
+    font-size: 1.8rem;
+    font-weight: bold;
     color: var(--main-color);
 }
+
+.Service-Request-Title p {
+    margin-top: 0.40rem;
+    margin-bottom: 1rem;
+    color: #666666;
+    font-size: 0.95rem;
+}
+
 
 
 /* =========================================

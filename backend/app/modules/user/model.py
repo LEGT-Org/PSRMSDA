@@ -32,7 +32,7 @@ class User(Base):
     )
 
     # Foreign Key
-    deleted_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
+    last_modified_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"), nullable=True)
 
     # Timestamp
     token_expire: Mapped[datetime] = mapped_column(DateTime, nullable=True)
@@ -41,5 +41,6 @@ class User(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationship
-    deleted_by: Mapped["User | None"] = relationship(foreign_keys=[deleted_by_id])
+    modified_by: Mapped["User | None"] = relationship(foreign_keys=[last_modified_by_id])
+    customers: Mapped[list["Customer"]] = relationship(foreign_keys="Customer.last_modified_by_id")
     service_requests: Mapped[list["ServiceRequest"]] = relationship(back_populates="users", foreign_keys="ServiceRequest.user_id")

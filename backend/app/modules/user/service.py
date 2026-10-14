@@ -1,3 +1,4 @@
+from typing import Literal
 from math import ceil
 from datetime import datetime, timedelta, timezone
 from sqlalchemy.orm import Session
@@ -53,43 +54,45 @@ class UserService:
     
     def create_user(
         self,
+        actor_id: int,
         data: UserCreate
     ) -> User:
 
-        validate_user = UserValidation(
-            first_name=data.first_name,
-            last_name=data.last_name,
-        )
-
-        validate_email = EmailValidation(email=data.email)
-
-        if self.repository.get_by_email(validate_email.validated_email):
-            raise EmailAlreadyExistsError()
-
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
-
-        raw_token = generate_registration_token()
-        token_hash = hash_registration_token(raw_token)
-        token_expire = now + timedelta(hours=settings.auth.password_setup_token_expire_hours)
-        
-        user = User(
-            first_name=validate_user.validated_first_name,
-            last_name=validate_user.validated_last_name,
-            email=validate_email.validated_email,
-            password_hash=None,
-            role=UserRole.USER,
-            token_hash=token_hash,
-            token_expire=token_expire,
-            email_verified=False,
-            is_active=True,
-            created_at=now,
-            updated_at=now,
-            deleted_at=None
-        )
-
-        self.repository.create(user)
-
         try:
+
+            validate_user = UserValidation(
+                first_name=data.first_name,
+                last_name=data.last_name,
+            )
+
+            validate_email = EmailValidation(email=data.email)
+
+            if self.repository.get_by_email(validate_email.validated_email):
+                raise EmailAlreadyExistsError()
+
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+            raw_token = generate_registration_token()
+            token_hash = hash_registration_token(raw_token)
+            token_expire = now + timedelta(hours=settings.auth.password_setup_token_expire_hours)
+            
+            user = User(
+                first_name=validate_user.validated_first_name,
+                last_name=validate_user.validated_last_name,
+                email=validate_email.validated_email,
+                password_hash=None,
+                role=UserRole.USER,
+                token_hash=token_hash,
+                token_expire=token_expire,
+                email_verified=False,
+                is_active=True,
+                created_at=now,
+                updated_at=now,
+                deleted_at=None,
+                last_modified_by_id=actor_id
+            )
+
+            self.repository.create(user)
 
             action_url = (
                 f"{settings.frontend.url}/password/set"
@@ -133,6 +136,11 @@ class UserService:
 
             return user
 
+        except EmailAlreadyExistsError:
+
+            self.db.rollback()
+            raise
+
         except Exception as error:
 
             self.db.rollback()
@@ -144,29 +152,28 @@ class UserService:
         email: str
     ) -> None:
 
-        email = EmailValidation(email=email)
-
-        user = self.repository.get_by_email(email.validated_email)
-
-        if user is None:
-            raise InvalidEmailAddressError()
-
-        if user.email_verified is False:
-            raise InvalidEmailAddressError()
-
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
-
-        raw_token = generate_registration_token()
-        token_hash = hash_registration_token(raw_token)
-        token_expire = now + timedelta(hours=settings.auth.password_reset_token_expire_hours)
-
-        self.repository.set_token_hash(
-            stored_user=user,
-            token_expire=token_expire,
-            token_hash=token_hash
-        )
-
         try:
+
+            email = EmailValidation(email=email)
+            user = self.repository.get_by_email(email.validated_email)
+
+            if user is None:
+                raise InvalidEmailAddressError()
+
+            if user.email_verified is False:
+                raise InvalidEmailAddressError()
+
+            now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+            raw_token = generate_registration_token()
+            token_hash = hash_registration_token(raw_token)
+            token_expire = now + timedelta(hours=settings.auth.password_reset_token_expire_hours)
+
+            self.repository.set_token_hash(
+                stored_user=user,
+                token_expire=token_expire,
+                token_hash=token_hash
+            )
 
             action_url = (
                 f"{settings.frontend.url}/password/set"
@@ -196,14 +203,20 @@ class UserService:
             message = EmailMessage(
                 to=user.email,
                 subject="Password Reset",
-                body=(f"Your password has been succesfully reset.\n\n"
-                    "Please set your new password using the link below."
+                body=(
+                    "We received a request to reset your password.\n\n"
+                    "Please use the link below to set a new password."
                 ),
                 html=html
             )
 
             self.email_service.send(message)
             self.db.commit()
+
+        except InvalidEmailAddressError:
+
+            self.db.rollback()
+            raise
             
         except Exception as error:
 
@@ -216,8 +229,8 @@ class UserService:
         page: int,
         limit: int,
         search: str | None = None,
-        role: str | None = None,
-        status: str | None = None,
+        role: UserRole | None = None,
+        status: Literal["active", "disabled"] | None = None,
     ) -> UserPageListResponse:
     
         users, total = self.repository.get_all(
@@ -302,7 +315,8 @@ class UserService:
 
     def enable_user(
         self,
-        user_id: int 
+        user_id: int,
+        actor_id: int 
     ) -> None:
 
         user = self.repository.get_by_id(user_id)
@@ -316,6 +330,7 @@ class UserService:
             
             self.repository.enable(
                 stored_user=user,
+                approve_by=actor_id,
                 now=now
             )
 
@@ -349,6 +364,7 @@ class UserService:
             
             self.repository.disable(
                 stored_user=user,
+                approve_by=actor_id,
                 now=now
             )
 
@@ -362,7 +378,8 @@ class UserService:
 
     def promote_user(
         self,
-        user_id: int
+        user_id: int,
+        actor_id: int
     ) -> None:
 
         user = self.repository.get_by_id(user_id)
@@ -376,6 +393,7 @@ class UserService:
 
             self.repository.promote(
                 stored_user=user,
+                approve_by=actor_id,
                 now=now
             )
 
@@ -409,6 +427,7 @@ class UserService:
 
             self.repository.demote(
                 stored_user=user,
+                approve_by=actor_id,
                 now=now
             )
 
@@ -442,7 +461,7 @@ class UserService:
 
             self.repository.delete(
                 stored_user=user,
-                deleted_by=actor_id,
+                approve_by=actor_id,
                 now=now
             )
 
@@ -451,8 +470,5 @@ class UserService:
         except Exception as error:
 
             self.db.rollback()
-
-            print(f"Soft deletion failed: {error!r}")
-
             raise InvalidCredentialsError() from error
 

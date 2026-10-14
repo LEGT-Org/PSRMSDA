@@ -1,13 +1,16 @@
+from typing import Literal
 from fastapi import (
     APIRouter,  
-    status, 
+    Response, 
+    status,
     Query
 )
 
 from app.modules.user.schema import (
     UserPageListResponse,
-    UserResponse, 
-    UserCreate
+    UserResponse,
+    UserCreate,
+    UserRole 
 )
 
 from app.modules.user.dependency import (
@@ -45,9 +48,15 @@ def get_users(
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     search: str | None = Query(None),
-    role: str | None = Query(None),
-    status: str | None = Query(None),
-):
+    role: UserRole | None = Query(None),
+    status: Literal["all", "active", "disabled"] = "all",
+) -> dict:
+
+    status_filter = {
+        "all": None,
+        "active": "active",
+        "disabled": "disabled",
+    }[status]
 
     return service.get_all_users(
         page=page,
@@ -66,10 +75,14 @@ def get_users(
 def register(
     data: UserCreate,
     service: UserService,
+    current_user: AdminUser,
     _: ValidateCSRF
 ):
 
-    return service.create_user(data)
+    return service.create_user(
+        data=data,
+        actor_id=current_user.id
+    )
 
 
 @router.patch(
@@ -82,7 +95,10 @@ def promote_user(
     current_user: AdminUser
 ) -> None:
 
-    service.promote_user(user_id)
+    service.promote_user(
+        user_id=user_id,
+        actor_id=current_user.id
+    )
 
     return {
         "message": f"User {user_id} has been successfully promoted"
@@ -119,7 +135,10 @@ def enable_user(
     current_user: AdminUser
 ) -> None:
 
-    service.enable_user(user_id)
+    service.enable_user(
+        user_id=user_id,
+        actor_id=current_user.id
+    )
 
     return {
         "message": f"User {user_id} has been successfully enabled"
@@ -146,21 +165,19 @@ def disable_user(
     }
 
 
-@router.patch(
+@router.delete(
     "/admin/{user_id}/delete",
-    status_code=status.HTTP_200_OK
+    status_code=status.HTTP_204_NO_CONTENT
 )
 def delete_user(
     user_id: int,
     service: UserService,
     current_user: AdminUser
-) -> dict[str, str]:
+) -> None:
 
     service.delete_user(
         user_id=user_id,
         actor_id=current_user.id
     )
 
-    return {
-        "message": f"User {user_id} has been permanently deleted"
-    }
+    return Response(status_code=status.HTTP_204_NO_CONTENT)
