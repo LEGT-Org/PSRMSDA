@@ -10,3 +10,8 @@ export const FormatServiceRequestDate = (createdAt: string): string => {
     );
     
 };
+
+
+export const FormatDate = (DateValue: string): string => {
+    return new Date(DateValue).toLocaleString();
+};

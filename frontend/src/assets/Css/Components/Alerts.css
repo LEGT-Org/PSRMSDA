@@ -64,11 +64,11 @@
 }
 
 .Unresolved-Summary {
-    border-left: 6px solid #ff0000;
+    border-left: 4px solid #ff0000;
 }
 
 .Resolved-Summary {
-    border-left: 6px solid #0000ff;
+    border-left: 4px solid #008000;
 }
 
 /* Alert List */
