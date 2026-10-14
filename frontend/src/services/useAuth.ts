@@ -119,18 +119,20 @@ export async function login(Email: string, Password: string) {
 
 // Reset User Password
 
-export async function resetPassword(Email: string) {
+export async function resetPassword(
+    Email: string
+): Promise<{ ok: true } | { ok: false; message: string }> {
 
     isLoading.value = true;
+    Error.value = '';
 
     try {
 
         const res = await ApiFetch('/auth/reset-password', {
-
             method: 'POST',
             body: JSON.stringify(
                 {
-                    email: Email.trim()
+                    reset_password_email: Email.trim()
                 }
             )
 
@@ -139,13 +141,15 @@ export async function resetPassword(Email: string) {
         const data = await res.json()
 
         if (!res.ok) { 
-
-            Error.value = data.detail ?? 'Invalid email or password';
-            return Error.value;
+            
+            const message = data.detail ?? 'Invalid email or password';
+            Error.value = message;
+            
+            return { ok: false, message };
 
         }
 
-        return data;
+        return { ok: true };
 
     } catch(error) {
 
@@ -155,7 +159,7 @@ export async function resetPassword(Email: string) {
             icon: 'error',
         });
 
-        return;
+        return { ok: false, message: 'Connection error' };
 
     } finally {
 

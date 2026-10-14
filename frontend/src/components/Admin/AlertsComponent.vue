@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
 
+import { FormatAlertType } from '@/helper/SymptomsParser';
+import { FormatDate } from '@/helper/DateFormatter';
 import {
     GetProcurementAlerts,
     ApplyProcurementAlertFilters,
@@ -26,6 +28,7 @@ import {
 // The backend already handles searching and filtering.
 const FilteredAlerts = computed(() => ProcurementAlerts.value);
 
+
 const GetAlerts = async (): Promise<void> => {
 
     const Response = await GetProcurementAlerts(
@@ -47,6 +50,7 @@ const GetAlerts = async (): Promise<void> => {
 
 };
 
+
 const ToggleResolved = async (AlertId: number): Promise<void> => {
 
     const Alert = ProcurementAlerts.value.find((Item) => Item.id === AlertId);
@@ -66,18 +70,6 @@ const ToggleResolved = async (AlertId: number): Promise<void> => {
 
 };
 
-const FormatAlertType = (Type: string): string => {
-    
-    return Type
-        .toLowerCase()
-        .split('_')
-        .map((Word) => Word.charAt(0).toUpperCase() + Word.slice(1))
-        .join(' ');
-};
-
-const FormatDate = (DateValue: string): string => {
-    return new Date(DateValue).toLocaleString();
-};
 
 const GoToNextPage = async () => {
 
@@ -107,6 +99,7 @@ const GoToPreviousPage = async () => {
     );
 
 };
+
 
 onMounted(async () => {
     await GetAlerts();

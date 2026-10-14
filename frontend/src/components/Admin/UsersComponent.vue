@@ -1,9 +1,10 @@
 <script setup lang="ts">
     import Swal from 'sweetalert2';
-    import { ref, onMounted, useShadowRoot } from 'vue';
+    import { ref, onMounted } from 'vue';
 
-    import { accessToken, currentUser, isFetched } from '@/services/state/Auth';
+    import { accessToken, currentUser } from '@/services/state/Auth';
     import { capitalizeFirstLetter } from '@/helper/Capitalize';
+    import { FormatDate } from '@/helper/DateFormatter';
     import { 
         RegisterUser, 
         GetUsers, 
@@ -379,6 +380,7 @@
                 <span>Email</span>
                 <span>Role</span>
                 <span>Status</span>
+                <span>Created Date</span>
                 <span>Actions</span>
             </div>
 
@@ -426,6 +428,16 @@
 
                         <span class="Status-Badge">
                             {{ user.is_active ? 'Active' : 'Disabled' }}
+                        </span>
+
+                    </div>
+
+                    <!-- Created Date -->
+
+                    <div>
+
+                        <span class="Date-Badge">
+                            {{ FormatDate(user.created_at) }}
                         </span>
 
                     </div>

@@ -8,6 +8,7 @@ export interface User {
     role: string;
     is_active: boolean;
     email_verified: boolean;
+    created_at: string;
 }
 
 export interface RegisterUserRequest {

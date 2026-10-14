@@ -2,7 +2,7 @@
     import { ref, onMounted } from 'vue';
     import { useRouter } from 'vue-router';
 
-    import { FormatServiceRequestDate } from '@/helper/DateFormatter';
+    import { FormatServiceRequestDate, FormatDate } from '@/helper/DateFormatter';
     import { 
         GetServiceRequests, 
         ApplyServiceRequestFilters,
@@ -207,7 +207,7 @@
                         <th>Customer</th>
                         <th>Device</th>
                         <th>Technician</th>
-                        <th>Created</th>
+                        <th>Created Date</th>
                         <th>Status</th>
                         <th></th>
                     </tr>
@@ -244,7 +244,7 @@
                         </td>
 
                         <td>
-                            {{ FormatServiceRequestDate(serviceRequest.created_at) }}
+                            {{ FormatDate(serviceRequest.created_at) }}
                         </td>
 
                         <td>

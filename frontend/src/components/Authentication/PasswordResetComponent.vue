@@ -13,21 +13,23 @@
 
     const ResetUserPassword = async () => {
 
-        const success = await resetPassword(Email.value);
+        ErrorMessage.value = '';
 
-        if (success) {
+        const result = await resetPassword(Email.value);
 
+        if (result.ok) {
+            
             await HandleSuccess(
                 'Your password has been reset successfully. You can now log in using your new password.',
                 'Password Reset Successful!'
-            )
+            );
 
             await Router.push('/');
 
+            return;
         }
 
-        ErrorMessage.value = Error.value;
-
+        ErrorMessage.value = result.message;
     };
     
 </script>
