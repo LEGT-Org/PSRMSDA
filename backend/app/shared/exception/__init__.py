@@ -52,7 +52,11 @@ from app.shared.exception.spare_part import (
 )
 
 from app.shared.exception.customer import (
-    CustomerDoesNotExistError    
+    CustomerCreationFailedError,
+    CustomerDoesNotExistError,
+    CustomerDeleteFailedError,
+    CustomerUpdateFailedError,    
+    CustomerValidationError
 )
 
 from app.shared.exception.category import (
@@ -139,7 +143,11 @@ __all__ = [
     "ServiceRequestFailedError",
 
     # Customer Exception
+    "CustomerCreationFailedError",
+    "CustomerUpdateFailedError",
+    "CustomerDeleteFailedError",
     "CustomerDoesNotExistError",
+    "CustomerValidationError",
 
     # Category Exception
     "CategoryDoesNotExistError",

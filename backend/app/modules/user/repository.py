@@ -149,9 +149,11 @@ class UserRepository:
     def enable(
         self,
         stored_user: User,
+        approve_by: int,
         now: datetime
     ) -> None:
 
+        stored_user.last_modified_by_id = approve_by
         stored_user.is_active = True
         stored_user.updated_at = now
 
@@ -159,30 +161,23 @@ class UserRepository:
     def disable(
         self,
         stored_user: User,
+        approve_by: int,
         now: datetime
     ) -> None:
 
+        stored_user.last_modified_by_id = approve_by
         stored_user.is_active = False
-        stored_user.updated_at = now
-
-    
-    def delete(
-        self,
-        stored_user: User,
-        now: datetime
-    ) -> None:
-
-        stored_user.is_active = False
-        stored_user.deleted_at = now
         stored_user.updated_at = now
 
 
     def promote(
         self,
         stored_user: User,
+        approve_by: int,
         now: datetime
     ) -> None:
 
+        stored_user.last_modified_by_id = approve_by
         stored_user.role = UserRole.ADMIN
         stored_user.updated_at = now
 
@@ -190,9 +185,11 @@ class UserRepository:
     def demote(
         self,
         stored_user: User,
+        approve_by: int,
         now: datetime
     ) -> None:
 
+        stored_user.last_modified_by_id = approve_by
         stored_user.role = UserRole.USER
         stored_user.updated_at = now
 
@@ -200,7 +197,7 @@ class UserRepository:
     def delete(
         self,
         stored_user: User,
-        deleted_by: int,
+        approve_by: int,
         now: datetime
     ) -> None:
 
@@ -210,7 +207,7 @@ class UserRepository:
         stored_user.is_active = False
         stored_user.email = None
 
-        stored_user.deleted_by_id = deleted_by
+        stored_user.last_modified_by_id = approve_by
         stored_user.updated_at = now
         stored_user.deleted_at = now
 
