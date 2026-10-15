@@ -47,8 +47,14 @@ from app.shared.exception.request_part import (
 )
 
 from app.shared.exception.spare_part import (
+    SparePartPartCodeAlreadyExistError,
     SparePartInsufficientQuantityError,
-    SparePartUpdateQuantityError
+    SparePartUpdateRequestFailedError,
+    SparePartUpdateQuantityError,
+    SparePartCreationFailedError,
+    SparePartDeletionFailedError,
+    SparePartUpdateFailedError,
+    SparePartDoesNotExistError
 )
 
 from app.shared.exception.customer import (
@@ -165,7 +171,13 @@ __all__ = [
     "ProcurementAlertFailedError",
 
     # Spare Part Exception
+    "SparePartPartCodeAlreadyExistError",
     "SparePartInsufficientQuantityError",
+    "SparePartUpdateRequestFailedError",
     "SparePartUpdateQuantityError",
+    "SparePartCreationFailedError",
+    "SparePartDeletionFailedError",
+    "SparePartUpdateFailedError",
+    "SparePartDoesNotExistError",
     
 ]

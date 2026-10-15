@@ -1,4 +1,9 @@
-from fastapi import APIRouter, Response, status
+from fastapi import (
+    APIRouter, 
+    Response,
+    Request, 
+    status
+)
 
 from app.modules.auth.schema import (
     ResetPasswordRequest,
@@ -18,6 +23,7 @@ from app.modules.auth.dependency import (
 from app.shared.security.csrf import generate_csrf_token
 from app.shared.security.jwt import create_access_token
 from app.shared.exception import NoRefreshTokenError
+from app.shared.rate_limiter import limiter
 from app.shared.config import settings 
 
 
@@ -53,7 +59,9 @@ def get_csrf_token(response: Response):
     "/set-password",
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("5/minute")
 def set_password(
+    request: Request,
     data: SetPasswordRequest,
     service: AuthService,
     _: ValidateCSRF
@@ -70,7 +78,9 @@ def set_password(
     "/reset-password",
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("5/minute")
 def reset_password(
+    request: Request,
     email: ResetPasswordRequest,
     service: AuthService,
     _:ValidateCSRF
@@ -88,7 +98,9 @@ def reset_password(
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("5/minute")
 def login(
+    request: Request,
     response: Response,
     form_data: LoginRequest,
     service: AuthService,
@@ -120,7 +132,9 @@ def login(
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("30/minute")
 def refresh(
+    request: Request,
     response: Response,
     service: AuthService,
     refresh_token_service: RefreshTokenService,
@@ -154,7 +168,9 @@ def refresh(
     "/revoke",
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("5/minute")
 def revoke(
+    request: Request,
     response: Response,
     refresh_token_service: RefreshTokenService,
     refresh_token: RefreshToken,

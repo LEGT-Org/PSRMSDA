@@ -1,4 +1,12 @@
-from fastapi import APIRouter, Query, Response, status
+from fastapi import (
+    APIRouter, 
+    Response,
+    Request, 
+    status,
+    Query
+)
+
+from app.shared.rate_limiter import limiter
 
 from app.modules.customer.dependency import (
     CustomerService,
@@ -16,7 +24,7 @@ from app.modules.customer.schema import (
 
 router = APIRouter(
     prefix="/customers",
-    tags=["Customers"]
+    tags=["Customer"]
 )
 
 
@@ -33,7 +41,7 @@ def get_customers(
     search: str | None = Query(default=None),
 ) -> CustomerPageListResponse:
 
-    return service.get_customers(
+    return service.get_list_of_customers(
         page=page,
         limit=limit,
         search=search,
@@ -45,8 +53,10 @@ def get_customers(
     response_model=CustomerResponse,
     status_code=status.HTTP_201_CREATED,
 )
+@limiter.limit("30/minute")
 def create_customer(
-    request: CustomerCreateRequest,
+    request: Request,
+    data: CustomerCreateRequest,
     service: CustomerService,
     current_user: CurrentUser,
     _:ValidateCSRF,
@@ -54,7 +64,7 @@ def create_customer(
 
     return service.create_customer(
         actor_id=current_user.id,
-        request=request
+        request=data
     )
 
 
@@ -77,9 +87,11 @@ def get_customer(
     response_model=CustomerResponse,
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("30/minute")
 def update_customer(
+    request: Request,
     customer_id: int,
-    request: CustomerUpdateRequest,
+    data: CustomerUpdateRequest,
     service: CustomerService,
     current_user: CurrentUser,
     _:ValidateCSRF,
@@ -88,7 +100,7 @@ def update_customer(
     service.update_customer(
         customer_id=customer_id,
         actor_id=current_user.id,
-        request=request
+        request=data
     )
 
     return {
@@ -100,7 +112,9 @@ def update_customer(
     "/{customer_id}/delete",
     status_code=status.HTTP_204_NO_CONTENT,
 )
+@limiter.limit("10/minute")
 def delete_customer(
+    request: Request,
     customer_id: int,
     service: CustomerService,
     current_user: AdminUser,

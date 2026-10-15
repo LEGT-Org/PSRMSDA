@@ -203,7 +203,7 @@ class CustomerService:
             raise CustomerDeleteFailedError()
             
 
-    def get_customers(
+    def get_list_of_customers(
         self,
         page: int,
         limit: int,
