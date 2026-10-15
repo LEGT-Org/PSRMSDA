@@ -701,7 +701,11 @@ class ServiceRequestService:
             device_model=service_request.device_model,
             fault_descriptions=service_request.fault_description,
             status=service_request.status,
-            diagnosis=service_request.llm_diagnosis.response,
+            diagnosis=(
+                service_request.llm_diagnosis.response
+                if service_request.llm_diagnosis
+                else None
+            ),
             customer=customer_detail,
             technician=technician_detail,
             requested_part=requested_part_detail

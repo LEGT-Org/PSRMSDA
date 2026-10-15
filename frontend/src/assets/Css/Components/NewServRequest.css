@@ -155,12 +155,12 @@
 
 .Diagnosis-Header h2 {
     margin: 0;
-    font-size: 1.20rem;
+    font-size: 1.50rem;
 }
 
 .Diagnosis-Header p {
     margin: 0.15rem 0 0;
-    font-size: 0.70rem;
+    font-size: 0.90rem;
     opacity: 0.85;
 }
 
@@ -169,7 +169,7 @@
     border-radius: 1rem;
     background-color: #eab308;
     color: var(--secondary-color);
-    font-size: 0.80rem;
+    font-size: 0.90rem;
     font-weight: 700;
 }
 
@@ -189,7 +189,7 @@
 
 .Diagnosis-Card h3 {
     margin: 0 0 0.65rem;
-    font-size: 1.08rem;
+    font-size: 1.20rem;
     color: var(--secondary-color);
 }
 
@@ -204,19 +204,19 @@
     gap: 0.75rem;
 }
 
-.Summary-Card {
+.New-Summary-Card {
     min-height: 7rem;
 }
 
-.Summary-Card h3 {
+.New-Summary-Card h3 {
     margin: 0 0 0.65rem;
-    font-size: 1.08rem;
+    font-size: 1.20rem;
     color: var(--secondary-color);
 }
 
-.Summary-Card p {
+.New-Summary-Card p {
     margin: 0;
-    font-size: 0.90rem;
+    font-size: 1rem;
     line-height: 1.5;
 }
 
@@ -226,7 +226,7 @@
     margin-top: 0.75rem;
     padding-top: 0.5rem;
     border-top: 1px solid #999;
-    font-size: 0.75rem;
+    font-size: 0.90rem;
 }
 
 .Diagnosis-Metadata strong {
@@ -239,7 +239,7 @@
 
 .Missing-Card h3 {
     margin: 0 0 0.65rem;
-    font-size: 1.08rem;
+    font-size: 1.20rem;
     color: var(--fifth-color);
 }
 
@@ -248,7 +248,7 @@
 .Part-Card ul {
     margin: 0;
     padding-left: 1.1rem;
-    font-size: 0.80rem;
+    font-size: 0.90rem;
     line-height: 1.6;
 }
 
@@ -282,7 +282,7 @@
     border-radius: 50%;
     background-color: var(--secondary-color);
     color: var(--normal-text-color);
-    font-size: 0.8rem;
+    font-size: 0.80rem;
     font-weight: 700;
 }
 
@@ -301,12 +301,12 @@
 
 .Hypothesis-Title h4 {
     margin: 0;
-    font-size: 0.90rem;
+    font-size: 1rem;
 }
 
 .Hypothesis-Content p {
     margin: 0.35rem 0 0;
-    font-size: 0.85rem;
+    font-size: 0.90rem;
     line-height: 1.45;
 }
 
@@ -314,7 +314,7 @@
     flex-shrink: 0;
     padding: 0.2rem 0.45rem;
     border-radius: 1rem;
-    font-size: 0.8rem;
+    font-size: 0.80rem;
     font-weight: 700;
     text-transform: uppercase;
 }
@@ -324,9 +324,9 @@
     color: #991b1b;
 }
 
-.Confidence-medium {
-    background-color: #fef08a;
-    color: #854d0e;
+.Confidence-moderate {
+    background-color: #dbeafe;
+    color: var(--secondary-color);
 }
 
 .Confidence-high {
@@ -341,7 +341,7 @@
     border-radius: 0.2rem;
     background-color: var(--secondary-color);
     color: var(--normal-text-color);
-    font-size: 0.6rem;
+    font-size: 0.80rem;
 }
 
 
@@ -355,14 +355,14 @@
 
 .Recommended-Checks h3 {
     margin: 0 0 0.65rem;
-    font-size: 1.08rem;
+    font-size: 1.20rem;
     color: var(--sixth-color);
 }
 
 .Recommended-Checks ol {
     margin: 0;
     padding-left: 1.25rem;
-    font-size: 0.80rem;
+    font-size: 0.90rem;
     line-height: 1.7;
 }
 
@@ -377,7 +377,7 @@
 
 .SOP-Step h3 {
     margin: 0 0 0.65rem;
-    font-size: 1.08rem;
+    font-size: 1.20rem;
     color: var(--secondary-color);
 }
 
@@ -411,7 +411,7 @@
 
 .SOP-Step-Content h4 {
     margin: 0;
-    font-size: 0.80rem;
+    font-size: 0.95rem;
     color: var(--second-color);
     line-height: 1.5;
 }
@@ -422,7 +422,7 @@
     border-radius: 0.2rem;
     background-color: #fff3cd;
     color: #664d03;
-    font-size: 0.65rem;
+    font-size: 0.90rem;
 }
 
 
@@ -436,7 +436,7 @@
 
 .Replacement-Card h3 {
     margin: 0 0 0.65rem;
-    font-size: 1.08rem;
+    font-size: 1.20rem;
     color: var(--seventh-color);
 }
 
@@ -448,13 +448,13 @@
 
 .Replacement-Content strong,
 .Recommended-Part strong {
-    font-size: 0.80rem;
+    font-size: 1rem;
 }
 
 .Replacement-Content p,
 .Recommended-Part p {
     margin: 0.2rem 0 0;
-    font-size: 0.75rem;
+    font-size: 0.90rem;
     line-height: 1.5;
 }
 
@@ -469,7 +469,7 @@
 
 .Part-Card h3 {
     margin: 0 0 0.65rem;
-    font-size: 1.08rem;
+    font-size: 1.20rem;
     color: var(--secondary-color)
 }
 
@@ -489,7 +489,7 @@
 
 .Matched-Part h4 {
     margin: 0 0 0.5rem;
-    font-size: 0.85rem;
+    font-size: 1rem;
     color: #16805c;
 }
 
@@ -506,11 +506,11 @@
 }
 
 .Matched-Part-Information span {
-    font-size: 0.80rem;
+    font-size: 0.90rem;
 }
 
 .Matched-Part-Information strong {
-    font-size: 0.80rem;
+    font-size: 0.90rem;
 }
 
 .Matched-Part-List {
@@ -539,11 +539,11 @@
 }
 
 .Matched-Part-Item span {
-    font-size: 0.80rem;
+    font-size: 0.90rem;
 }
 
 .Matched-Part-Item strong {
-    font-size: 0.80rem;
+    font-size: 0.90rem;
 }
 
 
@@ -646,6 +646,10 @@
 .Confirm-Button:hover {
     background-color: var(--secondary-hover-color);
     border: 1.5px solid var(--normal-text-color);
+}
+
+.Confirm-Button:disabled {
+    opacity: 0.80;
 }
 
 

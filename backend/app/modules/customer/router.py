@@ -28,7 +28,6 @@ router = APIRouter(
 def get_customers(
     current_user: CurrentUser,
     service: CustomerService,
-    _:ValidateCSRF,
     page: int = Query(default=1, ge=1),
     limit: int = Query(default=10, ge=1, le=100),
     search: str | None = Query(default=None),
@@ -68,7 +67,6 @@ def get_customer(
     customer_id: int,
     service: CustomerService,
     current_user: CurrentUser,
-    _:ValidateCSRF,
 ) -> CustomerResponse:
 
     return service.get_customer(customer_id)

@@ -1,8 +1,8 @@
-"""Create All Essential Table
+"""Create All Essential Tables
 
-Revision ID: ce30cab97671
+Revision ID: c8808a24a17d
 Revises: 
-Create Date: 2026-10-11 18:48:53.857933
+Create Date: 2026-10-15 08:01:55.874699
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'ce30cab97671'
+revision: str = 'c8808a24a17d'
 down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -30,32 +30,36 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['parent_category_id'], ['categories.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('users',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('first_name', sa.String(length=50), nullable=False),
+    sa.Column('last_name', sa.String(length=50), nullable=False),
+    sa.Column('email', sa.String(length=255), nullable=True),
+    sa.Column('password_hash', sa.String(length=255), nullable=True),
+    sa.Column('token_hash', sa.String(length=255), nullable=True),
+    sa.Column('email_verified', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('is_active', sa.Boolean(), server_default=sa.text('0'), nullable=False),
+    sa.Column('role', sa.Enum('user', 'admin', name='user_role'), server_default='user', nullable=False),
+    sa.Column('last_modified_by_id', sa.Integer(), nullable=True),
+    sa.Column('token_expire', sa.DateTime(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['last_modified_by_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id'),
+    sa.UniqueConstraint('email')
+    )
     op.create_table('customers',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('first_name', sa.String(length=50), nullable=False),
     sa.Column('last_name', sa.String(length=50), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
     sa.Column('phone_number', sa.String(length=16), nullable=False),
+    sa.Column('last_modified_by_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('deleted_at', sa.DateTime(), nullable=True),
-    sa.PrimaryKeyConstraint('id'),
-    sa.UniqueConstraint('email')
-    )
-    op.create_table('users',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('first_name', sa.String(length=50), nullable=False),
-    sa.Column('last_name', sa.String(length=50), nullable=False),
-    sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('password_hash', sa.String(length=255), nullable=True),
-    sa.Column('token_hash', sa.String(length=255), nullable=True),
-    sa.Column('email_verified', sa.Boolean(), server_default=sa.text('0'), nullable=False),
-    sa.Column('is_active', sa.Boolean(), server_default=sa.text('0'), nullable=False),
-    sa.Column('role', sa.Enum('user', 'admin', name='user_role'), server_default='user', nullable=False),
-    sa.Column('token_expire', sa.DateTime(), nullable=True),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('deleted_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['last_modified_by_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email')
     )
@@ -69,6 +73,26 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('token_hash')
+    )
+    op.create_table('spare_parts',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('part_name', sa.String(length=255), nullable=False),
+    sa.Column('part_code', sa.String(length=255), nullable=False),
+    sa.Column('device_model', sa.Text(), nullable=True),
+    sa.Column('device_brand', sa.Text(), nullable=True),
+    sa.Column('specifications', sa.Text(), nullable=True),
+    sa.Column('stock_quantity', sa.Integer(), nullable=True),
+    sa.Column('unit_cost', sa.Numeric(precision=10, scale=2), nullable=True),
+    sa.Column('shelf_location', sa.String(length=255), nullable=False),
+    sa.Column('image_url', sa.String(length=255), nullable=True),
+    sa.Column('category_id', sa.Integer(), nullable=False),
+    sa.Column('last_modified_by_id', sa.Integer(), nullable=True),
+    sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
+    sa.Column('deleted_at', sa.DateTime(), nullable=True),
+    sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),
+    sa.ForeignKeyConstraint(['last_modified_by_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('service_requests',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -88,24 +112,6 @@ def upgrade() -> None:
     sa.ForeignKeyConstraint(['approved_by_id'], ['users.id'], ),
     sa.ForeignKeyConstraint(['customer_id'], ['customers.id'], ),
     sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
-    sa.PrimaryKeyConstraint('id')
-    )
-    op.create_table('spare_parts',
-    sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('part_name', sa.String(length=255), nullable=False),
-    sa.Column('part_code', sa.String(length=255), nullable=False),
-    sa.Column('device_model', sa.Text(), nullable=True),
-    sa.Column('device_brand', sa.Text(), nullable=True),
-    sa.Column('specifications', sa.Text(), nullable=True),
-    sa.Column('stock_quantity', sa.Integer(), nullable=True),
-    sa.Column('unit_cost', sa.Numeric(precision=10, scale=2), nullable=True),
-    sa.Column('shelf_location', sa.String(length=255), nullable=False),
-    sa.Column('image_url', sa.String(length=255), nullable=True),
-    sa.Column('category_id', sa.Integer(), nullable=False),
-    sa.Column('created_at', sa.DateTime(), nullable=False),
-    sa.Column('updated_at', sa.DateTime(), nullable=False),
-    sa.Column('deleted_at', sa.DateTime(), nullable=True),
-    sa.ForeignKeyConstraint(['category_id'], ['categories.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_table('llm_diagnosis',
@@ -134,6 +140,7 @@ def upgrade() -> None:
     sa.Column('request_id', sa.Integer(), nullable=False),
     sa.Column('part_id', sa.Integer(), nullable=True),
     sa.Column('created_at', sa.DateTime(), nullable=False),
+    sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.ForeignKeyConstraint(['part_id'], ['spare_parts.id'], ),
     sa.ForeignKeyConstraint(['request_id'], ['service_requests.id'], ),
     sa.PrimaryKeyConstraint('id')
@@ -160,10 +167,10 @@ def downgrade() -> None:
     op.drop_table('request_parts')
     op.drop_table('procurement_alerts')
     op.drop_table('llm_diagnosis')
-    op.drop_table('spare_parts')
     op.drop_table('service_requests')
+    op.drop_table('spare_parts')
     op.drop_table('refresh_tokens')
-    op.drop_table('users')
     op.drop_table('customers')
+    op.drop_table('users')
     op.drop_table('categories')
     # ### end Alembic commands ###

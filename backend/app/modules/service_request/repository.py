@@ -43,8 +43,13 @@ class ServiceRequestRepository:
             select(ServiceRequest)
             .join(Customer, ServiceRequest.customer_id == Customer.id)
             .join(User, ServiceRequest.user_id == User.id)
-            .join(ServiceRequest.llm_diagnosis)
-            .where(LLMDiagnosis.status != LLMDiagnosisStatusPreview.DRAFT)
+            .outerjoin(ServiceRequest.llm_diagnosis)
+            .where(
+                or_(
+                    LLMDiagnosis.id.is_(None),
+                    LLMDiagnosis.status != LLMDiagnosisStatusPreview.DRAFT,
+                )
+            )
         )
 
         if search:

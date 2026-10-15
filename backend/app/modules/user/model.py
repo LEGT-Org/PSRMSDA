@@ -42,5 +42,6 @@ class User(Base):
 
     # Relationship
     modified_by: Mapped["User | None"] = relationship(foreign_keys=[last_modified_by_id])
-    customers: Mapped[list["Customer"]] = relationship(foreign_keys="Customer.last_modified_by_id")
+    customers: Mapped[list["Customer"]] = relationship(foreign_keys="Customer.last_modified_by_id", overlaps="users")
+    spare_parts: Mapped[list["SparePart"]] = relationship(foreign_keys="SparePart.last_modified_by_id", overlaps="users")
     service_requests: Mapped[list["ServiceRequest"]] = relationship(back_populates="users", foreign_keys="ServiceRequest.user_id")

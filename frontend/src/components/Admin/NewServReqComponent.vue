@@ -248,7 +248,7 @@
             <h1>New Service Request</h1>
             <p>
                 Create new service requests.
-            </p>w
+            </p>
         </div>
 
         <!-- ============================= -->
@@ -414,7 +414,7 @@ Example:
             <div class="Diagnosis-Top-Grid">
 
                 <!-- Summary -->
-                <section class="Diagnosis-Card Summary-Card">
+                <section class="Diagnosis-Card New-Summary-Card">
 
                     <h3>Summary</h3>
 
@@ -815,8 +815,8 @@ Example:
                 <button
                     type="button"
                     class="Confirm-Button"
-                    :disabled="isConfirming"
                     @click="ConfirmRequest"
+                    :disabled="isConfirming"
                 >
                     {{ 
                         isConfirming

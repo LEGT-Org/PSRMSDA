@@ -29,7 +29,6 @@ router = APIRouter(
 def get_procurement_alerts(
     service: ProcurementAlertService,
     current_user: AdminUser,
-    _:ValidateCSRF,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     search: str | None = Query(None, max_length=100),

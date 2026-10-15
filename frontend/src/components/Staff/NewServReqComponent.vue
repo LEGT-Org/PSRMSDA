@@ -15,6 +15,7 @@
 
     import { 
         isDiagnosing,
+        isConfirming,
         showDiagnosis,
         diagnosis,
         type DiagnosisRequest,
@@ -137,6 +138,25 @@
 
     const ConfirmRequest = async () => {
 
+        const Confirmation = await Swal.fire({
+            title: 'Confirm Service Request?',
+            text: `This action will mark the request as confirmed.`,
+            icon: 'question',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, confirm request',
+            cancelButtonText: 'Cancel',
+            customClass: {
+                confirmButton: 'success-button',
+                cancelButton: 'error-button'
+            },
+            reverseButtons: true,
+            focusCancel: true,
+        });
+
+        if (!Confirmation.isConfirmed) {
+            return;
+        }
+
         const payload = BuildConfirmRequestPayload();
         const response = await confirmServiceRequest(payload);
 
@@ -152,10 +172,27 @@
 
     const CancelRequest = async () => {
 
-        if (diagnosis.value?.service_request_id == null) {
+        const Confirmation = await Swal.fire({
+            title: 'Cancel Service Request?',
+            text: `Are you sure you want to cancel? This action cannot be undone.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonText: 'Yes, cancel request',
+            cancelButtonText: 'No',
+            customClass: {
+                confirmButton: 'error-button',
+                cancelButton: 'success-button'
+            },
+            reverseButtons: true,
+            focusCancel: true,
+        });
 
+        if (!Confirmation.isConfirmed) {
             return;
+        }
 
+        if (diagnosis.value?.service_request_id == null) {
+            return;
         }
 
         try {
@@ -181,12 +218,11 @@
         const serviceRequestId = diagnosis.value?.service_request_id;
 
         if (serviceRequestId == null) {
-
             return;
-            
         }
 
         cancelServiceRequestOnUnload(serviceRequestId);
+        window.location.reload();
         
     };
 
@@ -208,7 +244,12 @@
 <template>
     <div class="Service-Request">
 
-        <h1>New Service Request</h1>
+        <div class="Service-Request-Title">
+            <h1>New Service Request</h1>
+            <p>
+                Create new service requests.
+            </p>w
+        </div>
 
         <!-- ============================= -->
         <!-- Request Information            -->
@@ -774,9 +815,14 @@ Example:
                 <button
                     type="button"
                     class="Confirm-Button"
+                    :disabled="isConfirming"
                     @click="ConfirmRequest"
                 >
-                    Confirm
+                    {{ 
+                        isConfirming
+                            ? 'Confirm...'
+                            : 'Confirm'
+                    }}
                 </button>
 
                 <button
