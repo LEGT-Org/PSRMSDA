@@ -5,9 +5,9 @@ from app.modules.category.model import Category
 
 class CategoryInterface(Protocol):
 
-    def get_category_by_name(
+    def get_category_by_id(
         self,
-        category_name: str
+        category_id: str
     ) -> Category:
 
         pass

@@ -1,5 +1,12 @@
 from datetime import date
-from fastapi import APIRouter, Query, status
+from fastapi import (
+    APIRouter, 
+    Request,
+    status,
+    Query
+)
+
+from app.shared.rate_limiter import limiter
 
 from app.modules.service_request.dependency import (
     ServiceRequestService,
@@ -24,7 +31,7 @@ from app.modules.service_request.schema import (
             
 router = APIRouter(
     prefix="/service-requests",
-    tags=["Service Requests"]
+    tags=["Service Request"]
 )
 
 
@@ -57,7 +64,9 @@ def list_of_service_requests(
     response_model=ServiceRequestResponse,
     status_code=status.HTTP_201_CREATED
 )
+@limiter.limit("5/minute")
 async def ai_diagnosis(
+    request: Request,
     service: ServiceRequestService,
     llm_diagnosis_request: LLMDiagnosticRequestPreview,
     customer_data: CustomerRequestPreview,
@@ -77,8 +86,10 @@ async def ai_diagnosis(
     response_model=ServiceRequestResponse,
     status_code=status.HTTP_200_OK,
 )
+@limiter.limit("5/minute")
 def confirm_request(
-    request: ConfirmServiceRequest,
+    request: Request,
+    data: ConfirmServiceRequest,
     service: ServiceRequestService,
     current_user: CurrentUser,
     _: ValidateCSRF
@@ -86,7 +97,7 @@ def confirm_request(
 
     return service.confirm_request(
         user_id=current_user.id,
-        request=request
+        request=data
     )
 
 
@@ -135,9 +146,11 @@ def service_request_detail(
     "/{service_request_id}/final-confirmation",
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("5/minute")
 def finalized_service_request(
+    request: Request,
     service_request_id: int,
-    request: ServiceRequestFinalizeRequest,
+    data: ServiceRequestFinalizeRequest,
     service: ServiceRequestService,
     current_user: CurrentUser
 ) -> dict[str, str]:
@@ -145,13 +158,13 @@ def finalized_service_request(
     service.final_service_request_confirmation(
         service_request_id=service_request_id,
         approved_by=current_user,
-        request_data=request
+        request_data=data
     )
 
     return {
         "message": (
             f"Service request {service_request_id} "
-            f"status has been finalized into {request.status.value}."
+            f"status has been finalized into {data.status.value}."
         )
     }
 
@@ -160,16 +173,18 @@ def finalized_service_request(
     "/{service_request_id}/status",
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("30/minute")
 def update_service_request_status(
+    request: Request,
     service_request_id: int,
-    request: ServiceRequestStatusUpdate,
+    data: ServiceRequestStatusUpdate,
     service: ServiceRequestService,
     current_user: CurrentUser
 ) -> dict[str, str]:
 
     service.update_service_request_status(
         service_request_id=service_request_id,
-        status=request.status,
+        status=data.status,
         updated_by=current_user
     )
 

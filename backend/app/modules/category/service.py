@@ -17,13 +17,13 @@ class CategoryService:
         self.repository = repository
         self.db = db
 
-
-    def get_category_by_name(
+    
+    def get_category_by_id(
         self,
-        category_name: str
+        category_id: int
     ) -> Category:
 
-        category = self.repository.get_by_name(category_name)
+        category = self.repository.get_by_id(category_id)
 
         if category is None:
             raise CategoryDoesNotExistError()

@@ -1,5 +1,12 @@
 from typing import Literal
-from fastapi import APIRouter, Query, status
+from fastapi import (
+    APIRouter, 
+    Request,
+    status,
+    Query
+)
+
+from app.shared.rate_limiter import limiter
 
 from app.modules.procurement_alert.schema import (
     ProcurementAlertResolutionRequest,
@@ -17,7 +24,7 @@ from app.modules.procurement_alert.dependency import (
 
 router = APIRouter(
     prefix="/procurement-alerts",
-    tags=["Procurement Alerts"]
+    tags=["Procurement Alert"]
 )
 
 
@@ -29,7 +36,6 @@ router = APIRouter(
 def get_procurement_alerts(
     service: ProcurementAlertService,
     current_user: AdminUser,
-    _:ValidateCSRF,
     page: int = Query(1, ge=1),
     limit: int = Query(10, ge=1, le=100),
     search: str | None = Query(None, max_length=100),
@@ -56,9 +62,11 @@ def get_procurement_alerts(
     "/{alert_id}/resolution",
     status_code=status.HTTP_200_OK,
 )
+@limiter.limit("30/minute")
 def update_procurement_alert_resolution(
+    request: Request,
     alert_id: int,
-    request: ProcurementAlertResolutionRequest,
+    data: ProcurementAlertResolutionRequest,
     service: ProcurementAlertService,
     current_user: AdminUser,
     _:ValidateCSRF,
@@ -66,12 +74,12 @@ def update_procurement_alert_resolution(
 
     service.update_resolution(
         alert_id=alert_id,
-        is_resolved=request.is_resolved,
+        is_resolved=data.is_resolved,
     )
 
     return {
         "message": (
             f"Procurement alert {alert_id} has been "
-            f"{'resolved' if request.is_resolved else 'reopened'}."
+            f"{'resolved' if data.is_resolved else 'reopened'}."
         )
     }

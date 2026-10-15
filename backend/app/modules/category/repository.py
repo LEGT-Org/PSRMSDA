@@ -18,14 +18,14 @@ class CategoryRepository:
         self.db.add(category)
         return category
 
-
-    def get_by_name(
+    
+    def get_by_id(
         self,
-        category_name: str
+        category_id: int
     ) -> Category | None:
 
         statement = select(Category).where(
-            Category.name == category_name,
+            Category.id == category_id,
             Category.is_active.is_(True)
         )
 

@@ -2,7 +2,7 @@
     import { ref, onMounted } from 'vue';
     import { useRouter } from 'vue-router';
 
-    import { FormatServiceRequestDate } from '@/helper/DateFormatter';
+    import { FormatDate } from '@/helper/DateFormatter';
     import { 
         GetServiceRequests, 
         ApplyServiceRequestFilters,
@@ -22,32 +22,6 @@
 
 
     const Router = useRouter();
-
-
-    const GetStatusClass = (status: string): string => {
-
-        switch (status) {
-            case 'Pending':
-                return 'Status-Pending';
-
-            case 'In Progress':
-                return 'Status-Ongoing';
-
-            case 'For Further Inspection':
-                return 'Status-Diagnosing';
-
-            case 'Completed':
-                return 'Status-Completed';
-
-            case 'Unsuccessful':
-                return 'Status-Unsuccessful';
-
-            default:
-                return '';
-        }
-
-    };
-    
 
     const GoToNextPage = async (): Promise<void> => {
 
@@ -207,7 +181,7 @@
                         <th>Customer</th>
                         <th>Device</th>
                         <th>Technician</th>
-                        <th>Created</th>
+                        <th>Created Date</th>
                         <th>Status</th>
                         <th></th>
                     </tr>
@@ -244,13 +218,19 @@
                         </td>
 
                         <td>
-                            {{ FormatServiceRequestDate(serviceRequest.created_at) }}
+                            {{ FormatDate(serviceRequest.created_at) }}
                         </td>
 
                         <td>
                             <span
                                 class="Request-Status"
-                                :class="GetStatusClass(serviceRequest.status)"
+                                :class="{
+                                    'Status-Pending': serviceRequest.status === 'Pending',
+                                    'Status-Diagnosed': serviceRequest.status === 'For Further Inspection',
+                                    'Status-Ingoing': serviceRequest.status === 'In Progress',
+                                    'Status-Completed': serviceRequest.status === 'Completed',
+                                    'Status-Unsuccessful': serviceRequest.status === 'Unsuccessful'
+                                }"
                             >
                                 {{ serviceRequest.status }}
                             </span>

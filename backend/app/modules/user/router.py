@@ -1,10 +1,13 @@
 from typing import Literal
 from fastapi import (
     APIRouter,  
-    Response, 
+    Response,
+    Request, 
     status,
     Query
 )
+
+from app.shared.rate_limiter import limiter
 
 from app.modules.user.schema import (
     UserPageListResponse,
@@ -72,7 +75,9 @@ def get_users(
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED
 )
+@limiter.limit("5/minute")
 def register(
+    request: Request,
     data: UserCreate,
     service: UserService,
     current_user: AdminUser,
@@ -89,7 +94,9 @@ def register(
     "/admin/{user_id}/promote",
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("30/minute")
 def promote_user(
+    request: Request,
     user_id: int,
     service: UserService,
     current_user: AdminUser
@@ -109,7 +116,9 @@ def promote_user(
     "/admin/{user_id}/demote",
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("30/minute")
 def promote_user(
+    request: Request,
     user_id: int,
     service: UserService,
     current_user: AdminUser
@@ -129,7 +138,9 @@ def promote_user(
     "/admin/{user_id}/enable",
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("30/minute")
 def enable_user(
+    request: Request,
     user_id: int,
     service: UserService,
     current_user: AdminUser
@@ -149,7 +160,9 @@ def enable_user(
     "/admin/{user_id}/disable",
     status_code=status.HTTP_200_OK  
 )
+@limiter.limit("30/minute")
 def disable_user(
+    request: Request,
     user_id: int,
     service: UserService,
     current_user: AdminUser
@@ -169,7 +182,9 @@ def disable_user(
     "/admin/{user_id}/delete",
     status_code=status.HTTP_204_NO_CONTENT
 )
+@limiter.limit("10/minute")
 def delete_user(
+    request: Request,
     user_id: int,
     service: UserService,
     current_user: AdminUser

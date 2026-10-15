@@ -90,7 +90,7 @@ class ConfirmServiceRequest(BaseModel):
     selected_parts: list[SelectedPart] = Field(default_factory=list)
     final_status: ServiceRequestStatus
     technician_notes: str | None = None
-    diagnosis_verdict: LLMDiagnosisStatusPreview
+    diagnosis_verdict: LLMDiagnosisStatusPreview | None = None
 
 
 class CancelServiceRequest(BaseModel):
@@ -102,9 +102,7 @@ class LLMRecommendedSparePart(BaseModel):
 
     llm_component: str
     llm_reason: str | None = None
-    compatibility_requirements: list[str] = Field(
-        default_factory=list
-    )
+    compatibility_requirements: list[str] = Field(default_factory=list)
 
 
 class MatchedSparePartPreview(BaseModel):
@@ -132,7 +130,7 @@ class ServiceRequestResponse(BaseModel):
     diagnosis_id: int
     customer_id: int
     status: ServiceRequestStatus
-    diagnosis: LLMDiagnosticResponse
+    diagnosis: LLMDiagnosticResponse | None = None
     llm_recommended_part: LLMRecommendedSparePart | None = None 
     matched_part: list[MatchedSparePartPreview] = []
     created_at: datetime
@@ -225,7 +223,7 @@ class ServiceRequestDetailsResponse(BaseModel):
     device_model: str
     fault_descriptions: list[str]
     status: ServiceRequestStatus
-    diagnosis: LLMDiagnosticResponse | None
+    diagnosis: LLMDiagnosticResponse | None = None
     customer: CustomerServiceRequestDetails
     technician: UserServiceRequestDetails
     requested_part: list[RequestPartDetails]

@@ -32,6 +32,7 @@ class SparePart(Base):
 
     # Foreign Key
     category_id: Mapped[int] = mapped_column(ForeignKey("categories.id"))
+    last_modified_by_id: Mapped[int | None] = mapped_column(ForeignKey("users.id"))
 
     # Timestamp
     created_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
@@ -39,6 +40,7 @@ class SparePart(Base):
     deleted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
     # Relationship (Category Table)
+    users: Mapped["User | None"] = relationship(foreign_keys=[last_modified_by_id])
     categories: Mapped["Category"] = relationship(back_populates="spare_parts")
     request_parts: Mapped[list["RequestPart"]] = relationship(back_populates="spare_parts")
     procurement_alerts: Mapped[list["ProcurementAlert"]] = relationship(back_populates="spare_parts")

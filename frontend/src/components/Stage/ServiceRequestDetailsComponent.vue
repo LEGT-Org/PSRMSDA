@@ -350,9 +350,12 @@
         ErrorMessage.value = null;
 
         try {
+            console.log('Fetching service request:', serviceRequestId);
 
-            ServiceRequest.value = await GetServiceRequestDetail(serviceRequestId,);
+            ServiceRequest.value = await GetServiceRequestDetail(serviceRequestId);
             SelectedStatus.value = ServiceRequest.value.status;
+
+            console.log('Service request received:', ServiceRequest);
 
         } catch (error) {
             
@@ -452,149 +455,161 @@
                 </ul>
             </section>
 
-            <!-- AI Diagnosis -->
-            <section class="AI-Diagnosis-Details">
-                <h2>AI Diagnosis</h2>
 
-                <p>{{ ServiceRequest.diagnosis.summary }}</p>
+            <template v-if="ServiceRequest.diagnosis">
 
-                <p>
-                    <strong>Model:</strong>
-                    {{ ServiceRequest.diagnosis.llm_model }}
-                </p>
+                <!-- AI Diagnosis -->
+                <section class="AI-Diagnosis-Details">
+                    <h2>AI Diagnosis</h2>
 
-                <p>
-                    <strong>Overall Confidence:</strong>
-                    <span 
-                        class="Overall-Confidence"
-                        :class="{
-                            'Confidence-Low': capitalizeFirstLetter(ServiceRequest.diagnosis.overall_confidence) === 'Low',
-                            'Confidence-Moderate': capitalizeFirstLetter(ServiceRequest.diagnosis.overall_confidence) === 'Moderate',
-                            'Confidence-High': capitalizeFirstLetter(ServiceRequest.diagnosis.overall_confidence) === 'High',
-                        }"
-                    >
-                        {{ capitalizeFirstLetter(ServiceRequest.diagnosis.overall_confidence) }}
-                    </span>
-                </p>
+                    <p>{{ ServiceRequest.diagnosis.summary }}</p>
 
-                <!-- Diagnostic Hypotheses -->
-                <div class="Diagnostic-Hypotheses-Details">
-                    <h3>Possible Causes</h3>
+                    <p>
+                        <strong>Model:</strong>
+                        {{ ServiceRequest.diagnosis.llm_model }}
+                    </p>
 
-                    <article
-                        v-for="(hypothesis, index) in ServiceRequest.diagnosis.diagnostic_hypotheses"
-                        :key="index"
-                    >
-                        <h4>{{ hypothesis.cause }}</h4>
-                        <p>{{ hypothesis.reasoning }}</p>
+                    <p>
+                        <strong>Overall Confidence:</strong>
+                        <span 
+                            class="Overall-Confidence"
+                            :class="{
+                                'Confidence-Low': capitalizeFirstLetter(ServiceRequest.diagnosis.overall_confidence) === 'Low',
+                                'Confidence-Moderate': capitalizeFirstLetter(ServiceRequest.diagnosis.overall_confidence) === 'Moderate',
+                                'Confidence-High': capitalizeFirstLetter(ServiceRequest.diagnosis.overall_confidence) === 'High',
+                            }"
+                        >
+                            {{ capitalizeFirstLetter(ServiceRequest.diagnosis.overall_confidence) }}
+                        </span>
+                    </p>
 
-                        <p>
-                            <strong>Confidence:</strong>
-                            <span
-                                class="Overall-Confidence"
-                                :class="{
-                                    'Confidence-Low': capitalizeFirstLetter(hypothesis.confidence) === 'Low',
-                                    'Confidence-Moderate': capitalizeFirstLetter(hypothesis.confidence) === 'Moderate',
-                                    'Confidence-High': capitalizeFirstLetter(hypothesis.confidence) === 'High',
-                                }"
-                            >
-                                {{ capitalizeFirstLetter(hypothesis.confidence) }}</span>
-                        </p>
+                    <!-- Diagnostic Hypotheses -->
+                    <div class="Diagnostic-Hypotheses-Details">
+                        <h3>Possible Causes</h3>
 
-                        <p>
-                            <strong>Supporting Fault Numbers:</strong>
-                            <span class="Supporting-Faults">
-                                <span
-                                    v-for="fault in hypothesis.supporting_faults"
-                                    :key="fault"
-                                    class="Fault-Badge"
-                                >
-                                    {{ fault }}
-                                </span>
-                            </span>
-                        </p>
-                    </article>
-                </div>
-
-                <!-- Missing Information -->
-                <div class="Missing-Information-Details">
-                    <h3>Additional Information Needed</h3>
-
-                    <ul>
-                        <li
-                            v-for="(item, index) in ServiceRequest.diagnosis.missing_information"
+                        <article
+                            v-for="(hypothesis, index) in ServiceRequest.diagnosis.diagnostic_hypotheses"
                             :key="index"
                         >
-                            {{ item }}
-                        </li>
-                    </ul>
-                </div>
+                            <h4>{{ hypothesis.cause }}</h4>
+                            <p>{{ hypothesis.reasoning }}</p>
 
-                <!-- Recommended Checks -->
-                <div class="Recommended-Checks-Details">
-                    <h3>Recommended Checks</h3>
+                            <p>
+                                <strong>Confidence:</strong>
+                                <span
+                                    class="Overall-Confidence"
+                                    :class="{
+                                        'Confidence-Low': capitalizeFirstLetter(hypothesis.confidence) === 'Low',
+                                        'Confidence-Moderate': capitalizeFirstLetter(hypothesis.confidence) === 'Moderate',
+                                        'Confidence-High': capitalizeFirstLetter(hypothesis.confidence) === 'High',
+                                    }"
+                                >
+                                    {{ capitalizeFirstLetter(hypothesis.confidence) }}</span>
+                            </p>
+
+                            <p>
+                                <strong>Supporting Fault Numbers:</strong>
+                                <span class="Supporting-Faults">
+                                    <span
+                                        v-for="fault in hypothesis.supporting_faults"
+                                        :key="fault"
+                                        class="Fault-Badge"
+                                    >
+                                        {{ fault }}
+                                    </span>
+                                </span>
+                            </p>
+                        </article>
+                    </div>
+
+                    <!-- Missing Information -->
+                    <div class="Missing-Information-Details">
+                        <h3>Additional Information Needed</h3>
+
+                        <ul>
+                            <li
+                                v-for="(item, index) in ServiceRequest.diagnosis.missing_information"
+                                :key="index"
+                            >
+                                {{ item }}
+                            </li>
+                        </ul>
+                    </div>
+
+                    <!-- Recommended Checks -->
+                    <div class="Recommended-Checks-Details">
+                        <h3>Recommended Checks</h3>
+
+                        <ol>
+                            <li
+                                v-for="(check, index) in ServiceRequest.diagnosis.recommended_checks"
+                                :key="index"
+                            >
+                                {{ check }}
+                            </li>
+                        </ol>
+                    </div>
+                </section>
+
+                <!-- Standard Operating Procedure -->
+                <section class="Standard-Operating-Procedure-Details">
+                    <h2>Standard Operating Procedure</h2>
+
+                    <h3>
+                        {{ ServiceRequest.diagnosis.standard_operating_procedure.title }}
+                    </h3>
 
                     <ol>
                         <li
-                            v-for="(check, index) in ServiceRequest.diagnosis.recommended_checks"
-                            :key="index"
+                            v-for="step in ServiceRequest.diagnosis.standard_operating_procedure.steps"
+                            :key="step.step"
                         >
-                            {{ check }}
+                            <p>
+                                <strong>Step {{ step.step }}:</strong>
+                                {{ step.instruction }}
+                            </p>
+
+                            <p v-if="step.safety_note">
+                                <strong>Safety Note:</strong>
+                                {{ step.safety_note }}
+                            </p>
                         </li>
                     </ol>
-                </div>
-            </section>
+                </section>
 
-            <!-- Standard Operating Procedure -->
-            <section class="Standard-Operating-Procedure-Details">
-                <h2>Standard Operating Procedure</h2>
+                <!-- Replacement Recommendation -->
+                <section class="Replacement-Recommendation-Details">
+                    <h2>Replacement Recommendation</h2>
 
-                <h3>
-                    {{ ServiceRequest.diagnosis.standard_operating_procedure.title }}
-                </h3>
+                    <p>
+                        <strong>Recommended Component:</strong>
+                        {{ ServiceRequest.diagnosis.replacement_recommendation.component }}
+                    </p>
 
-                <ol>
-                    <li
-                        v-for="step in ServiceRequest.diagnosis.standard_operating_procedure.steps"
-                        :key="step.step"
-                    >
-                        <p>
-                            <strong>Step {{ step.step }}:</strong>
-                            {{ step.instruction }}
-                        </p>
+                    <p>
+                        <strong>Reason:</strong>
+                        {{ ServiceRequest.diagnosis.replacement_recommendation.reason }}
+                    </p>
 
-                        <p v-if="step.safety_note">
-                            <strong>Safety Note:</strong>
-                            {{ step.safety_note }}
-                        </p>
-                    </li>
-                </ol>
-            </section>
+                    <h3>Compatibility Requirements</h3>
 
-            <!-- Replacement Recommendation -->
-            <section class="Replacement-Recommendation-Details">
-                <h2>Replacement Recommendation</h2>
+                    <ul>
+                        <li
+                            v-for="(requirement, index) in ServiceRequest.diagnosis.replacement_recommendation.compatibility_requirements"
+                            :key="index"
+                        >
+                            {{ requirement }}
+                        </li>
+                    </ul>
+                </section>
 
+            </template>
+
+            <section v-else class="AI-Diagnosis-Details">
+                <h2>AI Diagnosis</h2>
                 <p>
-                    <strong>Recommended Component:</strong>
-                    {{ ServiceRequest.diagnosis.replacement_recommendation.component }}
+                    No AI diagnosis was performed for this service request.
                 </p>
-
-                <p>
-                    <strong>Reason:</strong>
-                    {{ ServiceRequest.diagnosis.replacement_recommendation.reason }}
-                </p>
-
-                <h3>Compatibility Requirements</h3>
-
-                <ul>
-                    <li
-                        v-for="(requirement, index) in ServiceRequest.diagnosis.replacement_recommendation.compatibility_requirements"
-                        :key="index"
-                    >
-                        {{ requirement }}
-                    </li>
-                </ul>
             </section>
 
             <!-- Requested Parts -->
