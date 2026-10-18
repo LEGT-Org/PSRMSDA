@@ -158,7 +158,6 @@
 
             </div>
 
-
             <button
                 type="button"
                 class="Register-User-Button"
@@ -170,127 +169,127 @@
         </div>
 
         <!-- Register User -->
-        <Transition name="register-user">
+        <Transition name="form-transition">
 
-        <div
-            v-if="ShowRegisterUser"
-            class="Register-User-Panel"
-        >
+            <div
+                v-if="ShowRegisterUser"
+                class="Form-Panel"
+            >
 
-            <div class="Modal-Header">
+                <div class="Modal-Header">
 
-                <div>
-                    <h2>Register User</h2>
+                    <div>
+                        <h2>Register User</h2>
 
-                    <p>
-                        Create a new user account.
-                    </p>
-                </div>
-
-                <button
-                    type="button"
-                    class="Modal-Close"
-                    :disabled="isRegisteringUser"
-                    @click="CloseRegisterUser"
-                >
-                    ×
-                </button>
-
-            </div>
-
-
-            <form @submit.prevent="SubmitRegisterUser">
-
-                <div class="Form-Field">
-
-                    <label for="first-name">
-                        First Name
-                    </label>
-
-                    <input
-                        id="first-name"
-                        v-model="FirstName"
-                        type="text"
-                        placeholder="e.g. John"
-                        autocomplete="given-name"
-                        required
-                    />
-
-                </div>
-
-
-                <div class="Form-Field">
-
-                    <label for="last-name">
-                        Last Name
-                    </label>
-
-                    <input
-                        id="last-name"
-                        v-model="LastName"
-                        type="text"
-                        placeholder="e.g. Doe"
-                        autocomplete="family-name"
-                        required
-                    />
-
-                </div>
-
-
-                <div class="Form-Field">
-
-                    <label for="email">
-                        Email
-                    </label>
-
-                    <input
-                        id="email"
-                        v-model="Email"
-                        type="email"
-                        placeholder="e.g johndoe@gmail.com"
-                        autocomplete="email"
-                        required
-                    />
-
-                </div>
-
-
-                <p
-                    v-if="UserError"
-                    class="Form-Error"
-                >
-                    {{ UserError }}
-                </p>
-
-
-                <div class="Modal-Actions">
+                        <p>
+                            Create a new user account.
+                        </p>
+                    </div>
 
                     <button
                         type="button"
-                        class="Modal-Cancel-Button"
+                        class="Modal-Close"
                         :disabled="isRegisteringUser"
                         @click="CloseRegisterUser"
                     >
-                        Cancel
-                    </button>
-
-                    <button
-                        type="submit"
-                        class="Modal-Confirm-Button"
-                        :disabled="isRegisteringUser"
-                    >
-                        {{
-                            isRegisteringUser
-                                ? 'Registering...'
-                                : 'Register User'
-                        }}
+                        ×
                     </button>
 
                 </div>
 
-            </form>
 
-        </div>
+                <form @submit.prevent="SubmitRegisterUser">
+
+                    <div class="Form-Field">
+
+                        <label for="first-name">
+                            First Name
+                        </label>
+
+                        <input
+                            id="first-name"
+                            v-model="FirstName"
+                            type="text"
+                            placeholder="e.g. John"
+                            autocomplete="given-name"
+                            required
+                        />
+
+                    </div>
+
+
+                    <div class="Form-Field">
+
+                        <label for="last-name">
+                            Last Name
+                        </label>
+
+                        <input
+                            id="last-name"
+                            v-model="LastName"
+                            type="text"
+                            placeholder="e.g. Doe"
+                            autocomplete="family-name"
+                            required
+                        />
+
+                    </div>
+
+
+                    <div class="Form-Field">
+
+                        <label for="email">
+                            Email
+                        </label>
+
+                        <input
+                            id="email"
+                            v-model="Email"
+                            type="email"
+                            placeholder="e.g johndoe@gmail.com"
+                            autocomplete="email"
+                            required
+                        />
+
+                    </div>
+
+
+                    <p
+                        v-if="UserError"
+                        class="Form-Error"
+                    >
+                        {{ UserError }}
+                    </p>
+
+
+                    <div class="Modal-Actions">
+
+                        <button
+                            type="button"
+                            class="Modal-Cancel-Button"
+                            :disabled="isRegisteringUser"
+                            @click="CloseRegisterUser"
+                        >
+                            Cancel
+                        </button>
+
+                        <button
+                            type="submit"
+                            class="Modal-Confirm-Button"
+                            :disabled="isRegisteringUser"
+                        >
+                            {{
+                                isRegisteringUser
+                                    ? 'Registering...'
+                                    : 'Register User'
+                            }}
+                        </button>
+
+                    </div>
+
+                </form>
+
+            </div>
 
         </Transition>
 
@@ -510,7 +509,7 @@
 
         </div>
 
-        <div class="Users-Pagination">
+        <div class="Pagination">
 
             <button
                 type="button"

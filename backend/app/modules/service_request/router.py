@@ -40,7 +40,9 @@ router = APIRouter(
     response_model=ServiceRequestPageListResponse,
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("120/minute")
 def list_of_service_requests(
+    request: Request,
     current_user: CurrentUser,
     service: ServiceRequestService,
     page: int = Query(1, ge=1),
@@ -105,27 +107,31 @@ def confirm_request(
     "/cancel",
     status_code=status.HTTP_204_NO_CONTENT,
 )
+@limiter.limit("120/minute")
 def cancel_request(
-    request: CancelServiceRequest,
+    request: Request,
+    data: CancelServiceRequest,
     service: ServiceRequestService,
     current_user: CurrentUser,
     _: ValidateCSRF
 ) -> None:
 
-    service.cancel_request(request.service_request_id)
+    service.cancel_request(data.service_request_id)
 
 
 @router.post(
     "/cancel/unload",
     status_code=status.HTTP_204_NO_CONTENT,
 )
+@limiter.limit("120/minute")
 def cancel_request_on_unload(
-    request: CancelServiceRequest,
+    request: Request,
+    data: CancelServiceRequest,
     service: ServiceRequestService,
     _: ValidateCSRF
 ) -> None:
 
-    service.cancel_request(request.service_request_id)
+    service.cancel_request(data.service_request_id)
 
 
 @router.get(
@@ -133,7 +139,9 @@ def cancel_request_on_unload(
     response_model=ServiceRequestDetailsResponse,
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("120/minute")
 def service_request_detail(
+    request: Request,
     service_request_id: int,
     service: ServiceRequestService,
     current_user: CurrentUser
@@ -191,7 +199,7 @@ def update_service_request_status(
     return {
         "message": (
             f"Service request {service_request_id} "
-            f"status updated to {request.status.value}."
+            f"status updated to {data.status.value}."
         )
     }
 

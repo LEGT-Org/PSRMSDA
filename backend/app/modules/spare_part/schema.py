@@ -1,5 +1,10 @@
 from decimal import Decimal
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import (
+    field_validator,
+    ConfigDict, 
+    BaseModel, 
+    Field, 
+)
 
 
 class SparePartCreateRequest(BaseModel):
@@ -26,6 +31,12 @@ class SparePartUpdateRequest(BaseModel):
     shelf_location: str | None = None
     image_url: str | None = None
     category_id: int | None = None
+
+
+class SparePartUpdateResponse(BaseModel):
+
+    id: int
+    message: str
 
 
 class SparePartResponse(BaseModel):

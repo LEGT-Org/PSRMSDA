@@ -286,66 +286,6 @@
 }
 
 
-/* ============================= */
-/* Pagination                    */
-/* ============================= */
-
-.Request-Pagination {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-
-    padding: 1rem 1.25rem;
-
-    border-top: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.Request-Pagination span {
-    font-size: 0.8rem;
-    opacity: 0.65;
-}
-
-.Request-Pagination button {
-    min-width: 5.5rem;
-
-    padding: 0.55rem 0.8rem;
-
-    background: transparent;
-
-    border: 1.5px solid var(--secondary-color);
-    border-radius: 0.375rem;
-
-    cursor: pointer;
-
-    font-size: 0.75rem;
-    font-weight: 600;
-
-    transition:
-        opacity 0.15s ease,
-        transform 0.15s ease,
-        background 0.15s ease,
-        color 0.15s ease;
-}
-
-.Request-Pagination button:hover {
-    background: var(--secondary-color);
-    color: var(--normal-text-color);
-    border-color: var(--normal-text-color);
-}
-
-.Request-Pagination button:hover:not(:disabled) {
-    border-color: var(--secondary-color);
-}
-
-.Request-Pagination button:disabled {
-    cursor: not-allowed;
-    opacity: 0.35;
-}
-
-.Request-Pagination button:active {
-    transform: translateY(2px);
-}
-
 /* =========================================
    Responsive
 ========================================= */

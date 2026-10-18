@@ -128,7 +128,16 @@ class ServiceRequestService:
 
             if llm_recommendation is not None:
                 
-                matched_parts = self.spare_part_interface.search_matched_spare_part(llm_recommendation.component)
+                matched_parts = self.spare_part_interface.search_matched_spare_part(
+                    part_name=llm_recommendation.component,
+                    device_type=service_request.device_type
+                )
+
+                print("LLM recommendation:", llm_recommendation.component)
+                print("Device type:", service_request.device_type)
+                print("Matched parts:", [
+                    part.part_name for part in matched_parts
+                ])
 
                 for part in matched_parts:
                     in_stock = (
@@ -160,6 +169,9 @@ class ServiceRequestService:
                         llm_recommendation.compatibility_requirements
                     ),
                 )
+
+            print("Matched parts count:", len(matched_spare_parts))
+            print("Matched parts response:", matched_spare_parts)
                 
             self.db.commit()
             self.db.refresh(service_request)
@@ -172,7 +184,7 @@ class ServiceRequestService:
                 status=ServiceRequestStatus.PENDING,
                 diagnosis=llm_diagnosis.response,
                 llm_recommended_part=llm_recommended_part,
-                matched_part=matched_spare_parts,
+                matched_parts=matched_spare_parts,
                 created_at=service_request.created_at
             )
 
@@ -284,8 +296,10 @@ class ServiceRequestService:
                             request_id=service_request.id,
                             part_id=None,
                             quantity=None,
+                            quantity_used=None,
                             part_name_snapshot=selection.part_name,
-                            is_stock_validated=False
+                            is_stock_validated=False,
+                            part_used=False
                         )
                     )
 
@@ -308,7 +322,7 @@ class ServiceRequestService:
 
                     continue
 
-                part = self.spare_part_interface.get_spare_part_by_id(selection.part_id)
+                part = self.spare_part_interface.get_spare_part_specific_details(selection.part_id)
 
                 if part is None:
 
@@ -342,8 +356,10 @@ class ServiceRequestService:
                         request_id=service_request.id,
                         part_id=part.id,
                         quantity=selection.quantity,
+                        quantity_used=None,
                         part_name_snapshot=part.part_name,
-                        is_stock_validated=in_stock
+                        is_stock_validated=in_stock,
+                        part_used=False
                     )
                 )
 
@@ -466,7 +482,8 @@ class ServiceRequestService:
 
             if llm_recommendation is not None:
                 matched_parts = self.spare_part_interface.search_matched_spare_part(
-                    llm_recommendation.component
+                    part_name=llm_recommendation.component,
+                    device_type=service_request.device_type
                 )
 
                 for part in matched_parts:
@@ -478,7 +495,7 @@ class ServiceRequestService:
                     matched_spare_parts.append(
                         MatchedSparePartPreview(
                             part_id=part.id,
-                            part_name=part.name,
+                            part_name=part.part_name,
                             part_code=part.part_code,
                             device_model=part.device_model,
                             device_brand=part.device_brand,
@@ -568,16 +585,30 @@ class ServiceRequestService:
                 service_request.llm_diagnosis.status = (LLMDiagnosisStatusPreview.REJECTED)
                 diagnostic_status = (service_request.llm_diagnosis.status.value)
 
-            self.procurement_alert_interface.cancel_by_request(
-                request_id=service_request.id,
-                alert_message=(
-                    f"Service Request No. {service_request.id}, created by "
-                    f"user {service_request.user_id}, has been cancelled. "
-                    f"Diagnostic status: {diagnostic_status}."
-                ),
+            self.procurement_alert_interface.create_procurement_alert(
+                data=ProcurementAlertRequest(
+                    request_id=service_request.id,
+                    part_id=None,
+                    part_name_snapshot=(
+                        service_request.llm_diagnosis.llm_recommendation.component
+                        if (
+                            service_request.llm_diagnosis is not None
+                            and service_request.llm_diagnosis.llm_recommendation is not None
+                        )
+                        else None
+                    ),
+                    is_resolved=False,
+                    created_at=now,
+                    alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
+                    alert_message=(
+                        f"Service Request No. {service_request.id}, created by "
+                        f"user {service_request.user_id}, has been cancelled. "
+                        f"Diagnostic status: {diagnostic_status}."
+                    ),
+                )
             )
 
-            self.repository.update_service_request(
+            self.repository.cancel_service_request(
                 now=now,
                 stored_service_request=service_request,
                 final_status=ServiceRequestStatus.UNSUCCESSFUL,
@@ -687,6 +718,7 @@ class ServiceRequestService:
 
         requested_part_detail = [
             RequestPartDetails(
+                id=request_part.id,
                 quantity=request_part.quantity,
                 part_name=request_part.part_name_snapshot,
                 validated=request_part.is_stock_validated,
@@ -784,13 +816,13 @@ class ServiceRequestService:
                 raise RequestPartInvalidUsageConfirmationError()
 
             for usage in request_data.parts_usage:
-                if usage.parts_used and (
+                if usage.part_used and (
                     usage.quantity_used is None 
                     or usage.quantity_used <= 0
                 ):
                     raise RequestPartQuantityUsedMustGreaterThanZeroError()
 
-                if not usage.parts_used and usage.quantity_used != 0:
+                if not usage.part_used and usage.quantity_used != 0:
                     raise RequestPartQuantityUsedMustBeZeroError()
 
             request_parts_to_update = [
@@ -810,7 +842,7 @@ class ServiceRequestService:
 
                 new_quantity = (
                     usage.quantity_used
-                    if usage.parts_used and usage.quantity_used is not None
+                    if usage.part_used and usage.quantity_used is not None
                     else 0
                 )
 
@@ -819,7 +851,7 @@ class ServiceRequestService:
                 if quantity_difference != 0 and request_part.part_id is not None:
 
                     if quantity_difference > 0:
-                        remaining_stock = self.spare_part_interface.update_spare_part_quantity(
+                        remaining_stock = self.spare_part_interface.deduct_spare_part_quantity(
                             part_id=request_part.part_id,
                             quantity_used=quantity_difference,
                         )
@@ -846,7 +878,7 @@ class ServiceRequestService:
                             quantity_used=abs(quantity_difference),
                         )
 
-                request_part.parts_used = usage.parts_used
+                request_part.parts_used = usage.part_used
                 request_part.quantity_used = usage.quantity_used
 
             self.repository.final_confirmation(
@@ -934,7 +966,7 @@ class ServiceRequestService:
         except (
             ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError,
             RequestPartQuantityUsedMustGreaterThanZeroError,
-            ServiceRequestStatusCanOnlyModifiedAgain,
+            ServiceRequestStatusCanOnlyModifiedAgainError,
             RequestPartInvalidUsageConfirmationError,
             RequestPartQuantityUsedMustBeZeroError,
             ServiceRequestDoesNotExistError,
@@ -1035,7 +1067,7 @@ class ServiceRequestService:
                         alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
                         alert_message=(
                             f"Service Request No. {service_request_id} "
-                            f"has been reopened by an admin and set to"
+                            f"has been reopened by an admin and set to "
                             f"{status.value}."
                         ),
                         created_at=now,

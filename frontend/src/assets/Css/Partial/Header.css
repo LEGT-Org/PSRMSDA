@@ -9,7 +9,6 @@
 
     background-color: var(--main-color);
     padding: 0;
-    border-bottom: 1px solid var(--fourth-color);
 
     position: fixed;
     top: 0;

@@ -90,28 +90,45 @@ export const confirmServiceRequest = async (payload: ConfirmServiceRequest): Pro
 
 // Cancel the Service Request
 
-export const cancelServiceRequest = async (serviceRequestId: number): Promise<void> => {
+export const cancelServiceRequest = async (
+    serviceRequestId: number
+): Promise<boolean> => {
 
-    const response = await ApiFetch(`/service-requests/cancel`,
-        {
+    try {
 
-            method: 'POST',
-            body: JSON.stringify(
-                {
-                    "service_request_id": serviceRequestId
-                }
+        const response = await ApiFetch(`/service-requests/cancel`,
+            {
+
+                method: 'POST',
+                body: JSON.stringify(
+                    {
+                        "service_request_id": serviceRequestId
+                    }
+                )
+            }
+        );
+
+        if (!response.ok) {
+            await HandleApiError(
+                response,
+                'Failed to cancel service request.'
             )
         }
-    );
 
-    if (!response.ok) {
-        await HandleApiError(
-            response,
-            'Failed to cancel service request.'
-        )
+        return true;
+
+    } catch (error) {
+
+        await Swal.fire({
+            title: 'Connection Error!',
+            text: 'Failed to cancel service request. Please try again later.',
+            icon: 'error',
+        });
+
+        return false;
+    
     }
 
-    return await response.json();
 };
 
 

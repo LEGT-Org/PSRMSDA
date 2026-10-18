@@ -159,9 +159,6 @@ export const FinalizeServiceRequest = async (
         const response = await ApiFetch(`/service-requests/${serviceRequestId}/final-confirmation`,
             {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
                 body: JSON.stringify(payload),
             },
         );

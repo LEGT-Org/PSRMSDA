@@ -329,7 +329,7 @@
                     PartsUsage.push(
                         {
                             request_part_id: Part.id,
-                            parts_used: PartsWereUsed,
+                            part_used: PartsWereUsed,
                             quantity_used: QuantityUsed,
                         }
                     );

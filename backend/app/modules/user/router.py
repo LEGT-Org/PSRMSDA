@@ -45,7 +45,9 @@ def get_me(current_user: CurrentUser):
     response_model=UserPageListResponse,
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("120/minute")
 def get_users(
+    request: Request,
     current_user:  AdminUser,
     service: UserService,
     page: int = Query(1, ge=1),

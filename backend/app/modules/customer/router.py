@@ -33,7 +33,9 @@ router = APIRouter(
     response_model=CustomerPageListResponse,
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("120/minute")
 def get_customers(
+    request: Request,
     current_user: CurrentUser,
     service: CustomerService,
     page: int = Query(default=1, ge=1),
@@ -73,7 +75,9 @@ def create_customer(
     response_model=CustomerResponse,
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("120/minute")
 def get_customer(
+    request: Request,
     customer_id: int,
     service: CustomerService,
     current_user: CurrentUser,

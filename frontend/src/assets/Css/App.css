@@ -9,6 +9,8 @@
 @import './Components/User.css';
 @import './Components/ServiceRequestDetail.css';
 @import './Components/Alerts.css';
+@import './Components/InventoryReference.css';
+@import './Components/SparePartDetails.css';
 
 :root {
     --background-color: #c4c4c4;

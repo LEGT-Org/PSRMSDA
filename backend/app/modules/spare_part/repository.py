@@ -26,13 +26,22 @@ class SparePartRepository:
 
     def search_by_name(
         self,
-        part_name: str
+        part_name: str,
+        device_type: str
     ) -> list[SparePart]:
 
         pattern = f"%{part_name}%"
-        statement = select(SparePart).where(SparePart.part_name.ilike(pattern))
 
-        return list(self.db.execute(statement).scalars())
+        statement = (
+            select(SparePart)
+            .join(SparePart.categories)
+            .where(
+                SparePart.part_name.ilike(pattern),
+                Category.name.ilike(device_type)
+            )
+        )
+
+        return list(self.db.execute(statement).scalars().all())
 
 
     def get_all(
@@ -41,6 +50,7 @@ class SparePartRepository:
         limit: int,
         search: str | None = None,
         category_id: int | None = None,
+        parent_category_id: int | None = None,
     ) -> tuple[list[SparePart], int]:
 
         statement = (
@@ -53,7 +63,7 @@ class SparePartRepository:
 
             statement = (
                 statement
-                .join(SparePart.category)
+                .join(SparePart.categories)
                 .where(
                     or_(
                         SparePart.part_name.ilike(search_value),
@@ -70,6 +80,13 @@ class SparePartRepository:
         if category_id is not None:
             statement = statement.where(
                 SparePart.category_id == category_id
+            )
+
+        if parent_category_id is not None:
+            statement = statement.where(
+                SparePart.categories.has(
+                    Category.parent_category_id == parent_category_id
+                )
             )
 
         count_statement = (
@@ -125,6 +142,7 @@ class SparePartRepository:
     def update(
         self,
         stored_spare_part: SparePart,
+        category_id: int,
         approve_by: int,
         updates: dict,
         now: datetime
@@ -134,7 +152,7 @@ class SparePartRepository:
             setattr(stored_spare_part, field, value)
 
         if "category_id" in updates:
-            stored_spare_part.category = category
+            stored_spare_part.category_id = category_id
 
         stored_spare_part.last_modified_by_id = approve_by
         stored_spare_part.updated_at = now
@@ -153,7 +171,7 @@ class SparePartRepository:
         stored_spare_part.updated_at = now
 
 
-    def soft_delete(
+    def delete(
         self,
         stored_spare_part: SparePart,
         approve_by: int,

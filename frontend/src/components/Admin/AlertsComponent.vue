@@ -190,7 +190,7 @@ onMounted(async () => {
                         aria-label="Filter alerts by resolution"
                         @change="ApplyProcurementAlertFilters"
                     >
-                        <option value="all">All Alerts</option>
+                        <option value="all">All Types</option>
                         <option value="Request Stage">Request Stage</option>
                         <option value="No Part Match">No Part Matched</option>
                         <option value="Part Not Found">Part Not Found</option>
@@ -213,7 +213,7 @@ onMounted(async () => {
                         aria-label="Filter alerts by resolution"
                         @change="ApplyProcurementAlertFilters"
                     >
-                        <option value="all">All Alerts</option>
+                        <option value="all">All Status</option>
                         <option value="unresolved">Unresolved</option>
                         <option value="resolved">Resolved</option>
                     </select>
@@ -315,7 +315,7 @@ onMounted(async () => {
                 </table>
             </div>
 
-            <div class="Alert-Pagination">
+            <div class="Pagination">
 
             <button
                 type="button"

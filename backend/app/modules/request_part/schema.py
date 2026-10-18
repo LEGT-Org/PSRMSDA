@@ -6,8 +6,10 @@ class RequestPartSchema(BaseModel):
     request_id: int
     part_id: int
     quantity: int | None = None
+    quantity_used: int | None = None
     part_name_snapshot: str
     is_stock_validated: bool = False
+    part_used: bool | None = None
 
 
 

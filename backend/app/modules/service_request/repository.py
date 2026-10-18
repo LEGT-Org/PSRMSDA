@@ -46,8 +46,9 @@ class ServiceRequestRepository:
             .outerjoin(ServiceRequest.llm_diagnosis)
             .where(
                 or_(
+                    ServiceRequest.deleted_at.isnot(None),
                     LLMDiagnosis.id.is_(None),
-                    LLMDiagnosis.status != LLMDiagnosisStatusPreview.DRAFT,
+                    LLMDiagnosis.status != LLMDiagnosisStatusPreview.DRAFT
                 )
             )
         )
@@ -133,6 +134,21 @@ class ServiceRequestRepository:
         stored_service_request.technician_notes = technician_notes
         stored_service_request.status = final_status
         stored_service_request.updated_at = now
+
+
+    def cancel_service_request(
+        self,
+        now: datetime,
+        stored_service_request: ServiceRequest,
+        final_status: ServiceRequestStatus,
+        technician_notes: str | None = None
+    ) -> None:
+
+        stored_service_request.technician_notes = technician_notes
+        stored_service_request.status = final_status
+        stored_service_request.updated_at = now
+        stored_service_request.deleted_at = now
+
 
 
     def final_confirmation(
