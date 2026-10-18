@@ -125,7 +125,7 @@ export type FinalServiceRequestStatus =
 
 export interface PartUsagePayload {
     request_part_id: number;
-    parts_used: boolean;
+    part_used: boolean;
     quantity_used: number;
 }
 

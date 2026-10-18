@@ -52,7 +52,15 @@ router.beforeEach( async (to) =>
             await RestoreSession();
 
         }
-        
+
+        console.log({
+            path: to.path,
+            matchedRoute: to.matched.length,
+            routeName: to.name,
+            role: currentUser.value?.role,
+            requiresStaff: to.meta.requiresStaff,
+        });
+                
         
         // Allowed Routes Middleware
         

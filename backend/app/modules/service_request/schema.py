@@ -127,12 +127,12 @@ class MatchedSparePartPreview(BaseModel):
 class ServiceRequestResponse(BaseModel):
 
     service_request_id: int
-    diagnosis_id: int
+    diagnosis_id: int | None = None
     customer_id: int
     status: ServiceRequestStatus
     diagnosis: LLMDiagnosticResponse | None = None
     llm_recommended_part: LLMRecommendedSparePart | None = None 
-    matched_part: list[MatchedSparePartPreview] = []
+    matched_parts: list[MatchedSparePartPreview] = []
     created_at: datetime
 
 
@@ -172,8 +172,10 @@ class RequestPartRequest(BaseModel):
     request_id: int
     part_id: int
     quantity: int | None = None
+    quantity_used: int | None = None
     part_name_snapshot: str
     is_stock_validated: bool = False
+    part_used: bool | None = None
 
 class ServiceRequestListResponse(BaseModel):
 
@@ -210,6 +212,7 @@ class CustomerServiceRequestDetails (BaseModel):
 
 class RequestPartDetails (BaseModel):
 
+    id: int
     quantity: int
     part_name: str
     validated: bool

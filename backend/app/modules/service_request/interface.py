@@ -69,12 +69,13 @@ class SparePartInterface(Protocol):
 
     def search_matched_spare_part(
         self,
-        part_name: str
+        part_name: str,
+        device_type: str
     ) -> list[SparePart]:
 
         pass
 
-    def get_spare_part_by_id(
+    def get_spare_part_specific_details(
         self,
         part_id: int
     ) -> SparePart:

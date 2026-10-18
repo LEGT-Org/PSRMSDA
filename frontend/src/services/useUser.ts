@@ -34,9 +34,6 @@ export const RegisterUser = async (payload: RegisterUserRequest): Promise<User |
         const response = await ApiFetch('/user/admin/register', {
 
             method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
             body: JSON.stringify(payload),
 
         });

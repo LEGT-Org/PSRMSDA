@@ -57,12 +57,12 @@
     };
 
 
-    const GoToNewServiceRequest = (): void => {
-        Router.push('/admin/request/new');
+    const GoToNewServiceRequest = async (): Promise<void> => {
+        await Router.push('/admin/request/new');
     };
 
-    const GoToServiceRequestDetail = (id: number): void => {
-        Router.push(`/admin/request/${id}`);
+    const GoToServiceRequestDetail = async (id: number): Promise<void> => {
+        await Router.push(`/admin/request/${id}`);
     }
 
 
@@ -193,7 +193,7 @@
                         :key="serviceRequest.id"
                     >
                         <td>
-                            <strong>#{{ serviceRequest.id }}</strong>
+                            <strong>SR-{{ serviceRequest.id }}</strong>
                         </td>
 
                         <td>
@@ -266,7 +266,7 @@
         </div>
 
         <!-- Pagination -->
-        <div class="Request-Pagination">
+        <div class="Pagination">
 
             <button
                 type="button"

@@ -26,6 +26,7 @@ from app.modules.procurement_alert.router import router as procurement_alert_rou
 from app.modules.service_request.router import router as service_request_router
 from app.modules.spare_part.router import router as spare_part_router
 from app.modules.customer.router import router as customer_router
+from app.modules.category.router import router as category_router
 from app.modules.auth.router import router as auth_router
 from app.modules.user.router import router as user_router
 
@@ -54,6 +55,7 @@ app.include_router(procurement_alert_router)
 app.include_router(service_request_router)
 app.include_router(spare_part_router)
 app.include_router(customer_router)
+app.include_router(category_router)
 app.include_router(user_router)
 app.include_router(auth_router)
 

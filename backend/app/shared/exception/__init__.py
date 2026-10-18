@@ -66,6 +66,8 @@ from app.shared.exception.customer import (
 )
 
 from app.shared.exception.category import (
+    InvalidParentCategoryInputError,
+    CategoryCreationFailedError,
     CategoryDoesNotExistError
 )
 
@@ -156,6 +158,8 @@ __all__ = [
     "CustomerValidationError",
 
     # Category Exception
+    "InvalidParentCategoryInputError",
+    "CategoryCreationFailedError",
     "CategoryDoesNotExistError",
 
     # Request Part Exception

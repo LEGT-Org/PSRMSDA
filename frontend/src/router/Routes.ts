@@ -137,7 +137,7 @@ const routes = [
             },
             {
                 path: '/request/:id',
-                name: 'ServiceRequestDetails',
+                name: 'Staff Service Request Details',
                 component: () => import('@/components/Stage/ServiceRequestDetailsComponent.vue'),
                 meta: {
                     requiresAuth: true,
@@ -146,7 +146,19 @@ const routes = [
                     requiresStaff: true,
                     title: 'Service Request Detail'
                 }
-            }
+            },
+            {
+                path: '/inventory/:id',
+                name: 'Staff Spare Part Details',
+                component: () => import('@/components/Stage/SparePartsDetailsComponent.vue'),
+                meta: {
+                    requiresAuth: true,
+                    requiresToken: false,
+                    requiresAdmin: false,
+                    requiresStaff: true,
+                    title: 'Spare Part Detail'
+                }
+            },
         ]
     },
 
@@ -278,6 +290,18 @@ const routes = [
                     requiresAdmin: true,
                     requiresStaff: false,
                     title: 'Service Request Detail'
+                }
+            },
+            {
+                path: '/admin/inventory/:id',
+                name: 'Admin Spare Part Details',
+                component: () => import('@/components/Stage/SparePartsDetailsComponent.vue'),
+                meta: {
+                    requiresAuth: true,
+                    requiresToken: false,
+                    requiresAdmin: true,
+                    requiresStaff: false,
+                    title: 'Spare Part Detail'
                 }
             }
         ]

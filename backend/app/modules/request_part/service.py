@@ -28,8 +28,10 @@ class RequestPartService:
             request_id=data.request_id,
             part_id=data.part_id,
             quantity=data.quantity,
+            quantity_used=data.quantity_used,
             part_name_snapshot=data.part_name_snapshot,
-            is_stock_validated=data.is_stock_validated
+            is_stock_validated=data.is_stock_validated,
+            parts_used=data.part_used
         )
         
         try:
@@ -37,10 +39,10 @@ class RequestPartService:
             self.repository.create(request_part)
             self.db.flush()
 
-            print("Created procurement alert ID:", procurement_alert.id)
-
             return request_part
 
         except Exception as error:
+
+            print(error)
             
             raise RequestPartFailedError() from error

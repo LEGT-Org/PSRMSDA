@@ -1,3 +1,4 @@
+import re
 from math import ceil
 from uuid import uuid4
 from datetime import datetime, timezone
@@ -47,14 +48,10 @@ class SparePartService:
     ) -> SparePartResponse:
 
         now = datetime.now(timezone.utc).replace(tzinfo=None)
-        category = self.category_repository.get_by_id(request.category_id)
-        existing_part = self.repository.get_by_part_code(request.part_code)
+        category = self.category_interface.get_category_by_id(request.category_id)
 
         if category is None:
             raise CategoryDoesNotExistError()
-
-        if existing_part is not None:
-            raise SparePartPartCodeAlreadyExistError()
 
         spare_part = SparePart(
             part_name=request.part_name,
@@ -186,7 +183,7 @@ class SparePartService:
             raise SparePartUpdateRequestFailedError()
 
         if "category_id" in updates:
-            category = self.category_interface.get_by_id(updates["category_id"])
+            category = self.category_interface.get_category_by_id(updates["category_id"])
 
             if category is None:
                 raise CategoryDoesNotExistError()
@@ -195,6 +192,7 @@ class SparePartService:
 
             self.repository.update(
                 stored_spare_part=spare_part,
+                category_id=category.id,
                 approve_by=actor_id,
                 updates=updates,
                 now=now
@@ -206,7 +204,7 @@ class SparePartService:
         except Exception as error:
 
             self.db.rollback
-            raise SparePartUpdateFailedError()
+            raise SparePartUpdateFailedError() from error
 
 
     def delete_spare_part(
@@ -234,16 +232,43 @@ class SparePartService:
         except Exception as error:
 
             self.db.rollback()
-            raise SparePartDeletionFailedError()
+
+            print(error)
+            raise SparePartDeletionFailedError() from error
 
 
     def search_matched_spare_part(
         self,
-        part_name: str
+        part_name: str,
+        device_type: str
     ) -> list[SparePart]:
 
-        spare_part = self.repository.search_by_name(part_name)
-        return list(spare_part)
+        keywords = set(re.findall(r"[a-z0-9]+", part_name.lower()))
+
+        matched_parts = {}
+
+        for keyword in keywords:
+            spare_parts = self.repository.search_by_name(
+                part_name=keyword,
+                device_type=device_type
+            )
+
+            for spare_part in spare_parts:
+                matched_parts[spare_part.id] = spare_part
+
+        # Count matching keywords for each spare part.
+        def get_match_score(spare_part: SparePart) -> int:
+            part_keywords = set(
+                re.findall(r"[a-z0-9]+", spare_part.part_name.lower())
+            )
+
+            return len(keywords & part_keywords)
+
+        return sorted(
+            matched_parts.values(),
+            key=get_match_score,
+            reverse=True
+        )
 
 
     def get_list_of_spare_parts(
@@ -252,6 +277,7 @@ class SparePartService:
         limit: int,
         search: str | None = None,
         category_id: int | None = None,
+        parent_category_id: int | None = None,
     ) -> SparePartListResponse:
 
         spare_parts, total = self.repository.get_all(
@@ -259,6 +285,7 @@ class SparePartService:
             limit=limit,
             search=search,
             category_id=category_id,
+            parent_category_id=parent_category_id
         )
 
         items = [

@@ -33,7 +33,9 @@ router = APIRouter(
     response_model=ProcurementAlertPageListResponse,
     status_code=status.HTTP_200_OK
 )
+@limiter.limit("120/minute")
 def get_procurement_alerts(
+    request: Request,
     service: ProcurementAlertService,
     current_user: AdminUser,
     page: int = Query(1, ge=1),

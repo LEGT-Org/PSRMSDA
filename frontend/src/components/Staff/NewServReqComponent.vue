@@ -1,11 +1,13 @@
 <script setup lang="ts">
     import Swal from 'sweetalert2';
-    import { onMounted, onUnmounted, ref } from 'vue';
+    import { computed, onMounted, onUnmounted, ref } from 'vue';
     import { parseFaultDescriptions } from '@/helper/SymptomsParser';
     import { ValidateDiagnosisForm } from '@/helper/ValidateServiceRequestForm';
     import { HandleSuccess } from '@/helper/HandleSuccess';
     
-
+    
+    import { GetCategories } from '@/services/useInventoryReference';
+    import { Categories, ParentCategoryFilter } from '@/services/state/InventoryReference';
     import { 
         runAIDiagnosis, 
         confirmServiceRequest, 
@@ -22,6 +24,9 @@
         type ConfirmServiceRequest,
         type SelectedPart, 
     } from '@/services/state/NewServiceRequest';
+
+    console.log("Full diagnosis:", diagnosis.value);
+    console.log("Matched parts:", diagnosis.value?.matched_parts);
 
 
     const DeviceType = ref<string>('');
@@ -126,9 +131,7 @@
             FaultDescription.value
         );
 
-        if (!isValid) {
-            return;
-        }
+        if (!isValid) return;
 
         const payload = BuildRequestPayload();
         await runAIDiagnosis(payload);
@@ -187,48 +190,45 @@
             focusCancel: true,
         });
 
-        if (!Confirmation.isConfirmed) {
-            return;
-        }
+        if (!Confirmation.isConfirmed) return;
+        if (diagnosis.value?.service_request_id == null) return;
 
-        if (diagnosis.value?.service_request_id == null) {
-            return;
-        }
+        await cancelServiceRequest(diagnosis.value.service_request_id);
+        showDiagnosis.value = false;
 
-        try {
-
-            await cancelServiceRequest(diagnosis.value.service_request_id);
-            showDiagnosis.value = false;
-
-        } catch (error) {
-
-
-            await Swal.fire({
-                title: 'Connection Error!',
-                text: 'Failed to cancel service request. Please try again later.',
-                icon: 'error',
-            });
-
-        }
     };
 
 
     const HandlePageHide = () => {
-        
         const serviceRequestId = diagnosis.value?.service_request_id;
 
-        if (serviceRequestId == null) {
-            return;
+        if (serviceRequestId != null) {
+            cancelServiceRequestOnUnload(serviceRequestId);
         }
 
-        cancelServiceRequestOnUnload(serviceRequestId);
-        window.location.reload();
-        
+        diagnosis.value = null;
+        showDiagnosis.value = false;
     };
 
 
-    onMounted(() => {
+    const FetchCategories = async (): Promise<void> => {
+        await GetCategories();
+    };
 
+
+    const FilteredCategories = computed(() => {
+        return Categories.value.filter(
+            Category =>
+                Category.parent_category_id === 1 &&
+                (ParentCategoryFilter.value === null ||
+                    Category.parent_category_id === ParentCategoryFilter.value)
+        );
+    });
+
+
+    onMounted(async () => {
+
+        await FetchCategories();
         window.addEventListener('pagehide', HandlePageHide);
 
     });
@@ -248,7 +248,7 @@
             <h1>New Service Request</h1>
             <p>
                 Create new service requests.
-            </p>w
+            </p>
         </div>
 
         <!-- ============================= -->
@@ -318,8 +318,16 @@
                         <input
                             v-model="DeviceType"
                             type="text"
+                            list="device-types"
                             placeholder="e.g. Refrigerator"
                         />
+
+                        <datalist id="device-types">
+                            <option v-for="Category in  FilteredCategories"
+                                    :key="Category.id"
+                                    :value="Category.name"
+                            />
+                        </datalist>
                     </label>
 
                     <label>
@@ -348,9 +356,7 @@
                         <textarea
                             v-model="FaultDescription"
                             placeholder="Enter detailed hardware symptoms...
-
 Example:
-
 - Refrigerator is running but not cooling
 - Compressor is running continuously
 - Freezer is cold but lower compartment is warm
@@ -414,7 +420,7 @@ Example:
             <div class="Diagnosis-Top-Grid">
 
                 <!-- Summary -->
-                <section class="Diagnosis-Card Summary-Card">
+                <section class="Diagnosis-Card New-Summary-Card">
 
                     <h3>Summary</h3>
 
@@ -673,19 +679,38 @@ Example:
 
                 </div>
 
-                <!-- Matched Database Part -->
+                <!-- Matched Database Parts -->
                 <div class="Matched-Part">
-                    <h4>Matched Parts</h4>
+                    <div class="Matched-Part-Header">
+                        <div>
+                            <h4>Possible Matched Parts</h4>
+                            <p>Select the parts required for this service request.</p>
+                        </div>
+
+                        <span class="Matched-Part-Count">
+                            {{ diagnosis.matched_parts.length }} parts
+                        </span>
+                    </div>
 
                     <div class="Matched-Part-List">
                         <div
                             v-for="part in diagnosis.matched_parts"
                             :key="part.part_id"
                             class="Matched-Part-Item"
+                            :class="{
+                                'is-selected': SelectedParts.some(
+                                    selected => selected.part_id === part.part_id
+                                ),
+                                'is-unavailable': (part.stock_quantity ?? 0) < 1
+                            }"
                         >
                             <input
+                                class="Part-Checkbox"
                                 type="checkbox"
-                                :checked="SelectedParts.some(selected => selected.part_id === part.part_id)"
+                                :checked="SelectedParts.some(
+                                    selected => selected.part_id === part.part_id
+                                )"
+                                :disabled="(part.stock_quantity ?? 0) < 1"
                                 @change="(event) => {
                                     const checked = (event.target as HTMLInputElement).checked;
 
@@ -696,69 +721,78 @@ Example:
                                             quantity: 1
                                         });
                                     } else {
-                                        const index = SelectedParts.findIndex(selected => selected.part_id === part.part_id);
+                                        const index = SelectedParts.findIndex(
+                                            selected => selected.part_id === part.part_id
+                                        );
 
                                         if (index !== -1) {
                                             SelectedParts.splice(index, 1);
                                         }
                                     }
-
                                 }"
                             />
 
-                            <div>
-                                <span>Part Number</span>
-                                <strong>{{ part.part_code }}</strong>
-                            </div>
-
-                            <div>
-                                <span>Name</span>
-                                <strong>{{ part.part_name }}</strong>
-                            </div>
-
-                            <div>
-                                <span>Stock</span>
-                                <strong>{{ part.stock_quantity ?? 0 }}</strong>
-                            </div>
-
-                            <div v-if="SelectedParts.some(selected => selected.part_id === part.part_id)">
-                                <span>Quantity</span>
-
-                                <button
-                                    type="button"
-                                    @click="SelectedParts.find(
-                                        selected => selected.part_id === part.part_id
-                                    )!.quantity--"
-                                    :disabled="SelectedParts.find(
-                                        selected => selected.part_id === part.part_id
-                                    )!.quantity <= 1"
-                                >
-                                    -
-                                </button>
-
-                                <strong>
-                                    {{ SelectedParts.find(
-                                        selected => selected.part_id === part.part_id
-                                    )!.quantity }}
+                            <div class="Matched-Part-Details">
+                                <strong class="Matched-Part-Name">
+                                    {{ part.part_name }}
                                 </strong>
 
-                                <button
-                                    type="button"
-                                    @click="SelectedParts.find(
-                                        selected => selected.part_id === part.part_id
-                                    )!.quantity++"
-                                    :disabled="
-                                        SelectedParts.find(
+                                <span class="Matched-Part-Code">
+                                    {{ part.part_code }}
+                                </span>
+
+                                <span class="Matched-Part-Stock">
+                                    {{ (part.stock_quantity ?? 0) > 0
+                                        ? `${part.stock_quantity} in stock`
+                                        : 'Out of stock'
+                                    }}
+                                </span>
+                            </div>
+
+                            <div
+                                v-if="SelectedParts.some(
+                                    selected => selected.part_id === part.part_id
+                                )"
+                                class="Matched-Part-Quantity"
+                            >
+                                <span>Quantity</span>
+
+                                <div class="Quantity-Controls">
+                                    <button
+                                        type="button"
+                                        @click="SelectedParts.find(
                                             selected => selected.part_id === part.part_id
-                                        )!.quantity >= (part.stock_quantity ?? 0)
-                                    "
-                                >
-                                    +
-                                </button>
+                                        )!.quantity--"
+                                        :disabled="SelectedParts.find(
+                                            selected => selected.part_id === part.part_id
+                                        )!.quantity <= 1"
+                                    >
+                                        −
+                                    </button>
+
+                                    <strong>
+                                        {{ SelectedParts.find(
+                                            selected => selected.part_id === part.part_id
+                                        )!.quantity }}
+                                    </strong>
+
+                                    <button
+                                        type="button"
+                                        @click="SelectedParts.find(
+                                            selected => selected.part_id === part.part_id
+                                        )!.quantity++"
+                                        :disabled="SelectedParts.find(
+                                            selected => selected.part_id === part.part_id
+                                        )!.quantity >= (part.stock_quantity ?? 0)"
+                                    >
+                                        +
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
+
 
             </section>
 
@@ -815,8 +849,8 @@ Example:
                 <button
                     type="button"
                     class="Confirm-Button"
-                    :disabled="isConfirming"
                     @click="ConfirmRequest"
+                    :disabled="isConfirming"
                 >
                     {{ 
                         isConfirming
