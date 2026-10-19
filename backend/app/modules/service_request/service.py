@@ -698,52 +698,61 @@ class ServiceRequestService:
         service_request_id: int
     ) -> ServiceRequestDetailsResponse:
 
-        service_request = self.repository.get_specific_detail(service_request_id)
+        try:
 
-        customer_detail = CustomerServiceRequestDetails(
-            id=service_request.customers.id,
-            name=(
-                f"{service_request.customers.first_name} "
-                f"{service_request.customers.last_name}"
+            service_request = self.repository.get_specific_detail(service_request_id)
+
+            customer_detail = CustomerServiceRequestDetails(
+                id=service_request.customers.id,
+                name=(
+                    f"{service_request.customers.first_name} "
+                    f"{service_request.customers.last_name}"
+                )
             )
-        )
 
-        technician_detail = UserServiceRequestDetails(
-            id=service_request.users.id,
-            name=(
-                f"{service_request.users.first_name} "
-                f"{service_request.users.last_name}"
+            technician_detail = UserServiceRequestDetails(
+                id=service_request.users.id,
+                name=(
+                    f"{service_request.users.first_name} "
+                    f"{service_request.users.last_name}"
+                )
             )
-        )
 
-        requested_part_detail = [
-            RequestPartDetails(
-                id=request_part.id,
-                quantity=request_part.quantity,
-                part_name=request_part.part_name_snapshot,
-                validated=request_part.is_stock_validated,
+            requested_part_detail = [
+                RequestPartDetails(
+                    id=request_part.id,
+                    quantity=request_part.quantity,
+                    part_name=request_part.part_name_snapshot,
+                    validated=request_part.is_stock_validated,
+                )
+                for request_part in service_request.request_parts
+            ]
+
+            item = ServiceRequestDetailsResponse(
+                id=service_request.id,
+                device_type=service_request.device_type,
+                device_brand=service_request.device_brand,
+                device_model=service_request.device_model,
+                fault_descriptions=service_request.fault_description,
+                technician_notes=service_request.technician_notes,
+                status=service_request.status,
+                diagnosis=(
+                    service_request.llm_diagnosis.response
+                    if service_request.llm_diagnosis
+                    else None
+                ),
+                customer=customer_detail,
+                technician=technician_detail,
+                requested_part=requested_part_detail
             )
-            for request_part in service_request.request_parts
-        ]
 
-        item = ServiceRequestDetailsResponse(
-            id=service_request.id,
-            device_type=service_request.device_type,
-            device_brand=service_request.device_brand,
-            device_model=service_request.device_model,
-            fault_descriptions=service_request.fault_description,
-            status=service_request.status,
-            diagnosis=(
-                service_request.llm_diagnosis.response
-                if service_request.llm_diagnosis
-                else None
-            ),
-            customer=customer_detail,
-            technician=technician_detail,
-            requested_part=requested_part_detail
-        )
+            return item
 
-        return item
+        except Exception as error:
+
+            raise ServiceRequestDoesNotExistError(
+                detail=f"Service request {service_request_id} not found"
+            ) from error
 
 
     """  

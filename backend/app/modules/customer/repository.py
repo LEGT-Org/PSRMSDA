@@ -27,7 +27,10 @@ class CustomerRepository:
         search: str | None = None,
     ) -> tuple[list[Customer], int]:
 
-        statement = select(Customer)
+        statement = select(Customer).where(
+            Customer.email.isnot(None),
+            Customer.deleted_at.is_(None)
+        )
 
         if search and search.strip():
             search_value = f"%{search.strip()}%"
@@ -65,7 +68,12 @@ class CustomerRepository:
         customer_id: int
     ) -> Customer | None:
         
-        statement = select(Customer).where(Customer.id == customer_id)
+        statement = select(Customer).where(
+            Customer.id == customer_id,
+            Customer.email.isnot(None),
+            Customer.deleted_at.is_(None)
+        )
+
         return self.db.scalar(statement)
 
 
@@ -76,7 +84,10 @@ class CustomerRepository:
 
         statement = (
             select(ServiceRequest.id)
-            .where(ServiceRequest.customer_id == customer_id)
+            .where(
+                ServiceRequest.customer_id == customer_id,
+                Customer.deleted_at.isnot(None)
+            )
             .limit(1)
         )
 
@@ -100,7 +111,7 @@ class CustomerRepository:
         now: datetime
     ) -> None:
 
-        for field, value in updates.items():
+        for field, value in customer.items():
             setattr(stored_customer, field, value)
 
         stored_customer.last_modified_by_id = approve_by
@@ -117,3 +128,4 @@ class CustomerRepository:
         stored_customer.last_modified_by_id = approve_by
         stored_customer.updated_at = now
         stored_customer.deleted_at = now
+        stored_customer.email = None

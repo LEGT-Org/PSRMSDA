@@ -85,7 +85,7 @@ class UserService:
                 token_hash=token_hash,
                 token_expire=token_expire,
                 email_verified=False,
-                is_active=True,
+                is_active=False,
                 created_at=now,
                 updated_at=now,
                 deleted_at=None,
@@ -224,6 +224,40 @@ class UserService:
             raise EmailServiceFailedError() from error
 
 
+    def set_user_new_password(
+        self,
+        token_hash: str,
+        new_password: str 
+    ) -> None:
+
+        hash_token = hash_registration_token(token_hash)
+        user = self.repository.get_user_by_token_hash(hash_token)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+        if user is None:
+            raise InvalidRegistrationTokenError()
+
+        if user.email_verified is True:
+            raise InvalidRegistrationTokenError()
+
+        if user.token_expire is None or user.token_expire <= now:
+            raise InvalidRegistrationTokenError()
+    
+        try:
+
+            self.repository.set_hash_password(
+                stored_user=user,
+                new_hash_password=new_password
+            )
+
+            self.db.commit()
+
+        except Exception as error:
+        
+            self.db.rollback()
+            raise SetupNewPasswordError() from error
+
+
     def get_all_users(
         self,
         page: int,
@@ -277,40 +311,6 @@ class UserService:
             raise InvalidCredentialsError()
 
         return user
-
-    
-    def set_user_new_password(
-        self,
-        token_hash: str,
-        new_password: str 
-    ) -> None:
-
-        hash_token = hash_registration_token(token_hash)
-        user = self.repository.get_user_by_token_hash(hash_token)
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
-
-        if user is None:
-            raise InvalidRegistrationTokenError()
-
-        if user.email_verified is True:
-            raise InvalidRegistrationTokenError()
-
-        if user.token_expire is None or user.token_expire <= now:
-            raise InvalidRegistrationTokenError()
-    
-        try:
-
-            self.repository.set_hash_password(
-                stored_user=user,
-                new_hash_password=new_password
-            )
-
-            self.db.commit()
-
-        except Exception as error:
-        
-            self.db.rollback()
-            raise SetupNewPasswordError() from error
 
 
     def enable_user(
@@ -470,5 +470,7 @@ class UserService:
         except Exception as error:
 
             self.db.rollback()
+
+            print(error)
             raise InvalidCredentialsError() from error
 

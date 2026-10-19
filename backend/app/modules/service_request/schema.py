@@ -225,6 +225,7 @@ class ServiceRequestDetailsResponse(BaseModel):
     device_brand: str
     device_model: str
     fault_descriptions: list[str]
+    technician_notes: str | None = None
     status: ServiceRequestStatus
     diagnosis: LLMDiagnosticResponse | None = None
     customer: CustomerServiceRequestDetails
