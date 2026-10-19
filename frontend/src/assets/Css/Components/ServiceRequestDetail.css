@@ -378,6 +378,13 @@
     cursor: not-allowed;
 }
 
+.Service-Request-Details-Error {
+    padding: 2rem;
+    background: white;
+    border: 1px solid #eee;
+    border-radius: 0.375rem;
+}
+
 /* ================================
    Closed Request
 ================================ */

@@ -395,9 +395,14 @@
             Loading service request...
         </p>
 
-        <p v-else-if="ErrorMessage">
-            {{ ErrorMessage }}
-        </p>
+        <!-- Error -->
+        <div
+            v-else-if="ErrorMessage"
+            class="Service-Request-Details-Error"
+        >
+            <h2>Unable to Load Service Request.</h2>
+            <p>{{ ErrorMessage }}</p>
+        </div>
 
         <template v-else-if="ServiceRequest">
             <!-- Header -->
@@ -436,9 +441,20 @@
 
             <!-- Technician Information -->
             <section class="Technician-Information-Details">
-                <h2>Assigned Technician</h2>
+                <h2>Technician</h2>
                 <p>{{ ServiceRequest.technician.name }}</p>
                 <p>Technician ID: {{ ServiceRequest.technician.id }}</p>
+
+                <div
+                    v-if="ServiceRequest.technician_notes !== null" 
+                    class="Diagnostic-Hypotheses-Details"
+                >
+                    <h3>Technician Notes: </h3>
+                    
+                    <article>
+                        <p>{{ ServiceRequest.technician_notes }}</p>
+                    </article>
+                </div>
             </section>
 
             <!-- Reported Faults -->

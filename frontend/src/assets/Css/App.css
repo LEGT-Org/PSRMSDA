@@ -11,6 +11,8 @@
 @import './Components/Alerts.css';
 @import './Components/InventoryReference.css';
 @import './Components/SparePartDetails.css';
+@import './Components/CustomerDetails.css';
+@import './Components/Customer.css';
 
 :root {
     --background-color: #c4c4c4;

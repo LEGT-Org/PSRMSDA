@@ -112,7 +112,7 @@
                 <input
                     id="request-search"
                     v-model="Search"
-                    type="text"
+                    type="search"
                     placeholder="Search requests..."
                     @input="HandleSearch"
                 />

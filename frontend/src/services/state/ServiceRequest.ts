@@ -85,6 +85,7 @@ export interface ServiceRequestDetail {
     device_brand: string;
     device_model: string;
     fault_descriptions: string[];
+    technician_notes: string;
 
     diagnosis: {
         summary: string;

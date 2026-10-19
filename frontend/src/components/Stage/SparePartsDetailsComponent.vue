@@ -125,6 +125,9 @@
 
 
     const DeleteCurrentSparePart = async (): Promise<void> => {
+
+        IsEditing.value = false
+
         if (!SparePart.value) return;
 
         const Confirmation = await Swal.fire({

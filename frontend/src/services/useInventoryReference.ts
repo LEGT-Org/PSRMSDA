@@ -202,6 +202,7 @@ export const GetSpareParts = async (
         return Data;
 
     } catch (error) {
+
         await Swal.fire({
             title: 'Connection Error!',
             text: 'Unable to connect to the server. Please try again later.',
@@ -325,7 +326,7 @@ export const UpdateSparePart = async (
             
             await HandleApiError(
                 Response,
-                'Failed to create spare part record.'
+                'Failed to update spare part record.'
             );
             return false;
 
@@ -372,7 +373,7 @@ export const DeleteSparePart = async (
             
             await HandleApiError(
                 Response,
-                'Failed to create spare part record.'
+                'Failed to delete spare part record.'
             );
 
             return false;
@@ -393,6 +394,6 @@ export const DeleteSparePart = async (
 
     }
 
-}
+};
 
 
