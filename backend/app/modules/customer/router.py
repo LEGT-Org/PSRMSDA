@@ -30,6 +30,23 @@ router = APIRouter(
 
 
 @router.get(
+    "/counts",
+    response_model=dict[str, int],
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("120/minute")
+def customers_counts_dashboard(
+    request: Request,
+    current_user: AdminUser,
+    service: CustomerService
+) -> dict[str, int]:
+
+    return {
+        "total_customers": service.get_customer_counts()
+    }
+
+
+@router.get(
     "/list",
     response_model=CustomerPageListResponse,
     status_code=status.HTTP_200_OK

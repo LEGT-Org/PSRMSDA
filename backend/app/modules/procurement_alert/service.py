@@ -7,14 +7,16 @@ from app.modules.procurement_alert.model import ProcurementAlert
 
 from app.modules.procurement_alert.schema import (
     ProcurementAlertPageListResponse,
+    RecentActivitiesResponse,
     ProcurementAlertSchema,
-    ProcurementAlertType
+    ProcurementAlertType,
+    RecentActivityItem
 )
 
 from app.shared.exception import (
     ProcurementAlertIsAlreadyBeenResolvedError,
     ProcurementAlertDoesNotExistError,
-    ProcurementAlertFailedError
+    ProcurementAlertFailedError,
 )
 
 
@@ -89,6 +91,24 @@ class ProcurementAlertService:
             "pages": pages,
             **summary
         }
+
+
+    def get_recent_activities(
+        self
+    ) -> RecentActivitiesResponse:
+
+        alerts = self.repository.get_recent_activities()
+
+        return RecentActivitiesResponse(
+            items=[
+                RecentActivityItem(
+                    id=alert.id,
+                    description=alert.alert_message,
+                    time=alert.created_at,
+                )
+                for alert in alerts
+            ]
+        )
 
 
     def update_resolution(

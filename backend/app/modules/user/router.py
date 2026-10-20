@@ -35,9 +35,30 @@ router = APIRouter(
     response_model=UserResponse,
     status_code=status.HTTP_200_OK   
 )
-def get_me(current_user: CurrentUser):
+@limiter.limit("120/minute")
+def get_me(
+    request: Request,
+    current_user: CurrentUser
+) -> UserResponse:
 
     return current_user
+
+
+@router.get(
+    "/counts",
+    response_model=dict[str, int],
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("120/minute")
+def get_active_users(
+    request: Request,
+    current_user: AdminUser,
+    service: UserService
+) -> dict[str, int]:
+
+    return {
+        "total_active_users": service.get_active_user_counts()
+    }
 
 
 @router.get(

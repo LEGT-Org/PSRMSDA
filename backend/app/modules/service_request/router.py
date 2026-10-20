@@ -15,8 +15,10 @@ from app.modules.service_request.dependency import (
 )
 
 from app.modules.service_request.schema import (
+    ServiceRequestDashboardResponse,
     ServiceRequestPageListResponse,
     ServiceRequestDetailsResponse,
+    RecentServiceRequestsResponse,
     ServiceRequestFinalizeRequest,
     LLMDiagnosticRequestPreview,
     ServiceRequestStatusUpdate,
@@ -33,6 +35,36 @@ router = APIRouter(
     prefix="/service-requests",
     tags=["Service Request"]
 )
+
+
+@router.get(
+    "/counts",
+    response_model=ServiceRequestDashboardResponse,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("120/minute")
+def service_request_counts_dashboard(
+    request: Request,
+    current_user: CurrentUser,
+    service: ServiceRequestService
+) -> ServiceRequestDashboardResponse:
+
+    return service.get_service_request_counts()
+
+
+@router.get(
+    "/recent",
+    response_model=RecentServiceRequestsResponse,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("120/minute")
+def recent_service_requests(
+    request: Request,
+    current_user: CurrentUser,
+    service: ServiceRequestService
+) -> RecentServiceRequestsResponse:
+
+    return service.get_recent_service_requests()
 
 
 @router.get(

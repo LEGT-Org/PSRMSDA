@@ -139,6 +139,22 @@ class SparePartRepository:
         return self.db.scalar(statement)
 
 
+    def count_low_stock_parts(
+        self,
+        threshold: int = 5,
+    ) -> int:
+        statement = (
+            select(func.count())
+            .select_from(SparePart)
+            .where(
+                SparePart.deleted_at.is_(None),
+                SparePart.stock_quantity <= threshold,
+            )
+        )
+
+        return self.db.scalar(statement) or 0
+
+
     def update(
         self,
         stored_spare_part: SparePart,

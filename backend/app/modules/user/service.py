@@ -474,3 +474,9 @@ class UserService:
             print(error)
             raise InvalidCredentialsError() from error
 
+
+    def get_active_user_counts(
+        self
+    ) -> int:
+
+        return self.repository.count_active_users()

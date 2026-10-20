@@ -230,8 +230,13 @@
     };
 
 
-    const GoToSparePartsDetail = async (id: number): Promise<void> => {
-        await Router.push(`/inventory/${id}`);
+    const GoToSparePartsDetail = (id: number): void => {
+        Router.push({
+            name: "Staff Spare Part Details",
+            params: {
+                id: id
+            }
+        });
     }
 
     

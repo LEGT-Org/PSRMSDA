@@ -57,14 +57,18 @@
     };
 
 
-    const GoToNewServiceRequest = async (): Promise<void> => {
-        await Router.push('/request/new');
+    const GoToNewServiceRequest = (): void => {
+        Router.push({ name: "Staff New Service Request" });
     };
 
-    const GoToServiceRequestDetail = async (id: number): Promise<void> => {
-        await Router.push(`/request/${id}`);
+    const GoToServiceRequestDetail = (id: number): void => {
+        Router.push({
+            name: "Staff Service Request Details",
+            params: {
+                id: id
+            }
+        });
     }
-
 
     onMounted(async () => {
 
@@ -223,7 +227,7 @@
 
                         <td>
                             <span
-                                class="Request-Status"
+                                class="Service-Request-Status"
                                 :class="{
                                     'Status-Pending': serviceRequest.status === 'Pending',
                                     'Status-Diagnosed': serviceRequest.status === 'For Further Inspection',

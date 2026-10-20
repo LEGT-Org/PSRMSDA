@@ -237,3 +237,26 @@ class ServiceRequestFinalizeRequest(BaseModel):
 
     status: ServiceRequestStatus
     parts_usage: list[RequestPartUsage]
+
+
+class ServiceRequestDashboardResponse(BaseModel):
+
+    total: int
+    pending: int
+    in_progress: int
+    completed: int
+
+
+class RecentServiceRequestItem(BaseModel):
+
+    id: int
+    device: str
+    customer: str
+    technician: str
+    status: str
+    created_at: datetime
+
+
+class RecentServiceRequestsResponse(BaseModel):
+    
+    items: list[RecentServiceRequestItem]

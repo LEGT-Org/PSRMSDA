@@ -12,19 +12,24 @@ export const FormatServiceRequestDate = (createdAt: string): string => {
 };
 
 
-export const FormatDate = (DateValue: string): string => {
-    const utcDate = DateValue.endsWith("Z")
-        ? DateValue
-        : `${DateValue}Z`;
+export const FormatDate = (value: string): string => {
+    const utcDate = value.endsWith("Z")
+        ? value
+        : `${value}Z`;
 
-    return new Date(utcDate).toLocaleString("en-PH", {
-        timeZone: "Asia/Manila",
-        year: "numeric",
-        month: "2-digit",
+    const date = new Date(utcDate);
+
+    if (Number.isNaN(date.getTime())) {
+        return value;
+    }
+
+    return new Intl.DateTimeFormat("en-PH", {
+        month: "short",
         day: "2-digit",
-        hour: "2-digit",
+        year: "numeric",
+        hour: "numeric",
         minute: "2-digit",
-        second: "2-digit",
         hour12: true,
-    });
+        timeZone: "Asia/Manila",
+    }).format(date);
 };

@@ -116,8 +116,13 @@
     };
 
 
-    const GoToCustomerDetail = async (id: number): Promise<void> => {
-        await Router.push(`/admin/customer/${id}`);
+    const GoToCustomerDetail = (id: number): void => {
+        Router.push({
+            name: "Admin Customer Details",
+            params: {
+                id: id
+            }
+        });
     }
 
 
@@ -353,9 +358,9 @@
                     <tr v-if="Customers.length === 0">
                         <td colspan="8">
                             <div class="Customer-Empty-State">
-                                <h3>No spare parts found</h3>
+                                <h3>No customers found</h3>
                                 <p>
-                                    No spare parts record match
+                                    No customers record match
                                     your current search or filter.
                                 </p>
                             </div>

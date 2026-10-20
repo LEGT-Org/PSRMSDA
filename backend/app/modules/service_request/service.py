@@ -6,15 +6,18 @@ from app.modules.service_request.helper import build_service_request_response
 from app.modules.service_request.repository import ServiceRequestRepository
 from app.modules.service_request.model import ServiceRequest
 from app.modules.service_request.schema import (
+    ServiceRequestDashboardResponse,
     ServiceRequestPageListResponse,
     ServiceRequestDetailsResponse,
     ServiceRequestFinalizeRequest,
     CustomerServiceRequestDetails,
+    RecentServiceRequestsResponse,
     LLMDiagnosticRequestPreview,
     ProcurementAlertTypePreview,
     ServiceRequestListResponse,
     UserServiceRequestDetails,
     LLMDiagnosisStatusPreview,
+    RecentServiceRequestItem,
     LLMRecommendedSparePart,
     ProcurementAlertRequest,
     MatchedSparePartPreview,
@@ -753,6 +756,70 @@ class ServiceRequestService:
             raise ServiceRequestDoesNotExistError(
                 detail=f"Service request {service_request_id} not found"
             ) from error
+
+
+    """  
+    
+        Get Service Request Counts for Dashboard
+    
+    """
+
+    def get_service_request_counts(
+        self
+    ) -> ServiceRequestDashboardResponse:
+        
+        result = self.repository.get_service_request_counts()
+
+        return ServiceRequestDashboardResponse(
+            total=result["total"],
+            pending=result["pending"],
+            in_progress=result["in_progress"],
+            completed=result["completed"]
+        )
+
+
+    """  
+    
+        Recent Service Request for Dashboard
+    
+    """
+
+    def get_recent_service_requests(
+        self
+    ) -> RecentServiceRequestsResponse:
+
+        service_requests = self.repository.get_recent_requests()
+
+        return RecentServiceRequestsResponse(
+            items=[
+                RecentServiceRequestItem(
+                    id=request.id,
+                    device=" ".join(
+                        value
+                        for value in (
+                            request.device_brand,
+                            request.device_model,
+                        )
+                        if value
+                    ) or request.device_type,
+                    customer=(
+                        f"{request.customers.first_name} "
+                        f"{request.customers.last_name}"
+                    ),
+                    technician=(
+                        f"{request.users.first_name} "
+                        f"{request.users.last_name}"
+                    ),
+                    status=(
+                        request.status.value
+                        if hasattr(request.status, "value")
+                        else request.status
+                    ),
+                    created_at=request.created_at
+                )
+                for request in service_requests
+            ]
+        )
 
 
     """  

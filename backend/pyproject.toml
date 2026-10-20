@@ -23,6 +23,8 @@ dependencies = [
 # Development Configuration
 [dependency-groups]
 dev = [
+    "bandit>=1.9.4",
+    "pip-audit>=2.10.1",
     "pytest>=9.1.1",
 ]
 
@@ -30,3 +32,7 @@ dev = [
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["test"]
+
+# Bandit Configuration
+[tool.bandit]
+exclude_dirs = [".venv", "test", "node_modules"]

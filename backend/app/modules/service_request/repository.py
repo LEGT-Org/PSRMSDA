@@ -1,6 +1,6 @@
 from datetime import date, time, datetime, timedelta
-from sqlalchemy import func, or_, select
-from sqlalchemy.orm import Session
+from sqlalchemy import func, or_, select, case
+from sqlalchemy.orm import Session, joinedload
 
 from app.modules.service_request.schema import ServiceRequestStatus
 from app.modules.service_request.model import ServiceRequest
@@ -45,11 +45,16 @@ class ServiceRequestRepository:
             .join(User, ServiceRequest.user_id == User.id)
             .outerjoin(ServiceRequest.llm_diagnosis)
             .where(
+                ServiceRequest.deleted_at.is_(None),
                 or_(
-                    ServiceRequest.deleted_at.isnot(None),
                     LLMDiagnosis.id.is_(None),
-                    LLMDiagnosis.status != LLMDiagnosisStatusPreview.DRAFT
-                )
+                    (
+                        LLMDiagnosis.status.isnot(None)
+                        & (
+                            LLMDiagnosis.status != LLMDiagnosisStatusPreview.DRAFT
+                        )
+                    ),
+                ),
             )
         )
 
@@ -150,7 +155,6 @@ class ServiceRequestRepository:
         stored_service_request.deleted_at = now
 
 
-
     def final_confirmation(
         self,
         now: datetime,
@@ -162,4 +166,99 @@ class ServiceRequestRepository:
         stored_service_request.status = final_status
         stored_service_request.approved_by_id = approved_by
         stored_service_request.updated_at = now
+
+
+    def get_service_request_counts(
+        self
+    ) -> dict[str, int]:
+
+        statement = (
+            select(
+                func.count(ServiceRequest.id).label("total"),
+                func.count(
+                    case(
+                        (
+                            ServiceRequest.status == ServiceRequestStatus.PENDING,
+                            1,
+                        )
+                    )
+                ).label("pending"),
+                func.count(
+                    case(
+                        (
+                            ServiceRequest.status == ServiceRequestStatus.IN_PROGRESS,
+                            1,
+                        )
+                    )
+                ).label("in_progress"),
+                func.count(
+                    case(
+                        (
+                            ServiceRequest.status == ServiceRequestStatus.COMPLETED,
+                            1,
+                        )
+                    )
+                ).label("completed"),
+            )
+            .select_from(ServiceRequest)
+            .outerjoin(ServiceRequest.llm_diagnosis)
+            .where(
+                ServiceRequest.deleted_at.is_(None),
+                or_(
+                    LLMDiagnosis.id.is_(None),
+                    (
+                        LLMDiagnosis.status.isnot(None)
+                        & (
+                            LLMDiagnosis.status
+                            != LLMDiagnosisStatusPreview.DRAFT
+                        )
+                    ),
+                ),
+            )
+        )
+
+        result = self.db.execute(statement).one()
+
+        return {
+            "total": result.total or 0,
+            "pending": result.pending or 0,
+            "in_progress": result.in_progress or 0,
+            "completed": result.completed or 0,
+        }
+
+
+    def get_recent_requests(
+        self, 
+        limit: int = 5
+    ):
+
+        statement = (
+            select(ServiceRequest)
+            .outerjoin(ServiceRequest.llm_diagnosis)
+            .options(
+                joinedload(ServiceRequest.customers),
+                joinedload(ServiceRequest.users),
+            )
+            .where(
+                ServiceRequest.deleted_at.is_(None),
+                or_(
+                    LLMDiagnosis.id.is_(None),
+                    (
+                        LLMDiagnosis.status.isnot(None)
+                        & (
+                            LLMDiagnosis.status
+                            != LLMDiagnosisStatusPreview.DRAFT
+                        )
+                    ),
+                ),
+            )
+            .order_by(ServiceRequest.created_at.desc())
+            .limit(limit)
+        )
+
+        return self.db.scalars(statement).unique().all()
+
+
+
+
 

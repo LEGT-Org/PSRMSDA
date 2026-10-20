@@ -255,3 +255,10 @@ class CustomerService:
         except CustomerDoesNotExistError:
 
             raise
+
+    
+    def get_customer_counts(
+        self
+    ) -> int:
+
+        return self.repository.count_total_customers()

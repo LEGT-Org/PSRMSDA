@@ -103,6 +103,19 @@ class CustomerRepository:
         return self.db.scalar(statement)
 
 
+    def count_total_customers(
+        self
+    ) -> int:
+
+        statement = (
+            select(func.count())
+            .select_from(Customer)
+            .where(Customer.deleted_at.is_(None))
+        )
+
+        return self.db.scalar(statement) or 0
+
+
     def update(
         self,
         stored_customer: Customer,

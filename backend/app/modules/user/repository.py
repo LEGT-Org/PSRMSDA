@@ -119,6 +119,23 @@ class UserRepository:
 
         return self.db.scalar(statement)
 
+
+    def count_active_users(
+        self
+    ) -> int:
+
+        statement = (
+            select(func.count())
+            .select_from(User)
+            .where(
+                User.deleted_at.is_(None),
+                User.email_verified.is_(True),
+                User.is_active.is_(True),
+            )
+        )
+
+        return self.db.scalar(statement) or 0
+
     
     def set_hash_password(
         self, 

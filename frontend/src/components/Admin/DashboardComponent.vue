@@ -1,389 +1,204 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+    import { onMounted } from "vue";
+    import { useDashboard } from "@/services/useDashboard";
+    import { FormatDate } from "@/helper/DateFormatter";
+    import Router from "@/router/Router";
 
+    const {
+        statistics,
+        totalCustomers,
+        totalActiveUsers,
+        totalLowStockParts,
+        recentRequests,
+        recentActivities,
+        isLoading,
+        error,
+        fetchDashboard,
+    } = useDashboard();
 
-interface RecentRequest {
-    id: number;
-    customer: string;
-    device: string;
-    technician: string;
-    status: string;
-    created_at: string;
-}
+    onMounted(fetchDashboard);
 
+    function GetStatusClass(status: string): string {
+        const normalized = status.toLowerCase().replaceAll(" ", "-");
 
-interface RecentActivity {
-    id: number;
-    description: string;
-    time: string;
-}
+        const classes: Record<string, string> = {
+            pending: "Status-Pending",
+            diagnosing: "Status-Diagnosing",
+            "in-progress": "Status-Ongoing",
+            ongoing: "Status-Ongoing",
+            "for-further-inspection": "Status-Diagnosing",
+            completed: "Status-Completed",
+        };
 
-
-const TotalRequests = ref<number>(128);
-const PendingRequests = ref<number>(23);
-const OngoingRequests = ref<number>(14);
-const CompletedRequests = ref<number>(91);
-
-const TotalCustomers = ref<number>(84);
-const TotalUsers = ref<number>(17);
-const LowStockParts = ref<number>(6);
-
-const TotalDiagnoses = ref<number>(36);
-const PendingDiagnoses = ref<number>(4);
-const RecommendedParts = ref<number>(18);
-
-
-const RecentRequests = ref<RecentRequest[]>([
-    {
-        id: 128,
-        customer: 'Juan Dela Cruz',
-        device: 'Samsung Refrigerator',
-        technician: 'Mark Santos',
-        status: 'Pending',
-        created_at: '10 minutes ago'
-    },
-    {
-        id: 127,
-        customer: 'Maria Santos',
-        device: 'LG Air Conditioner',
-        technician: 'John Reyes',
-        status: 'Ongoing',
-        created_at: '35 minutes ago'
-    },
-    {
-        id: 126,
-        customer: 'Pedro Reyes',
-        device: 'Panasonic Television',
-        technician: 'Mark Santos',
-        status: 'Completed',
-        created_at: '1 hour ago'
-    },
-    {
-        id: 125,
-        customer: 'Ana Cruz',
-        device: 'Samsung Washing Machine',
-        technician: 'Michael Tan',
-        status: 'Completed',
-        created_at: '2 hours ago'
+        return classes[normalized] ?? "";
     }
-]);
 
-
-const RecentActivities = ref<RecentActivity[]>([
-    {
-        id: 1,
-        description: 'Service Request #128 was created',
-        time: '10 minutes ago'
-    },
-    {
-        id: 2,
-        description: 'AI diagnosis generated for Request #127',
-        time: '35 minutes ago'
-    },
-    {
-        id: 3,
-        description: 'Service Request #126 was completed',
-        time: '1 hour ago'
-    },
-    {
-        id: 4,
-        description: 'New staff account was created',
-        time: '2 hours ago'
+    const GoToServiceRequestDetail = (id: number): void => {
+        Router.push({
+            name: "Admin Service Request Details",
+            params: {
+                id: id
+            }
+        });
     }
-]);
 
-
-const GetStatusClass = (status: string): string => {
-
-    switch (status) {
-
-        case 'Pending':
-            return 'Status-Pending';
-
-        case 'Ongoing':
-            return 'Status-Ongoing';
-
-        case 'Completed':
-            return 'Status-Completed';
-
-        default:
-            return '';
-    }
-};
 </script>
 
 
+
 <template>
-
     <div class="Admin-Dashboard">
-
-        <!-- =========================================
-             Header
-        ========================================== -->
-
         <section class="Dashboard-Header">
-
             <div>
-
-                <h1>
-                    Admin Dashboard
-                </h1>
-
-                <p>
-                    System-wide overview and management.
-                </p>
-
+                <h1>Admin Dashboard</h1>
+                <p>System-wide overview and management.</p>
             </div>
 
+            <button
+                type="button"
+                class="View-All-Button"
+                :disabled="isLoading"
+                @click="fetchDashboard"
+            >
+                {{ isLoading ? "Refreshing..." : "Refresh" }}
+            </button>
         </section>
 
+        <p v-if="error" class="Dashboard-Error" role="alert">
+            {{ error }}
+        </p>
 
-
-        <!-- =========================================
-             Main Statistics
-        ========================================== -->
-
+        <!-- Main Statistics -->
         <section class="Statistics-Grid">
-
             <div class="Statistic-Card">
-
-                <div class="Statistic-Icon">
-                    📋
-                </div>
-
+                <div class="Statistic-Icon">📋</div>
                 <div class="Statistic-Content">
-
-                    <span class="Statistic-Label">
-                        Total Requests
-                    </span>
-
+                    <span class="Statistic-Label">Total Requests</span>
                     <strong class="Statistic-Value">
-                        {{ TotalRequests }}
+                        {{ statistics?.total ?? "—" }}
                     </strong>
-
                 </div>
-
             </div>
 
-
             <div class="Statistic-Card">
-
-                <div class="Statistic-Icon">
-                    ⏳
-                </div>
-
+                <div class="Statistic-Icon">⏳</div>
                 <div class="Statistic-Content">
-
-                    <span class="Statistic-Label">
-                        Pending
-                    </span>
-
+                    <span class="Statistic-Label">Pending</span>
                     <strong class="Statistic-Value">
-                        {{ PendingRequests }}
+                        {{ statistics?.pending ?? "—" }}
                     </strong>
-
                 </div>
-
             </div>
 
-
             <div class="Statistic-Card">
-
-                <div class="Statistic-Icon">
-                    🔧
-                </div>
-
+                <div class="Statistic-Icon">🔧</div>
                 <div class="Statistic-Content">
-
-                    <span class="Statistic-Label">
-                        Ongoing
-                    </span>
-
+                    <span class="Statistic-Label">Ongoing</span>
                     <strong class="Statistic-Value">
-                        {{ OngoingRequests }}
+                        {{ statistics?.in_progress ?? "—" }}
                     </strong>
-
                 </div>
-
             </div>
 
-
             <div class="Statistic-Card">
-
-                <div class="Statistic-Icon">
-                    ✓
-                </div>
-
+                <div class="Statistic-Icon">✓</div>
                 <div class="Statistic-Content">
-
-                    <span class="Statistic-Label">
-                        Completed
-                    </span>
-
+                    <span class="Statistic-Label">Completed</span>
                     <strong class="Statistic-Value">
-                        {{ CompletedRequests }}
+                        {{ statistics?.completed ?? "—" }}
                     </strong>
-
                 </div>
-
             </div>
-
         </section>
 
-
-
-        <!-- =========================================
-             System Overview
-        ========================================== -->
-
+        <!-- System Overview -->
         <section class="Overview-Grid">
-
             <div class="Overview-Card">
-
-                <span class="Overview-Label">
-                    Customers
-                </span>
-
-                <strong>
-                    {{ TotalCustomers }}
-                </strong>
-
-                <small>
-                    Registered customers
-                </small>
-
+                <span class="Overview-Label">Customers</span>
+                <strong>{{ totalCustomers }}</strong>
+                <small>Registered customers</small>
             </div>
 
-
             <div class="Overview-Card">
-
-                <span class="Overview-Label">
-                    System Users
-                </span>
-
-                <strong>
-                    {{ TotalUsers }}
-                </strong>
-
-                <small>
-                    Active staff and administrators
-                </small>
-
+                <span class="Overview-Label">System Users</span>
+                <strong>{{ totalActiveUsers }}</strong>
+                <small>Active staff and administrators</small>
             </div>
 
-
             <div class="Overview-Card">
-
-                <span class="Overview-Label">
-                    Low Stock
-                </span>
-
-                <strong>
-                    {{ LowStockParts }}
-                </strong>
-
-                <small>
-                    Parts requiring attention
-                </small>
-
+                <span class="Overview-Label">Low Stock</span>
+                <strong>{{ totalLowStockParts }}</strong>
+                <small>Parts requiring attention</small>
             </div>
-
         </section>
 
-
-
-        <!-- =========================================
-             Main Dashboard Grid
-        ========================================== -->
-
+        <!-- Main Dashboard Grid -->
         <section class="Dashboard-Grid">
-
-
-            <!-- =====================================
-                 Recent Requests
-            ====================================== -->
-
+            <!-- Recent Service Requests -->
             <div class="Dashboard-Card">
-
                 <div class="Card-Header">
-
                     <div>
-
-                        <h2>
-                            Recent Service Requests
-                        </h2>
-
-                        <p>
-                            Latest activity across the system.
-                        </p>
-
+                        <h2>Recent Service Requests</h2>
+                        <p>Latest service requests across the system.</p>
                     </div>
-
-
-                    <button class="View-All-Button">
-                        View All
-                    </button>
-
                 </div>
 
+                <div
+                    v-if="isLoading"
+                    class="Staff-Dashboard-Empty"
+                >
+                    Loading service requests...
+                </div>
 
+                <div
+                    v-else-if="error"
+                    class="Staff-Dashboard-Empty"
+                >
+                    <p>{{ error }}</p>
 
-                <div class="Request-Table">
+                    <button @click="fetchDashboard">
+                        Try Again
+                    </button>
+                </div>
 
-                    <!-- Table Header -->
-
+                <div 
+                    v-else-if="recentRequests.length"
+                    class="Request-Table"
+                >
                     <div class="Table-Header">
-
-                        <span>
-                            Request
-                        </span>
-
-                        <span>
-                            Customer
-                        </span>
-
-                        <span>
-                            Technician
-                        </span>
-
-                        <span>
-                            Status
-                        </span>
-
+                        <span>Request</span>
+                        <span>Customer</span>
+                        <span>Technician</span>
+                        <span>Status</span>
                     </div>
-
-
-
-                    <!-- Table Rows -->
 
                     <div
-                        v-for="request in RecentRequests"
+                        v-if="isLoading && recentRequests.length === 0"
+                        class="Dashboard-Empty"
+                    >
+                        Loading service requests...
+                    </div>
+
+                    <div
+                        v-else-if="recentRequests.length === 0"
+                        class="Dashboard-Empty"
+                    >
+                        No recent service requests found.
+                    </div>
+
+                    <div
+                        v-for="request in recentRequests"
                         :key="request.id"
                         class="Table-Row"
                     >
-
                         <div class="Request-Cell">
-
-                            <strong>
-                                #{{ request.id }}
-                            </strong>
-
-                            <small>
-                                {{ request.device }}
-                            </small>
-
+                            <strong>#{{ request.id }}</strong>
+                            <small>{{ request.device }}</small>
                         </div>
 
+                        <span>{{ request.customer }}</span>
 
-                        <span>
-                            {{ request.customer }}
-                        </span>
-
-
-                        <span>
-                            {{ request.technician }}
-                        </span>
-
+                        <span>{{ request.technician }}</span>
 
                         <span
                             class="Request-Status"
@@ -392,66 +207,69 @@ const GetStatusClass = (status: string): string => {
                             {{ request.status }}
                         </span>
 
-                    </div>
+                        <span>
+                            <button
+                                class="Staff-Open-Request-Button"
+                                aria-label="Open service request"
+                                @click="GoToServiceRequestDetail(request.id)"
+                            >
+                                →
+                            </button>
+                            
+                        </span>
 
+                    </div>
+                    
                 </div>
 
             </div>
 
 
-
-            <!-- =====================================
-                 Recent Activity
-            ====================================== -->
-
+            <!-- Recent Activity -->
             <div class="Dashboard-Card">
-
                 <div class="Card-Header">
-
                     <div>
-
-                        <h2>
-                            Recent Activity
-                        </h2>
-
-                        <p>
-                            Latest system activity.
-                        </p>
-
+                        <h2>Recent Activity</h2>
+                        <p>Latest procurement alerts.</p>
                     </div>
-
                 </div>
 
+                <div
+                    v-if="isLoading && recentActivities.length === 0"
+                    class="Dashboard-Empty"
+                >
+                    Loading activities...
+                </div>
 
-                <div class="Activity-List">
+                <div
+                    v-else-if="recentActivities.length === 0"
+                    class="Dashboard-Empty"
+                >
+                    No recent activities found.
+                </div>
 
+                <div v-else class="Activity-List">
                     <div
-                        v-for="activity in RecentActivities"
+                        v-for="activity in recentActivities"
                         :key="activity.id"
                         class="Activity-Item"
                     >
-
                         <div class="Activity-Dot"></div>
 
                         <div class="Activity-Content">
-
-                            <span>
-                                {{ activity.description }}
-                            </span>
+                            <span>{{ activity.description }}</span>
 
                             <small>
-                                {{ activity.time }}
+                                {{ FormatDate(activity.time).toLocaleString() }}
                             </small>
-
                         </div>
-
                     </div>
-
                 </div>
-
             </div>
-
         </section>
+    </div>
+</template>
+
 
 
 
@@ -459,10 +277,7 @@ const GetStatusClass = (status: string): string => {
              AI + Inventory
         ========================================== -->
 
-        <section class="Bottom-Grid">
-
-
-            <!-- AI Diagnosis -->
+        <!-- <section class="Bottom-Grid">
 
             <div class="Dashboard-Card">
 
@@ -532,10 +347,6 @@ const GetStatusClass = (status: string): string => {
 
             </div>
 
-
-
-            <!-- Inventory -->
-
             <div class="Dashboard-Card">
 
                 <div class="Card-Header">
@@ -578,8 +389,4 @@ const GetStatusClass = (status: string): string => {
 
             </div>
 
-        </section>
-
-    </div>
-
-</template>
+        </section> -->
