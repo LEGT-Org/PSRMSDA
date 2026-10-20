@@ -12,6 +12,7 @@ from app.modules.procurement_alert.schema import (
     ProcurementAlertResolutionRequest,
     ProcurementAlertPageListResponse,
     ProcurementAlertResponse,
+    RecentActivitiesResponse,
     ProcurementAlertType
 )
 
@@ -26,6 +27,20 @@ router = APIRouter(
     prefix="/procurement-alerts",
     tags=["Procurement Alert"]
 )
+
+
+@router.get(
+    "/recent",
+    response_model=RecentActivitiesResponse,
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("120/minute")
+def recent_activities(
+    request: Request,
+    service: ProcurementAlertService
+) -> RecentActivitiesResponse:
+
+    return service.get_recent_activities()
 
 
 @router.get(

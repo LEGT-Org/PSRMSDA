@@ -6,15 +6,18 @@ from app.modules.service_request.helper import build_service_request_response
 from app.modules.service_request.repository import ServiceRequestRepository
 from app.modules.service_request.model import ServiceRequest
 from app.modules.service_request.schema import (
+    ServiceRequestDashboardResponse,
     ServiceRequestPageListResponse,
     ServiceRequestDetailsResponse,
     ServiceRequestFinalizeRequest,
     CustomerServiceRequestDetails,
+    RecentServiceRequestsResponse,
     LLMDiagnosticRequestPreview,
     ProcurementAlertTypePreview,
     ServiceRequestListResponse,
     UserServiceRequestDetails,
     LLMDiagnosisStatusPreview,
+    RecentServiceRequestItem,
     LLMRecommendedSparePart,
     ProcurementAlertRequest,
     MatchedSparePartPreview,
@@ -698,52 +701,125 @@ class ServiceRequestService:
         service_request_id: int
     ) -> ServiceRequestDetailsResponse:
 
-        service_request = self.repository.get_specific_detail(service_request_id)
+        try:
 
-        customer_detail = CustomerServiceRequestDetails(
-            id=service_request.customers.id,
-            name=(
-                f"{service_request.customers.first_name} "
-                f"{service_request.customers.last_name}"
+            service_request = self.repository.get_specific_detail(service_request_id)
+
+            customer_detail = CustomerServiceRequestDetails(
+                id=service_request.customers.id,
+                name=(
+                    f"{service_request.customers.first_name} "
+                    f"{service_request.customers.last_name}"
+                )
             )
+
+            technician_detail = UserServiceRequestDetails(
+                id=service_request.users.id,
+                name=(
+                    f"{service_request.users.first_name} "
+                    f"{service_request.users.last_name}"
+                )
+            )
+
+            requested_part_detail = [
+                RequestPartDetails(
+                    id=request_part.id,
+                    quantity=request_part.quantity,
+                    part_name=request_part.part_name_snapshot,
+                    validated=request_part.is_stock_validated,
+                )
+                for request_part in service_request.request_parts
+            ]
+
+            item = ServiceRequestDetailsResponse(
+                id=service_request.id,
+                device_type=service_request.device_type,
+                device_brand=service_request.device_brand,
+                device_model=service_request.device_model,
+                fault_descriptions=service_request.fault_description,
+                technician_notes=service_request.technician_notes,
+                status=service_request.status,
+                diagnosis=(
+                    service_request.llm_diagnosis.response
+                    if service_request.llm_diagnosis
+                    else None
+                ),
+                customer=customer_detail,
+                technician=technician_detail,
+                requested_part=requested_part_detail
+            )
+
+            return item
+
+        except Exception as error:
+
+            raise ServiceRequestDoesNotExistError(
+                detail=f"Service request {service_request_id} not found"
+            ) from error
+
+
+    """  
+    
+        Get Service Request Counts for Dashboard
+    
+    """
+
+    def get_service_request_counts(
+        self
+    ) -> ServiceRequestDashboardResponse:
+        
+        result = self.repository.get_service_request_counts()
+
+        return ServiceRequestDashboardResponse(
+            total=result["total"],
+            pending=result["pending"],
+            in_progress=result["in_progress"],
+            completed=result["completed"]
         )
 
-        technician_detail = UserServiceRequestDetails(
-            id=service_request.users.id,
-            name=(
-                f"{service_request.users.first_name} "
-                f"{service_request.users.last_name}"
-            )
+
+    """  
+    
+        Recent Service Request for Dashboard
+    
+    """
+
+    def get_recent_service_requests(
+        self
+    ) -> RecentServiceRequestsResponse:
+
+        service_requests = self.repository.get_recent_requests()
+
+        return RecentServiceRequestsResponse(
+            items=[
+                RecentServiceRequestItem(
+                    id=request.id,
+                    device=" ".join(
+                        value
+                        for value in (
+                            request.device_brand,
+                            request.device_model,
+                        )
+                        if value
+                    ) or request.device_type,
+                    customer=(
+                        f"{request.customers.first_name} "
+                        f"{request.customers.last_name}"
+                    ),
+                    technician=(
+                        f"{request.users.first_name} "
+                        f"{request.users.last_name}"
+                    ),
+                    status=(
+                        request.status.value
+                        if hasattr(request.status, "value")
+                        else request.status
+                    ),
+                    created_at=request.created_at
+                )
+                for request in service_requests
+            ]
         )
-
-        requested_part_detail = [
-            RequestPartDetails(
-                id=request_part.id,
-                quantity=request_part.quantity,
-                part_name=request_part.part_name_snapshot,
-                validated=request_part.is_stock_validated,
-            )
-            for request_part in service_request.request_parts
-        ]
-
-        item = ServiceRequestDetailsResponse(
-            id=service_request.id,
-            device_type=service_request.device_type,
-            device_brand=service_request.device_brand,
-            device_model=service_request.device_model,
-            fault_descriptions=service_request.fault_description,
-            status=service_request.status,
-            diagnosis=(
-                service_request.llm_diagnosis.response
-                if service_request.llm_diagnosis
-                else None
-            ),
-            customer=customer_detail,
-            technician=technician_detail,
-            requested_part=requested_part_detail
-        )
-
-        return item
 
 
     """  

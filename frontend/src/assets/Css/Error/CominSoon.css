@@ -1,0 +1,47 @@
+.Coming-Soon {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    padding: 2rem;
+    text-align: center;
+    color: var(--main-color);
+}
+
+.Coming-Soon-Icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 5rem;
+    height: 5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 1rem;
+    background: #eef2ff;
+    font-size: 2.5rem;
+}
+
+.Coming-Soon h1 {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    letter-spacing: -0.04em;
+}
+
+.Coming-Soon p {
+    max-width: 28rem;
+    margin: 0.75rem 0 1.5rem;
+    color: #737373;
+    font-size: 0.95rem;
+    line-height: 1.7;
+}
+
+.Coming-Soon-Badge {
+    padding: 0.5rem 0.85rem;
+    border: 1px solid #e0e7ff;
+    border-radius: 999px;
+    background: #f5f7ff;
+    color: #00167a;
+    font-size: 0.75rem;
+    font-weight: 600;
+}

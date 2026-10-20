@@ -118,7 +118,23 @@ class UserRepository:
         )
 
         return self.db.scalar(statement)
-    
+
+
+    def count_active_users(
+        self
+    ) -> int:
+
+        statement = (
+            select(func.count())
+            .select_from(User)
+            .where(
+                User.deleted_at.is_(None),
+                User.email_verified.is_(True),
+                User.is_active.is_(True),
+            )
+        )
+
+        return self.db.scalar(statement) or 0
 
     
     def set_hash_password(
@@ -131,6 +147,7 @@ class UserRepository:
         stored_user.email_verified = True
         stored_user.token_expire = None
         stored_user.token_hash = None
+        stored_user.is_active = True
 
 
     def set_token_hash(
@@ -140,10 +157,11 @@ class UserRepository:
         token_hash: str
     ) -> None:
 
-        stored_user.password_hash = None
-        stored_user.email_verified = False
         stored_user.token_expire = token_expire
         stored_user.token_hash = token_hash
+        stored_user.email_verified = False
+        stored_user.password_hash = None
+        stored_user.is_active = False
 
     
     def enable(

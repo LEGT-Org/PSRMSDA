@@ -46,7 +46,7 @@ export const RegisterUser = async (payload: RegisterUserRequest): Promise<User |
             return null;
         }
         
-        Users.value.push(data);
+        await GetUsers();
 
         await HandleSuccess(
             `User ${data.email} has been created.`,
@@ -418,7 +418,7 @@ export const EnableUser = async (userId: number): Promise<boolean> => {
 };
 
 
-// Enable a User
+// Delete a User
 
 export const DeleteUser = async (userId: number): Promise<boolean> => {
 
@@ -443,7 +443,7 @@ export const DeleteUser = async (userId: number): Promise<boolean> => {
 
     try {
 
-        const response = await ApiFetch(`/user/admin/${userId}/delete`,{ method: 'PATCH' });
+        const response = await ApiFetch(`/user/admin/${userId}/delete`,{ method: 'DELETE' });
         
         if (!response.ok) {
             
@@ -456,10 +456,12 @@ export const DeleteUser = async (userId: number): Promise<boolean> => {
             
         }
         
-        const data = await response.json();
         await GetUsers();
 
-        await HandleSuccess(data.message);
+        await HandleSuccess(
+            'User record has been successfully deleted.',
+            'Record Delete Successful!'
+        );
 
         return true;
 

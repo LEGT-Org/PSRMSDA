@@ -90,16 +90,18 @@ class CustomerService:
 
         now = datetime.now(timezone.utc).replace(tzinfo=None)
 
-        first_name = CustomerValidation(request.first_name)
-        last_name = CustomerValidation(request.last_name)
+        name = CustomerValidation(
+            first_name=request.first_name,
+            last_name=request.last_name
+        )
         email = EmailValidation(request.email)
         phone_number = PhoneNumberValidation(request.phone_number)
 
         try:
 
             customer = Customer(
-                first_name=first_name.validated_first_name,
-                last_name=last_name.validated_last_name,
+                first_name=name.validated_first_name,
+                last_name=name.validated_last_name,
                 email=email.validated_email,
                 phone_number=phone_number.validated_phone_number,
                 created_at=now,
@@ -127,9 +129,9 @@ class CustomerService:
         request: CustomerUpdateRequest
     ) -> None:
 
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)   
 
-        customer = self.get_by_id(customer_id)
+        customer = self.repository.get_by_id(customer_id)
 
         if customer is None:
             raise CustomerDoesNotExistError()
@@ -138,19 +140,28 @@ class CustomerService:
 
         validated_updates = {}
 
-        for field, value in updates.items():
+        if "first_name" in updates or "last_name" in updates:
 
-            if value is None:
-                continue
+            name = CustomerValidation(
+                first_name=updates.get("first_name") or customer.first_name,
+                last_name=updates.get("last_name") or customer.last_name,
+            )
 
-            if field in ("first_name", "last_name"):
-                validated_updates[field] = CustomerValidation(value).value
+            if updates.get("first_name") is not None:
+                validated_updates["first_name"] = name.validated_first_name
 
-            elif field == "email":
-                validated_updates[field] = EmailValidation(value).value
+            if updates.get("last_name") is not None:
+                validated_updates["last_name"] = name.validated_last_name
 
-            elif field == "phone_number":
-                validated_updates[field] = PhoneNumberValidation(value).value
+        if "email" in updates and updates["email"] is not None:
+
+            email = EmailValidation(email=updates["email"])
+            validated_updates["email"] = email.validated_email
+
+        if "phone_number" in updates and updates["phone_number"] is not None:
+
+            phone_number = PhoneNumber(phone_number=updates["phone_number"])
+            validated_updates["phone_number"] = phone_number.validated_phone_number
 
         if not validated_updates:
             raise CustomerValidationError()
@@ -170,7 +181,7 @@ class CustomerService:
         except Exception as error:
 
             self.db.rollback()
-            raise CustomerUpdateFailedError()
+            raise CustomerUpdateFailedError() from error
 
 
     def delete_customer(
@@ -200,7 +211,7 @@ class CustomerService:
         except Exception as error:
 
             self.db.rollback()
-            raise CustomerDeleteFailedError()
+            raise CustomerDeleteFailedError() from error
             
 
     def get_list_of_customers(
@@ -216,12 +227,14 @@ class CustomerService:
             search=search,
         )
 
+        pages = ceil(total / limit) if total else 0
+
         return CustomerPageListResponse(
             items=customers,
             total=total,
             page=page,
             limit=limit,
-            total_pages=ceil(total / limit) if total else 0,
+            pages=pages,
         )
 
 
@@ -230,10 +243,22 @@ class CustomerService:
         customer_id: int
     ) -> Customer:
 
-        customer = self.repository.get_by_id(customer_id)
+        try:
 
-        if customer is None:
-            raise CustomerDoesNotExistError()
+            customer = self.repository.get_by_id(customer_id)
 
-        return customer
-            
+            if customer is None:
+                raise CustomerDoesNotExistError()
+
+            return customer
+
+        except CustomerDoesNotExistError:
+
+            raise
+
+    
+    def get_customer_counts(
+        self
+    ) -> int:
+
+        return self.repository.count_total_customers()

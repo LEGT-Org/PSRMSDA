@@ -116,6 +116,20 @@ class ProcurementAlertRepository:
         return self.db.scalar(statement)
 
 
+    def get_recent_activities(
+        self, 
+        limit: int = 5
+    ):
+
+        statement = (
+            select(ProcurementAlert)
+            .order_by(ProcurementAlert.created_at.desc())
+            .limit(limit)
+        )
+
+        return self.db.scalars(statement).all()
+
+
     def update(
         self,
         stored_procurement_alert: ProcurementAlert,

@@ -62,3 +62,15 @@ class ProcurementAlertPageListResponse(BaseModel):
     total_alerts: int
     unresolved_alerts: int
     resolved_alerts: int
+
+
+class RecentActivityItem(BaseModel):
+
+    id: int
+    description: str
+    time: datetime
+
+
+class RecentActivitiesResponse(BaseModel):
+    
+    items: list[RecentActivityItem]

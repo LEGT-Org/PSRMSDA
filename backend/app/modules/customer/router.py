@@ -17,6 +17,7 @@ from app.modules.customer.dependency import (
 
 from app.modules.customer.schema import (
     CustomerPageListResponse,
+    CustomerUpdateResponse,
     CustomerCreateRequest,
     CustomerUpdateRequest,
     CustomerResponse
@@ -26,6 +27,23 @@ router = APIRouter(
     prefix="/customers",
     tags=["Customer"]
 )
+
+
+@router.get(
+    "/counts",
+    response_model=dict[str, int],
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("120/minute")
+def customers_counts_dashboard(
+    request: Request,
+    current_user: AdminUser,
+    service: CustomerService
+) -> dict[str, int]:
+
+    return {
+        "total_customers": service.get_customer_counts()
+    }
 
 
 @router.get(
@@ -88,7 +106,7 @@ def get_customer(
 
 @router.patch(
     "/{customer_id}/update",
-    response_model=CustomerResponse,
+    response_model=CustomerUpdateResponse,
     status_code=status.HTTP_200_OK
 )
 @limiter.limit("30/minute")
@@ -99,7 +117,7 @@ def update_customer(
     service: CustomerService,
     current_user: CurrentUser,
     _:ValidateCSRF,
-) -> dict:
+) -> CustomerUpdateResponse:
 
     service.update_customer(
         customer_id=customer_id,
@@ -107,9 +125,10 @@ def update_customer(
         request=data
     )
 
-    return {
-        "message": "Customer details update has been successful."
-    }
+    return CustomerUpdateResponse(
+        id=customer_id,
+        message="Customer details update has been successful."
+    )
 
 
 @router.delete(

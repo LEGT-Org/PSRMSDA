@@ -225,6 +225,7 @@ class ServiceRequestDetailsResponse(BaseModel):
     device_brand: str
     device_model: str
     fault_descriptions: list[str]
+    technician_notes: str | None = None
     status: ServiceRequestStatus
     diagnosis: LLMDiagnosticResponse | None = None
     customer: CustomerServiceRequestDetails
@@ -236,3 +237,26 @@ class ServiceRequestFinalizeRequest(BaseModel):
 
     status: ServiceRequestStatus
     parts_usage: list[RequestPartUsage]
+
+
+class ServiceRequestDashboardResponse(BaseModel):
+
+    total: int
+    pending: int
+    in_progress: int
+    completed: int
+
+
+class RecentServiceRequestItem(BaseModel):
+
+    id: int
+    device: str
+    customer: str
+    technician: str
+    status: str
+    created_at: datetime
+
+
+class RecentServiceRequestsResponse(BaseModel):
+    
+    items: list[RecentServiceRequestItem]

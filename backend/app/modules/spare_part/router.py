@@ -31,6 +31,22 @@ router = APIRouter(
 
 
 @router.get(
+    "/counts",
+    response_model=dict[str, int],
+    status_code=status.HTTP_200_OK
+)
+@limiter.limit("120/minute")
+def get_low_stock(
+    request: Request,
+    current_user: AdminUser,
+    service: SparePartService
+) -> dict[str, int]:
+
+    return {
+        "total_low_stock_parts": service.get_low_stock_counts()
+    }
+
+@router.get(
     "/list",
     response_model=SparePartListResponse,
     status_code=status.HTTP_200_OK

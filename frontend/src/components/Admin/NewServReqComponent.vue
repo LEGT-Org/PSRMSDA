@@ -809,6 +809,7 @@ Example:
             <div class="Service-Request-Fields">
 
                 <textarea
+                    v-model="TechnicianNotes"
                     placeholder="Enter technician notes..."
                 ></textarea>
 

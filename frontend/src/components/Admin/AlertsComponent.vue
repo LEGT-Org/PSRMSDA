@@ -45,7 +45,7 @@ const GetAlerts = async (): Promise<void> => {
 
     ProcurementAlerts.value = Response.items;
     Total.value = Response.total;
-    TotalPages.value = Response.total_pages;
+    TotalPages.value = Response.pages;
     CurrentPage.value = Response.page;
 
 };

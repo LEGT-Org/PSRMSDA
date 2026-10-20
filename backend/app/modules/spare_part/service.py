@@ -345,4 +345,11 @@ class SparePartService:
         return item
 
 
+    def get_low_stock_counts(
+        self
+    ) -> int:
+
+        return self.repository.count_low_stock_parts()
+
+
     

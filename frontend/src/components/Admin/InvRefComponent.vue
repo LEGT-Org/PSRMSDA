@@ -230,8 +230,13 @@
     };
 
 
-    const GoToSparePartsDetail = async (id: number): Promise<void> => {
-        await Router.push(`/admin/inventory/${id}`);
+    const GoToSparePartsDetail = (id: number): void => {
+        Router.push({
+            name: "Admin Spare Part Details",
+            params: {
+                id: id
+            }
+        });
     }
 
     
@@ -263,7 +268,7 @@
                     v-if="IsAdmin"
                     type="button"
                     class="Add-New-Category-Button"
-                    @click="ShowCreateCategory = true"
+                    @click="ShowCreateCategory = true; ShowCreateSparePart = false"
                 >
                     Add New Category
                 </button>
@@ -271,7 +276,7 @@
                 <button
                     type="button"
                     class="Create-Inventory-Reference-Button"
-                    @click="ShowCreateSparePart = true"
+                    @click="ShowCreateSparePart = true; ShowCreateCategory = false"
                 >
                     Create Spare Part
                 </button>
@@ -710,98 +715,91 @@
             </div>
         </div>
 
-        <!-- Loading -->
-        <p v-if="IsLoading">
-            Loading spare parts...
-        </p>
+        <!-- Spare Parts Table -->
+        <div class="Spare-Part-Table-Container">
+            <table class="Spare-Part-Table">
+                <thead>
+                    <tr>
+                        <th>Part Code</th>
+                        <th>Part Name</th>
+                        <th>Type</th>
+                        <th>Brand</th>
+                        <th>Model</th>
+                        <th>Quantity</th>
+                        <th>Unit Cost</th>
+                        <th>Shelf Location</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
 
-        <template v-else>
-            <!-- Spare Parts Table -->
-            <div class="Spare-Part-Table-Container">
-                <table class="Spare-Part-Table">
-                    <thead>
-                        <tr>
-                            <th>Part Code</th>
-                            <th>Part Name</th>
-                            <th>Type</th>
-                            <th>Brand</th>
-                            <th>Model</th>
-                            <th>Quantity</th>
-                            <th>Unit Cost</th>
-                            <th>Shelf Location</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
+                <tbody>
+                    <tr
+                        v-for="Part in SpareParts"
+                        :key="Part.id"
+                    >
+                        <td>
+                            <strong>{{ Part.part_code }}</strong>
+                        </td>
+                        <td>{{ Part.part_name }}</td>
+                        <td>{{ Part.category_name }}</td>
+                        <td>{{ Part.device_brand ?? '—' }}</td>
+                        <td>{{ Part.device_model ?? '—' }}</td>
+                        <td>{{ Part.stock_quantity ?? '—' }}</td>
+                        <td>{{ FormatCurrency(Part.unit_cost) }}</td>
+                        <td>{{ Part.shelf_location }}</td>
 
-                    <tbody>
-                        <tr
-                            v-for="Part in SpareParts"
-                            :key="Part.id"
-                        >
-                            <td>
-                                <strong>{{ Part.part_code }}</strong>
-                            </td>
-                            <td>{{ Part.part_name }}</td>
-                            <td>{{ Part.category_name }}</td>
-                            <td>{{ Part.device_brand ?? '—' }}</td>
-                            <td>{{ Part.device_model ?? '—' }}</td>
-                            <td>{{ Part.stock_quantity ?? '—' }}</td>
-                            <td>{{ FormatCurrency(Part.unit_cost) }}</td>
-                            <td>{{ Part.shelf_location }}</td>
+                        <td>
+                            <button
+                                type="button"
+                                class="View-Request-Button"
+                                @click="GoToSparePartsDetail(Part.id)"
+                            >
+                                →
+                            </button>
+                        </td>
 
-                            <td>
-                                <button
-                                    type="button"
-                                    class="View-Request-Button"
-                                    @click="GoToSparePartsDetail(Part.id)"
-                                >
-                                    →
-                                </button>
-                            </td>
+                    </tr>
 
-                        </tr>
+                    <tr v-if="SpareParts.length === 0">
+                        <td colspan="8">
+                            <div class="Spare-Part-Empty-State">
+                                <h3>No spare parts found</h3>
+                                <p>
+                                    No spare parts record match
+                                    your current search or filter.
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
 
-                        <tr v-if="SpareParts.length === 0">
-                            <td colspan="8">
-                                <div class="Spare-Part-Empty-State">
-                                    <h3>No spare parts found</h3>
-                                    <p>
-                                        No spare parts record match
-                                        your current search or filter.
-                                    </p>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+        <!-- Pagination -->
+        <div class="Pagination">
+            <button
+                type="button"
+                :disabled="CurrentPage <= 1 || IsLoading"
+                @click="GoToPreviousPage"
+            >
+                Previous
+            </button>
 
-            <!-- Pagination -->
-            <div class="Pagination">
-                <button
-                    type="button"
-                    :disabled="CurrentPage <= 1 || IsLoading"
-                    @click="GoToPreviousPage"
-                >
-                    Previous
-                </button>
+            <span>
+                Page {{ CurrentPage }} of {{ TotalPages }}
+            </span>
 
-                <span>
-                    Page {{ CurrentPage }} of {{ TotalPages }}
-                </span>
-
-                <button
-                    type="button"
-                    :disabled="
-                        CurrentPage >= TotalPages ||
-                        IsLoading ||
-                        TotalPages === 0
-                    "
-                    @click="GoToNextPage"
-                >
-                    Next
-                </button>
-            </div>
-        </template>
+            <button
+                type="button"
+                :disabled="
+                    CurrentPage >= TotalPages ||
+                    IsLoading ||
+                    TotalPages === 0
+                "
+                @click="GoToNextPage"
+            >
+                Next
+            </button>
+        </div>
     </section>
 </template>

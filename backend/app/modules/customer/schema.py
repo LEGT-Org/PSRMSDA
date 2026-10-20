@@ -74,11 +74,18 @@ class CustomerUpdateRequest(BaseModel):
     )
 
 
-class CustomerResponse(BaseModel):
+class CustomerUpdateResponse(BaseModel):
 
+    id: int
+    message: str
+
+
+class CustomerResponse(BaseModel):
+    
+    id: int
     first_name: str
     last_name: str
-    email: EmailStr
+    email: str
     phone_number: str
     created_at: datetime
 
@@ -86,8 +93,9 @@ class CustomerResponse(BaseModel):
 
 
 class CustomerPageListResponse(BaseModel):
+
     items: list[CustomerResponse]
     total: int
     page: int
     limit: int
-    total_pages: int
+    pages: int

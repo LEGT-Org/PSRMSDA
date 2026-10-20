@@ -16,12 +16,11 @@ export interface SparePart {
 }
 
 export interface SparePartListResponse {
-    pages: number;
     items: SparePart[];
     total: number;
     page: number;
     limit: number;
-    total_pages: number;
+    pages: number;
 }
 
 export interface SparePartCreateRequest {
