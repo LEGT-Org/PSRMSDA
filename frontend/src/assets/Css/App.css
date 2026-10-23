@@ -13,7 +13,7 @@
 @import './Components/SparePartDetails.css';
 @import './Components/CustomerDetails.css';
 @import './Components/Customer.css';
-@import './Error/CominSoon.css';
+@import './Components/Reports.css';
 
 :root {
     --background-color: #c4c4c4;
