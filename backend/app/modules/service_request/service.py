@@ -63,15 +63,15 @@ class ServiceRequestService:
 
     def __init__(
         self,
+        db: Session,
         repository: ServiceRequestRepository,
         llm_diagnosis_interface: LLMDiagnosisInterface,
         procurement_alert_interface: ProcurementAlertInterface,
         request_part_interface: RequestPartInterface,
         spare_part_interface: SparePartInterface,
         customer_interface: CustomerInterface,
-        email_renderer: JinjaEmailRendered,
-        email_service: EmailService,
-        db: Session
+        email_renderer: JinjaEmailRendered | None = None,
+        email_service: EmailService | None = None,
     ):
 
         self.repository = repository
@@ -430,49 +430,50 @@ class ServiceRequestService:
             self.db.commit()
             self.db.refresh(service_request)
 
-            try:
+            if self.email_service is not None and self.email_renderer is not None:
+                try:
 
-                html = self.email_renderer.render(
-                    "service_request.html",
+                    html = self.email_renderer.render(
+                        "service_request.html",
 
-                    preheader="Your service request has been created.",
-                    company_name="Lightyear Electrical Goods Trading",
-                    address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
-                    first_name=customer.first_name,
-                    last_name=customer.last_name,
-                    intro="Your service request has been successfully created.",
-                    service_request_id=service_request.id,
-                    device_type=service_request.device_type,
-                    device_brand=service_request.device_brand,
-                    device_model=service_request.device_model,
-                    status=service_request.status,
-                    fault_description=service_request.fault_description,
-                    notice_title="What happens next?",
-                    notice_body="A technician will review your service request and proceed with the necessary inspection.",
-                    regards="Thanks,",
-                    team="The LEGT Team",
-                    footer="This is an automated message. Please do not reply directly to this email."
-                )
+                        preheader="Your service request has been created.",
+                        company_name="Lightyear Electrical Goods Trading",
+                        address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
+                        first_name=customer.first_name,
+                        last_name=customer.last_name,
+                        intro="Your service request has been successfully created.",
+                        service_request_id=service_request.id,
+                        device_type=service_request.device_type,
+                        device_brand=service_request.device_brand,
+                        device_model=service_request.device_model,
+                        status=service_request.status,
+                        fault_description=service_request.fault_description,
+                        notice_title="What happens next?",
+                        notice_body="A technician will review your service request and proceed with the necessary inspection.",
+                        regards="Thanks,",
+                        team="The LEGT Team",
+                        footer="This is an automated message. Please do not reply directly to this email."
+                    )
 
-                message = EmailMessage(
-                    to=customer.email,
-                    subject="Service Request Created",
-                    body=(
-                        "Your service request has been successfully created.\n\n"
-                        f"Service Request #: {service_request.id}\n"
-                        f"Device: {service_request.device_type}\n"
-                        f"Brand: {service_request.device_brand}\n"
-                        f"Model: {service_request.device_model}\n"
-                        f"Status: {service_request.status}\n\n"
-                        "Please wait for our team to contact you for further assistance."
-                    ),
-                        html=html
-                )
+                    message = EmailMessage(
+                        to=customer.email,
+                        subject="Service Request Created",
+                        body=(
+                            "Your service request has been successfully created.\n\n"
+                            f"Service Request #: {service_request.id}\n"
+                            f"Device: {service_request.device_type}\n"
+                            f"Brand: {service_request.device_brand}\n"
+                            f"Model: {service_request.device_model}\n"
+                            f"Status: {service_request.status}\n\n"
+                            "Please wait for our team to contact you for further assistance."
+                        ),
+                            html=html
+                    )
 
-            except Exception as email_error:
+                except Exception as email_error:
 
-                print(f"Failed to send finalization email: {email_error}")
-                raise EmailServiceFailedError() from error
+                    print(f"Failed to send finalization email: {email_error}")
+                    raise EmailServiceFailedError() from email_error
 
             self.email_service.send(message)
 
@@ -983,61 +984,62 @@ class ServiceRequestService:
             self.db.commit()
             self.db.refresh(stored_service_request)
 
-            try:
-                
-                html = self.email_renderer.render(
-                    "service_request.html",
-                    preheader="Your service request has been finalized.",
-                    company_name="Lightyear Electrical Goods Trading",
-                    address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
-                    first_name=stored_service_request.customers.first_name,
-                    last_name=stored_service_request.customers.last_name,
-                    intro="Your service request has been finalized.",
-                    service_request_id=stored_service_request.id,
-                    device_type=stored_service_request.device_type,
-                    device_brand=stored_service_request.device_brand,
-                    device_model=stored_service_request.device_model,
-                    status=stored_service_request.status.value,
-                    fault_description=stored_service_request.fault_description,
-                    notice_title="Final Service Request Status",
-                    notice_body=(
-                        "Good news! Your device is repaired and ready to be picked up. "
-                        "Please visit our store to collect your device."
-                        if stored_service_request.status == ServiceRequestStatus.COMPLETED
-                        else (
-                            "Your service request has been marked as unsuccessful. "
-                            "Please contact our team to discuss the results and next steps."
-                        )
-                    ),
-                    regards="Thanks,",
-                    team="The LEGT Team",
-                    footer=(
-                        "This is an automated message. "
-                        "Please do not reply directly to this email."
-                    ),
-                )
+            if self.email_service is not None and self.email_renderer is not None:
+                try:
+                    
+                    html = self.email_renderer.render(
+                        "service_request.html",
+                        preheader="Your service request has been finalized.",
+                        company_name="Lightyear Electrical Goods Trading",
+                        address="60 Burgos Street, Brgy. 3, Calamba City, 4027, Laguna, Philippines",
+                        first_name=stored_service_request.customers.first_name,
+                        last_name=stored_service_request.customers.last_name,
+                        intro="Your service request has been finalized.",
+                        service_request_id=stored_service_request.id,
+                        device_type=stored_service_request.device_type,
+                        device_brand=stored_service_request.device_brand,
+                        device_model=stored_service_request.device_model,
+                        status=stored_service_request.status.value,
+                        fault_description=stored_service_request.fault_description,
+                        notice_title="Final Service Request Status",
+                        notice_body=(
+                            "Good news! Your device is repaired and ready to be picked up. "
+                            "Please visit our store to collect your device."
+                            if stored_service_request.status == ServiceRequestStatus.COMPLETED
+                            else (
+                                "Your service request has been marked as unsuccessful. "
+                                "Please contact our team to discuss the results and next steps."
+                            )
+                        ),
+                        regards="Thanks,",
+                        team="The LEGT Team",
+                        footer=(
+                            "This is an automated message. "
+                            "Please do not reply directly to this email."
+                        ),
+                    )
 
-                message = EmailMessage(
-                    to=stored_service_request.customers.email,
-                    subject="Service Request Finalized",
-                    body=(
-                        "Your service request has been finalized.\n\n"
-                        f"Service Request #: {stored_service_request.id}\n"
-                        f"Device: {stored_service_request.device_type}\n"
-                        f"Brand: {stored_service_request.device_brand}\n"
-                        f"Model: {stored_service_request.device_model}\n"
-                        f"Status: {stored_service_request.status.value}\n\n"
-                        "Please contact our team if you have any questions."
-                    ),
-                    html=html,
-                )
+                    message = EmailMessage(
+                        to=stored_service_request.customers.email,
+                        subject="Service Request Finalized",
+                        body=(
+                            "Your service request has been finalized.\n\n"
+                            f"Service Request #: {stored_service_request.id}\n"
+                            f"Device: {stored_service_request.device_type}\n"
+                            f"Brand: {stored_service_request.device_brand}\n"
+                            f"Model: {stored_service_request.device_model}\n"
+                            f"Status: {stored_service_request.status.value}\n\n"
+                            "Please contact our team if you have any questions."
+                        ),
+                        html=html,
+                    )
 
-                self.email_service.send(message)
+                    self.email_service.send(message)
 
-            except Exception as email_error:
+                except Exception as email_error:
 
-                print(f"Failed to send finalization email: {email_error}")
-                raise EmailServiceFailedError() from error
+                    print(f"Failed to send finalization email: {email_error}")
+                    raise EmailServiceFailedError() from email_error
 
         except (
             ServiceRequestStatusCanOnlyBeCompletedOrUnsuccessfulError,

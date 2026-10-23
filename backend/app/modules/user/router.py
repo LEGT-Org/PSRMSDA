@@ -98,7 +98,7 @@ def get_users(
     response_model=UserResponse,
     status_code=status.HTTP_201_CREATED
 )
-@limiter.limit("5/minute")
+@limiter.limit("15/minute")
 def register(
     request: Request,
     data: UserCreate,

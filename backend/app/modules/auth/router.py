@@ -59,7 +59,7 @@ def get_csrf_token(response: Response):
     "/set-password",
     status_code=status.HTTP_200_OK
 )
-@limiter.limit("5/minute")
+@limiter.limit("15/minute")
 def set_password(
     request: Request,
     data: SetPasswordRequest,
@@ -78,7 +78,7 @@ def set_password(
     "/reset-password",
     status_code=status.HTTP_200_OK
 )
-@limiter.limit("5/minute")
+@limiter.limit("15/minute")
 def reset_password(
     request: Request,
     email: ResetPasswordRequest,
@@ -98,7 +98,7 @@ def reset_password(
     response_model=TokenResponse,
     status_code=status.HTTP_200_OK
 )
-@limiter.limit("5/minute")
+@limiter.limit("15/minute")
 def login(
     request: Request,
     response: Response,
@@ -168,7 +168,7 @@ def refresh(
     "/revoke",
     status_code=status.HTTP_200_OK
 )
-@limiter.limit("5/minute")
+@limiter.limit("15/minute")
 def revoke(
     request: Request,
     response: Response,
