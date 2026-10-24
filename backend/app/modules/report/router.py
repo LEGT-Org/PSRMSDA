@@ -25,6 +25,7 @@ router = APIRouter(
 @router.get("/spare-parts/csv")
 def export_spare_parts_csv(
     service: ReportService,
+    current_user: AdminUser,
     search: str | None = Query(default=None),
     category_id: int | None = Query(default=None, ge=1),
 ):
@@ -45,6 +46,7 @@ def export_spare_parts_csv(
 @router.get("/spare-parts/excel")
 def export_spare_parts_excel(
     service: ReportService,
+    current_user: AdminUser,
     search: str | None = Query(default=None),
     category_id: int | None = Query(default=None, ge=1),
 ):
@@ -68,6 +70,7 @@ def export_spare_parts_excel(
 @router.get("/spare-parts/pdf")
 def export_spare_parts_pdf(
     service: ReportService,
+    current_user: AdminUser,
     search: str | None = Query(default=None),
     category_id: int | None = Query(default=None, ge=1),
 ):
@@ -94,6 +97,7 @@ def export_spare_parts_pdf(
 @router.get("/service-requests/csv")
 def export_service_requests_csv(
     service: ReportService,
+    current_user: AdminUser,
     search: str | None = Query(default=None),
     status: ServiceRequestStatus | None = Query(default=None),
     created_date: date | None = Query(default=None),
@@ -118,6 +122,7 @@ def export_service_requests_csv(
 @router.get("/service-requests/excel")
 def export_service_requests_excel(
     service: ReportService,
+    current_user: AdminUser,
     search: str | None = Query(default=None),
     status: ServiceRequestStatus | None = Query(default=None),
     created_date: date | None = Query(default=None),
@@ -145,6 +150,7 @@ def export_service_requests_excel(
 @router.get("/service-requests/pdf")
 def export_service_requests_pdf(
     service: ReportService,
+    current_user: AdminUser,
     search: str | None = Query(default=None),
     status: ServiceRequestStatus | None = Query(default=None),
     created_date: date | None = Query(default=None),
