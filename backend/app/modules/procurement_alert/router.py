@@ -13,6 +13,7 @@ from app.modules.procurement_alert.schema import (
     ProcurementAlertPageListResponse,
     ProcurementAlertResponse,
     RecentActivitiesResponse,
+    LowStockCheckResponse,
     ProcurementAlertType
 )
 
@@ -37,7 +38,8 @@ router = APIRouter(
 @limiter.limit("120/minute")
 def recent_activities(
     request: Request,
-    service: ProcurementAlertService
+    service: ProcurementAlertService,
+    current_user: AdminUser
 ) -> RecentActivitiesResponse:
 
     return service.get_recent_activities()
@@ -75,6 +77,25 @@ def get_procurement_alerts(
     )
 
 
+@router.post(
+    "/check-stock",
+    response_model=LowStockCheckResponse,
+    status_code=status.HTTP_200_OK,
+)
+@limiter.limit("15/minute")
+def check_low_stock(
+    request: Request,
+    service: ProcurementAlertService,
+    current_user: AdminUser,
+    _: ValidateCSRF,
+    threshold: int = Query(5, ge=0),
+) -> LowStockCheckResponse:
+
+    return service.check_low_stock(
+        threshold=threshold
+    )
+
+
 @router.patch(
     "/{alert_id}/resolution",
     status_code=status.HTTP_200_OK,
@@ -100,3 +121,21 @@ def update_procurement_alert_resolution(
             f"{'resolved' if data.is_resolved else 'reopened'}."
         )
     }
+
+
+@router.get(
+    "/{alert_id}",
+    response_model=ProcurementAlertResponse,
+    status_code=status.HTTP_200_OK,
+)
+@limiter.limit("120/minute")
+def get_procurement_alert_by_id(
+    request: Request,
+    alert_id: int,
+    service: ProcurementAlertService,
+    current_user: AdminUser,
+) -> ProcurementAlertResponse:
+
+    return service.get_procurement_alert_by_id(
+        alert_id=alert_id
+    )

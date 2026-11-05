@@ -14,6 +14,7 @@
 @import './Components/CustomerDetails.css';
 @import './Components/Customer.css';
 @import './Components/Reports.css';
+@import './Components/LowStockDetails.css';
 
 :root {
     --background-color: #c4c4c4;

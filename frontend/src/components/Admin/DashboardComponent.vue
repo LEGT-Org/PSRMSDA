@@ -14,6 +14,7 @@
         isLoading,
         error,
         fetchDashboard,
+        CheckLowStock,
     } = useDashboard();
 
     onMounted(fetchDashboard);
@@ -127,8 +128,18 @@
 
             <div class="Overview-Card">
                 <span class="Overview-Label">Low Stock</span>
+
                 <strong>{{ totalLowStockParts }}</strong>
+
                 <small>Parts requiring attention</small>
+
+                <button
+                    type="button"
+                    class="Check-Stock-Button"
+                    @click="CheckLowStock"
+                >
+                    Check Stock
+                </button>
             </div>
         </section>
 

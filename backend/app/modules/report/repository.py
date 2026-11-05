@@ -25,6 +25,23 @@ class ReportRepository:
         self.db = db
 
 
+    def get_low_stock_parts(
+        self,
+        threshold: int = 5,
+    ) -> list[SparePart]:
+
+        statement = (
+            select(SparePart)
+            .where(
+                SparePart.deleted_at.is_(None),
+                SparePart.stock_quantity <= threshold,
+            )
+            .order_by(SparePart.part_name.asc())
+        )
+
+        return list(self.db.scalars(statement).all())
+
+
     def get_spare_parts(
         self,
         search: str | None = None,

@@ -5,7 +5,11 @@ import { ApiFetch } from '@/api/Client'
 import { Categories } from '@/services/state/InventoryReference'
 import { GetCategories } from '@/services/useInventoryReference'
 
-type ReportType = 'spare-parts' | 'service-requests'
+type ReportType =
+    | 'spare-parts'
+    | 'service-requests'
+    | 'low-stock-spare-parts'
+
 type ExportFormat = 'csv' | 'excel' | 'pdf'
 
 const exporting = ref<string | null>(null)
@@ -17,6 +21,8 @@ const categoryId = ref<number | ''>('')
 const serviceRequestSearch = ref('')
 const serviceRequestStatus = ref('')
 const createdDate = ref('')
+
+const lowStockThreshold = ref(5)
 
 const statuses = [
     'Pending',
@@ -32,6 +38,13 @@ const reports = [
         title: 'Spare Parts Report',
         description: 'Export spare-part inventory and category information.',
         icon: '📦',
+        formats: ['csv', 'excel', 'pdf'],
+    },
+    {
+        type: 'low-stock-spare-parts',
+        title: 'Low Stock Spare Parts Report',
+        description: 'Export spare parts with stock quantities at or below the selected threshold.',
+        icon: '⚠️',
         formats: ['csv', 'excel', 'pdf'],
     },
     {
@@ -58,6 +71,8 @@ function buildQuery(reportType: ReportType): string {
         if (categoryId.value !== '') {
             params.set('category_id', String(categoryId.value))
         }
+    } else if (reportType === 'low-stock-spare-parts') {
+        params.set('threshold', String(lowStockThreshold.value))
     } else {
         if (serviceRequestSearch.value.trim()) {
             params.set('search', serviceRequestSearch.value.trim())
@@ -128,6 +143,7 @@ async function exportReport(
 }
 </script>
 
+
 <template>
     <div class="Reports-Page">
         <header class="Reports-Header">
@@ -167,6 +183,25 @@ async function exportReport(
                     </option>
                 </select>
             </div>
+        </section>
+
+        <section class="Report-Card">
+            <h2>Low Stock Filters</h2>
+
+            <div class="Report-Filters">
+                <input
+                    v-model.number="lowStockThreshold"
+                    type="number"
+                    min="0"
+                    placeholder="Stock threshold"
+                    aria-label="Low stock threshold"
+                />
+            </div>
+
+            <p class="Report-Filter-Description">
+                Spare parts with a stock quantity less than or equal to
+                {{ lowStockThreshold }} will be included in the report.
+            </p>
         </section>
 
         <section class="Report-Card">

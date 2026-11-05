@@ -172,9 +172,6 @@ class ServiceRequestService:
                         llm_recommendation.compatibility_requirements
                     ),
                 )
-
-            print("Matched parts count:", len(matched_spare_parts))
-            print("Matched parts response:", matched_spare_parts)
                 
             self.db.commit()
             self.db.refresh(service_request)
@@ -280,6 +277,7 @@ class ServiceRequestService:
                         request_id=service_request.id,
                         part_id=None,
                         part_name_snapshot=None,
+                        low_stock_parts_snapshot=None,
                         is_resolved=False,
                         created_at=now,
                         alert_type=ProcurementAlertTypePreview.NO_PART_MATCH,
@@ -311,6 +309,7 @@ class ServiceRequestService:
                             request_id=service_request.id,
                             part_id=None,
                             part_name_snapshot=selection.part_name,
+                            low_stock_parts_snapshot=None,
                             is_resolved=False,
                             created_at=now,
                             alert_type=ProcurementAlertTypePreview.NO_PART_MATCH,
@@ -334,6 +333,7 @@ class ServiceRequestService:
                             request_id=service_request.id,
                             part_id=None,
                             part_name_snapshot=selection.part_name,
+                            low_stock_parts_snapshot=None,
                             is_resolved=False,
                             created_at=now,
                             alert_type=ProcurementAlertTypePreview.PART_NOT_FOUND,
@@ -390,6 +390,7 @@ class ServiceRequestService:
                         request_id=service_request.id,
                         part_id=part.id,
                         part_name_snapshot=part.part_name,
+                        low_stock_parts_snapshot=None,
                         is_resolved=False,
                         created_at=now,
                         alert_type=alert_type,
@@ -416,6 +417,7 @@ class ServiceRequestService:
                         )
                         else None
                     ),
+                    low_stock_parts_snapshot=None,
                     is_resolved=False,
                     created_at=now,
                     alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
@@ -601,6 +603,7 @@ class ServiceRequestService:
                         )
                         else None
                     ),
+                    low_stock_parts_snapshot=None,
                     is_resolved=False,
                     created_at=now,
                     alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
@@ -939,6 +942,7 @@ class ServiceRequestService:
                                     request_id=stored_service_request.id,
                                     part_id=request_part.part_id,
                                     part_name_snapshot=request_part.part_name_snapshot,
+                                    low_stock_parts_snapshot=None,
                                     is_resolved=False,
                                     created_at=now,
                                     alert_type=ProcurementAlertTypePreview.FINALIZED_REQUEST,
@@ -970,6 +974,7 @@ class ServiceRequestService:
                     request_id=stored_service_request.id,
                     part_id=None,
                     part_name_snapshot=None,
+                    low_stock_parts_snapshot=None,
                     is_resolved=False,
                     created_at=now,
                     alert_type=ProcurementAlertTypePreview.FINALIZED_REQUEST,
@@ -1138,10 +1143,11 @@ class ServiceRequestService:
                 )
 
                 self.procurement_alert_interface.create_procurement_alert(
-                    ProcurementAlertRequest(
+                    data=ProcurementAlertRequest(
                         request_id=service_request_id,
                         part_id=None,
                         part_name_snapshot=None,
+                        low_stock_parts_snapshot=None,
                         alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
                         alert_message=(
                             f"Service Request No. {service_request_id} "
@@ -1164,10 +1170,11 @@ class ServiceRequestService:
             )
 
             self.procurement_alert_interface.create_procurement_alert(
-                ProcurementAlertRequest(
+                data=ProcurementAlertRequest(
                     request_id=service_request_id,
                     part_id=None,
                     part_name_snapshot=None,
+                    low_stock_parts_snapshot=None,
                     alert_type=ProcurementAlertTypePreview.REQUEST_STAGE,
                     alert_message=(
                         f"Service Request No. {service_request_id} "

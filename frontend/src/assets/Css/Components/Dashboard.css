@@ -97,6 +97,7 @@
 .Overview-Card {
     display: flex;
     flex-direction: column;
+    justify-content: center;
     gap: 0.4rem;
     min-width: 0;
     padding: 1.2rem;
@@ -108,13 +109,38 @@
 }
 
 .Overview-Card strong {
-    font-size: 1.65rem;
+    font-size: 2.2rem;
     line-height: 1.2;
 }
 
 .Overview-Card small {
     color: #929292;
     font-size: 0.75rem;
+}
+
+.Check-Stock-Button {
+    background: transparent;
+    color: var(--error-handler-color);
+    border: 1.5px solid var(--error-handler-color);
+    border-radius: 0.375rem;
+    font-weight: bold;
+    padding: 0.50rem;
+
+    transition:
+        opacity 0.15s ease,
+        transform 0.15s ease,
+        background 0.15s ease,
+        color 0.15s ease;
+}
+
+.Check-Stock-Button:hover {
+    transform: translateY(-1px);
+    background: var(--seventh-color);
+    color: var(--normal-text-color);
+}
+
+.Check-Stock-Button:active {
+    transform: translateY(2px);
 }
 
 /* Main dashboard grid */

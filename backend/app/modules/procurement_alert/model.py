@@ -5,6 +5,7 @@ from sqlalchemy import (
     ForeignKey, 
     DateTime, 
     String,
+    JSON,
     Enum, 
     text
 )
@@ -22,7 +23,9 @@ class ProcurementAlert(Base):
     id: Mapped[int] = mapped_column(primary_key=True)
     alert_message: Mapped[str] = mapped_column(String(255), nullable=True)
     part_name_snapshot: Mapped[str] = mapped_column(String(255), nullable=True)
+    low_stock_parts_snapshot: Mapped[list[dict] | None] = mapped_column(JSON, nullable=True)
     is_resolved: Mapped[bool] = mapped_column(server_default=text("0"))
+
 
     alert_type: Mapped[ProcurementAlertType] = mapped_column(
         Enum(
@@ -35,7 +38,7 @@ class ProcurementAlert(Base):
     )
 
     # Foreign Key
-    request_id: Mapped[int] = mapped_column(ForeignKey("service_requests.id"), nullable=True)
+    request_id: Mapped[int | None] = mapped_column(ForeignKey("service_requests.id"), nullable=True)
     part_id: Mapped[int | None] = mapped_column(ForeignKey("spare_parts.id"), nullable=True)
 
     # Timestamp

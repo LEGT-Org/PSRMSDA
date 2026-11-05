@@ -161,6 +161,7 @@ class ProcurementAlertRequest(BaseModel):
     request_id: int
     part_id: int | None = None
     part_name_snapshot: str | None = None
+    low_stock_parts_snapshot: list[dict] | None = None
     is_resolved: bool = False
     created_at: datetime
     alert_type: ProcurementAlertType

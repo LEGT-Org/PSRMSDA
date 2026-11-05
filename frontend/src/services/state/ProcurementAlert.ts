@@ -5,11 +5,18 @@ export type ProcurementAlertResolution =
     | 'unresolved'
     | 'resolved';
 
+interface LowStockPart {
+    part_id: number;
+    part_name: string;
+    stock_quantity: number;
+}
+
 export interface ProcurementAlert {
     id: number;
     request_id: number;
     part_id: number | null;
     part_name_snapshot: string | null;
+    low_stock_parts_snapshot: LowStockPart[] | null;
     alert_type: string;
     alert_message: string | null;
     is_resolved: boolean;

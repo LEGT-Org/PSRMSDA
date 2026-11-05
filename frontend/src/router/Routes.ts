@@ -221,18 +221,6 @@ const routes = [
                 }
             },
             {
-                path: 'alerts',
-                name: 'Admin Procurement Alerts',
-                component: () => import('@/components/Admin/AlertsComponent.vue'),
-                meta: {
-                    requiresAuth: true,
-                    requiresToken: false,
-                    requiresAdmin: true,
-                    requiresStaff: false,
-                    title: 'Procurement Alerts Management'
-                }
-            },
-            {
                 path: 'inventory',
                 name: 'Admin Inventory Reference',
                 component: () => import('@/components/Admin/InvRefComponent.vue'),
@@ -327,7 +315,21 @@ const routes = [
                     requiresStaff: false,
                     title: 'Customer Detail'
                 }
-            }
+            },
+            {
+                path: 'alerts/low-stock/:id',
+                name: 'Admin Low Stock Details',
+                component: () => import(
+                    '@/components/Stage/LowStockDetailsComponent.vue'
+                ),
+                meta: {
+                    requiresAuth: true,
+                    requiresToken: false,
+                    requiresAdmin: true,
+                    requiresStaff: false,
+                    title: 'Low Stock Details'
+                }
+            },
         ]
     },
 
