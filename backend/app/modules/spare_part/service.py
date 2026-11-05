@@ -4,10 +4,12 @@ from uuid import uuid4
 from datetime import datetime, timezone
 from sqlalchemy.orm import Session
 
+from app.modules.spare_part.interface import ProcurementAlertInterface, CategoryInterface
 from app.modules.spare_part.repository import SparePartRepository
-from app.modules.spare_part.interface import CategoryInterface
 from app.modules.spare_part.model import SparePart
 from app.modules.spare_part.schema import (
+    ProcurementAlertTypePreview,
+    ProcurementAlertRequest,
     SparePartCreateRequest,
     SparePartUpdateRequest,
     SparePartListResponse,
@@ -33,11 +35,13 @@ class SparePartService:
         self,
         repository: SparePartRepository,
         category_interface: CategoryInterface,
+        procurement_alert_interface: ProcurementAlertInterface,
         db: Session
     ):
 
         self.repository = repository
         self.category_interface = category_interface
+        self.procurement_alert_interface = procurement_alert_interface
         self.db = db
 
 
@@ -168,6 +172,7 @@ class SparePartService:
     ) -> None:
 
         now = datetime.now(timezone.utc).replace(tzinfo=None)
+
         spare_part = self.repository.get_by_id(part_id)
 
         if spare_part is None:
@@ -182,28 +187,50 @@ class SparePartService:
         if not updates:
             raise SparePartUpdateRequestFailedError()
 
+        # Preserve the existing category if it isn't being updated.
+        category_id = spare_part.category_id
+
         if "category_id" in updates:
-            category = self.category_interface.get_category_by_id(updates["category_id"])
+
+            category = self.category_interface.get_category_by_id(
+                updates["category_id"]
+            )
 
             if category is None:
                 raise CategoryDoesNotExistError()
 
+            category_id = category.id
+
         try:
 
+            # 1. Update the spare part.
             self.repository.update(
                 stored_spare_part=spare_part,
-                category_id=category.id,
+                category_id=category_id,
                 approve_by=actor_id,
                 updates=updates,
                 now=now
             )
 
+            # 2. Synchronize the inventory alert only when stock changes.
+            if "stock_quantity" in updates:
+
+                self.procurement_alert_interface.sync_inventory_stock_alert(
+                    part_id=spare_part.id,
+                    part_name=spare_part.part_name,
+                    stock_quantity=spare_part.stock_quantity,
+                )
+
+            # 3. Commit both the inventory update and alert together.
             self.db.commit()
             self.db.refresh(spare_part)
 
         except Exception as error:
 
-            self.db.rollback
+            self.db.rollback()
+
+            print(error)
+
             raise SparePartUpdateFailedError() from error
 
 
@@ -350,6 +377,16 @@ class SparePartService:
     ) -> int:
 
         return self.repository.count_low_stock_parts()
+
+
+    def get_low_stock_parts(
+        self,
+        threshold: int = 5,
+    ) -> list[SparePart]:
+
+        return self.repository.get_low_stocks(
+            threshold=threshold
+        )
 
 
     

@@ -40,3 +40,10 @@ export interface RecentActivity {
 export interface RecentActivitiesResponse {
     items: RecentActivity[];
 }
+
+export interface LowStockCheckResponse {
+    message: string;
+    alert_created: boolean;
+    total_low_stock_parts: number;
+    alert: unknown | null;
+}

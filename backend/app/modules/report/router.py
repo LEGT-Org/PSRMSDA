@@ -1,7 +1,9 @@
 from fastapi.responses import StreamingResponse
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Request
 from datetime import date
 from io import BytesIO
+
+from app.shared.rate_limiter import limiter
 
 from app.modules.service_request.schema import ServiceRequestStatus
 from app.modules.report.dependency import (
@@ -16,6 +18,78 @@ router = APIRouter(
 )
 
 
+"""
+
+    Low Stock Spare Parts Report Generation Endpoints
+
+"""
+
+@router.get("/low-stock-spare-parts/csv")
+@limiter.limit("15/minute")
+def export_low_stock_parts_csv(
+    request: Request,
+    service: ReportService,
+    current_user: AdminUser,
+    threshold: int = Query(default=5, ge=0),
+):
+    csv_content, filename = service.export_low_stock_parts_csv(
+        threshold=threshold,
+    )
+
+    return StreamingResponse(
+        iter([csv_content.encode("utf-8-sig")]),
+        media_type="text/csv; charset=utf-8",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
+    )
+
+
+@router.get("/low-stock-spare-parts/excel")
+@limiter.limit("15/minute")
+def export_low_stock_parts_excel(
+    request: Request,
+    service: ReportService,
+    current_user: AdminUser,
+    threshold: int = Query(default=5, ge=0),
+):
+    excel_file, filename = service.export_low_stock_parts_excel(
+        threshold=threshold,
+    )
+
+    return StreamingResponse(
+        excel_file,
+        media_type=(
+            "application/vnd.openxmlformats-officedocument."
+            "spreadsheetml.sheet"
+        ),
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
+    )
+
+
+@router.get("/low-stock-spare-parts/pdf")
+@limiter.limit("15/minute")
+def export_low_stock_parts_pdf(
+    request: Request,
+    service: ReportService,
+    current_user: AdminUser,
+    threshold: int = Query(default=5, ge=0),
+):
+    pdf_file, filename = service.export_low_stock_parts_pdf(
+        threshold=threshold,
+    )
+
+    return StreamingResponse(
+        pdf_file,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f'attachment; filename="{filename}"'
+        },
+    )
+
+
 """  
 
     Spare Parts Report Generation Endpoint
@@ -23,7 +97,9 @@ router = APIRouter(
 """
 
 @router.get("/spare-parts/csv")
+@limiter.limit("15/minute")
 def export_spare_parts_csv(
+    request: Request,
     service: ReportService,
     current_user: AdminUser,
     search: str | None = Query(default=None),
@@ -44,7 +120,9 @@ def export_spare_parts_csv(
 
 
 @router.get("/spare-parts/excel")
+@limiter.limit("15/minute")
 def export_spare_parts_excel(
+    request: Request,
     service: ReportService,
     current_user: AdminUser,
     search: str | None = Query(default=None),
@@ -68,7 +146,9 @@ def export_spare_parts_excel(
 
 
 @router.get("/spare-parts/pdf")
+@limiter.limit("15/minute")
 def export_spare_parts_pdf(
+    request: Request,
     service: ReportService,
     current_user: AdminUser,
     search: str | None = Query(default=None),
@@ -95,7 +175,9 @@ def export_spare_parts_pdf(
 """
 
 @router.get("/service-requests/csv")
+@limiter.limit("15/minute")
 def export_service_requests_csv(
+    request: Request,
     service: ReportService,
     current_user: AdminUser,
     search: str | None = Query(default=None),
@@ -120,7 +202,9 @@ def export_service_requests_csv(
 
 
 @router.get("/service-requests/excel")
+@limiter.limit("15/minute")
 def export_service_requests_excel(
+    request: Request,
     service: ReportService,
     current_user: AdminUser,
     search: str | None = Query(default=None),
@@ -148,7 +232,9 @@ def export_service_requests_excel(
 
 
 @router.get("/service-requests/pdf")
+@limiter.limit("15/minute")
 def export_service_requests_pdf(
+    request: Request,
     service: ReportService,
     current_user: AdminUser,
     search: str | None = Query(default=None),

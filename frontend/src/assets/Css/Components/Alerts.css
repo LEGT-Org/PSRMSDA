@@ -3,6 +3,8 @@
     margin: 0;
 }
 
+/* Page Header */
+
 .Page-Header {
     display: flex;
     justify-content: space-between;
@@ -19,16 +21,6 @@
     margin: 0.5rem 0 0;
     color: #666666;
     font-size: 0.95rem;
-}
-
-.Alert-List-Header h2 {
-    margin: 0;
-}
-
-.Alert-List-Header p {
-    margin: 0.5rem 0 0;
-    color: #666666;
-    font-size: 0.90rem;
 }
 
 /* Summary */
@@ -84,11 +76,23 @@
     margin-bottom: 1rem;
 }
 
+.Alert-List-Header h2 {
+    margin: 0;
+}
+
+.Alert-List-Header p {
+    margin: 0.5rem 0 0;
+    color: #666666;
+    font-size: 0.9rem;
+}
+
+/* Filters */
+
 .Alert-List-Section .Alert-Filters {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr;
+    grid-template-columns: minmax(0, 2fr) minmax(150px, 1fr) minmax(150px, 1fr);
     gap: 1rem;
-    margin: 2rem 0 1.25rem ;
+    margin: 2rem 0 1.25rem;
     padding: 0 1rem;
 }
 
@@ -97,12 +101,15 @@
 .Alert-Table-Wrapper {
     width: 100%;
     overflow-x: auto;
+    border: 1px solid #dddddd;
     border-radius: 0.375rem;
 }
 
 .Alert-Table {
     width: 100%;
+    min-width: 900px;
     border-collapse: collapse;
+    table-layout: auto;
     text-align: left;
     background: var(--normal-text-color);
 }
@@ -111,16 +118,11 @@
     padding: 0.9rem 0.75rem;
     background: var(--main-color);
     color: var(--normal-text-color);
-    font-size: 0.82rem;
-    font-weight: 600;
-    white-space: nowrap;
-
-    font-size: 0.80rem;
+    font-size: 0.8rem;
     font-weight: 700;
-
     text-transform: uppercase;
     letter-spacing: 0.04em;
-
+    white-space: nowrap;
     box-sizing: border-box;
 }
 
@@ -129,7 +131,15 @@
     border-bottom: 1px solid #e8e8e8;
     font-size: 0.9rem;
     font-weight: 500;
-    vertical-align: top;
+    vertical-align: middle;
+}
+
+.Alert-Table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.Alert-Table tbody tr:hover {
+    background: #f8f8f8;
 }
 
 .Alert-Message-Cell {
@@ -144,7 +154,7 @@
 
 .Alert-Message-Cell p {
     margin: 0;
-    color: #666;
+    color: #666666;
     line-height: 1.5;
     overflow-wrap: anywhere;
     font-size: 0.85rem;
@@ -156,7 +166,7 @@
     padding: 0.35rem 0.55rem;
     border-radius: 0.3rem;
     font-size: 0.8rem;
-    font-weight: bold;
+    font-weight: 700;
     white-space: nowrap;
 }
 
@@ -165,8 +175,10 @@
     padding: 0.35rem 0.55rem;
     min-width: 150px;
     white-space: nowrap;
-    color: #555;
+    color: #555555;
 }
+
+/* Status */
 
 .Alert-Status {
     display: inline-block;
@@ -187,38 +199,71 @@
     color: #236740;
 }
 
+
 /* Actions */
 
-.Alert-Action-Button {
-    padding: 0.65rem 0.80rem;
+.Alert-Action-Container {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    white-space: nowrap;
+}
 
-    border-radius: 0.375rem;
-    background: none;
+.Alert-Action-Button,
+.View-Request-Button {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
 
-    border: 1.5px solid var(--secondary-color);
+    min-width: unset;
+    min-height: 32px;
+    padding: 0.4rem 0.55rem;
+
+    border-radius: 0.3rem;
+    background: transparent;
+
+    border: 1px solid var(--secondary-color);
     color: var(--secondary-color);
 
     cursor: pointer;
 
-    font-size: 0.72rem;
+    font-size: 0.68rem;
     font-weight: 600;
+    line-height: 1;
 
     transition:
-        opacity 0.15s ease,
-        transform 0.15s ease,
         background 0.15s ease,
-        color 0.15s ease;
+        color 0.15s ease,
+        transform 0.15s ease;
 }
 
-.Alert-Action-Button:hover {
+.View-Request-Button {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    font-size: 0.85rem;
+}
+
+.Alert-Action-Button:hover,
+.View-Request-Button:hover {
     background: var(--secondary-color);
     color: var(--normal-text-color);
     transform: translateY(-1px);
 }
 
-.Alert-Action-Button:active {
-    transform: translateY(2px);
+.Alert-Action-Button:active,
+.View-Request-Button:active {
+    transform: translateY(1px);
 }
+
+.Alert-Action-Button:disabled,
+.View-Request-Button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+
 /* Empty State */
 
 .Alert-Empty-State {
@@ -232,15 +277,14 @@
 
 .Alert-Empty-State p {
     margin: 0;
-    color: #777;
+    color: #777777;
 }
-
 
 /* Responsive */
 
 @media (max-width: 900px) {
     .Alert-Table {
-        min-width: 850px;
+        min-width: 900px;
     }
 }
 
@@ -249,19 +293,25 @@
         padding: 1rem;
     }
 
+    .Page-Header h1 {
+        font-size: 1.5rem;
+    }
+
     .Alert-Summary {
         grid-template-columns: 1fr;
     }
 
-    .Alert-Filters {
-        flex-direction: column;
-    }
-
-    .Alert-Filter-Select {
-        width: 100%;
-    }
-
     .Alert-List-Section {
         padding: 0.75rem;
+    }
+
+    .Alert-List-Section .Alert-Filters {
+        grid-template-columns: 1fr;
+        padding: 0;
+        margin: 1.5rem 0 1rem;
+    }
+
+    .Alert-Table {
+        min-width: 900px;
     }
 }

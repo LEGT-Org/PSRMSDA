@@ -1,10 +1,24 @@
+from enum import StrEnum
 from decimal import Decimal
+from datetime import datetime
 from pydantic import (
     field_validator,
     ConfigDict, 
     BaseModel, 
     Field, 
 )
+
+from app.modules.procurement_alert.schema import ProcurementAlertType
+
+
+class ProcurementAlertTypePreview(StrEnum):
+
+    FINALIZED_REQUEST = ProcurementAlertType.FINALIZED_REQUEST
+    REQUEST_STAGE = ProcurementAlertType.REQUEST_STAGE
+    PART_SELECTED = ProcurementAlertType.PART_SELECTED
+    NO_PART_MATCH = ProcurementAlertType.NO_PART_MATCH
+    PART_NOT_FOUND = ProcurementAlertType.PART_NOT_FOUND
+    INSUFFICIENT_STOCK = ProcurementAlertType.INSUFFICIENT_STOCK
 
 
 class SparePartCreateRequest(BaseModel):
@@ -63,3 +77,15 @@ class SparePartListResponse(BaseModel):
     page: int
     limit: int
     pages: int
+
+
+class ProcurementAlertRequest(BaseModel):
+
+    request_id: int
+    part_id: int | None = None
+    part_name_snapshot: str | None = None
+    low_stock_parts_snapshot: list[dict] | None = None
+    is_resolved: bool = False
+    created_at: datetime
+    alert_type: ProcurementAlertType
+    alert_message: str | None = None

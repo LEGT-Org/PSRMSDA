@@ -1,9 +1,10 @@
 from datetime import datetime
 from enum import StrEnum
+
 from pydantic import (
+    BaseModel,
+    ConfigDict,
     field_validator,
-    ConfigDict, 
-    BaseModel
 )
 
 
@@ -17,11 +18,20 @@ class ProcurementAlertType(StrEnum):
     INSUFFICIENT_STOCK = "Insufficient Stock"
 
 
+class LowStockPartSnapshot(BaseModel):
+
+    part_id: int
+    part_name: str
+    stock_quantity: int
+
+
 class ProcurementAlertSchema(BaseModel):
 
-    request_id: int
+    request_id: int | None = None
     part_id: int | None = None
     part_name_snapshot: str | None = None
+    low_stock_parts_snapshot: list[dict] | None = None
+
     is_resolved: bool = False
     created_at: datetime
     alert_type: ProcurementAlertType
@@ -36,9 +46,11 @@ class ProcurementAlertResolutionRequest(BaseModel):
 class ProcurementAlertResponse(BaseModel):
 
     id: int
-    request_id: int
+    request_id: int | None
     part_id: int | None
     part_name_snapshot: str | None
+    low_stock_parts_snapshot: list[LowStockPartSnapshot] | None = None
+
     alert_type: str
     alert_message: str | None
     is_resolved: bool
@@ -72,5 +84,13 @@ class RecentActivityItem(BaseModel):
 
 
 class RecentActivitiesResponse(BaseModel):
-    
+
     items: list[RecentActivityItem]
+
+
+class LowStockCheckResponse(BaseModel):
+
+    message: str
+    alert_created: bool
+    total_low_stock_parts: int
+    alert: ProcurementAlertResponse | None = None

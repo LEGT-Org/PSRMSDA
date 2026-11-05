@@ -41,6 +41,289 @@ class ReportService:
         self.db = db
 
 
+    """ 
+    
+        Spare Parts Reports Low Stock Generation
+
+    """
+
+    def export_low_stock_parts_csv(
+        self,
+        threshold: int = 5,
+    ) -> tuple[str, str]:
+
+        spare_parts = self.repository.get_low_stock_parts(
+            threshold=threshold,
+        )
+
+        output = StringIO()
+        writer = csv.writer(output)
+
+        writer.writerow([
+            "Spare Part Name",
+            "Stock Quantity",
+        ])
+
+        for part in spare_parts:
+            writer.writerow([
+                part.part_name,
+                part.stock_quantity,
+            ])
+
+        return output.getvalue(), "low-stock-spare-parts.csv"
+
+
+    def export_low_stock_parts_excel(
+        self,
+        threshold: int = 5,
+    ) -> tuple[BytesIO, str]:
+
+        spare_parts = self.repository.get_low_stock_parts(
+            threshold=threshold,
+        )
+
+        workbook = Workbook()
+        worksheet = workbook.active
+        worksheet.title = "Low Stock Parts"
+
+        headers = [
+            "Spare Part Name",
+            "Stock Quantity",
+        ]
+
+        worksheet.append(headers)
+
+        for part in spare_parts:
+            worksheet.append([
+                part.part_name,
+                part.stock_quantity,
+            ])
+
+        # Format the header row.
+        for cell in worksheet[1]:
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = PatternFill(
+                fill_type="solid",
+                fgColor="1F4E78",
+            )
+            cell.alignment = Alignment(horizontal="center")
+
+        # Adjust column widths.
+        worksheet.column_dimensions["A"].width = 35
+        worksheet.column_dimensions["B"].width = 20
+
+        # Keep headers visible while scrolling.
+        worksheet.freeze_panes = "A2"
+
+        # Enable filtering.
+        worksheet.auto_filter.ref = worksheet.dimensions
+
+        # Center stock quantities.
+        for cell in worksheet["B"][1:]:
+            cell.alignment = Alignment(horizontal="center")
+
+        output = BytesIO()
+        workbook.save(output)
+        output.seek(0)
+
+        return output, "low-stock-spare-parts.xlsx"
+
+
+    def export_low_stock_parts_pdf(
+        self,
+        threshold: int = 5,
+    ) -> tuple[BytesIO, str]:
+
+        spare_parts = self.repository.get_low_stock_parts(
+            threshold=threshold,
+        )
+
+        # Locate Unicode font files.
+        font_directory = Path("/usr/share/fonts/truetype/dejavu")
+        regular_font = font_directory / "DejaVuSans.ttf"
+        bold_font = font_directory / "DejaVuSans-Bold.ttf"
+
+        if not regular_font.exists() or not bold_font.exists():
+            raise RuntimeError(
+                "DejaVu Sans fonts were not found. "
+                "Install the DejaVu fonts or configure their paths."
+            )
+
+        # Register fonts only once.
+        if "DejaVu" not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(
+                TTFont("DejaVu", str(regular_font))
+            )
+
+        if "DejaVu-Bold" not in pdfmetrics.getRegisteredFontNames():
+            pdfmetrics.registerFont(
+                TTFont("DejaVu-Bold", str(bold_font))
+            )
+
+        output = BytesIO()
+
+        document = SimpleDocTemplate(
+            output,
+            pagesize=A4,
+            rightMargin=20 * mm,
+            leftMargin=20 * mm,
+            topMargin=15 * mm,
+            bottomMargin=15 * mm,
+            title="Low Stock Spare Parts Report",
+        )
+
+        styles = getSampleStyleSheet()
+
+        title_style = ParagraphStyle(
+            "LowStockReportTitle",
+            parent=styles["Title"],
+            fontName="DejaVu-Bold",
+            fontSize=16,
+            leading=20,
+            alignment=TA_CENTER,
+            textColor=colors.HexColor("#1F4E78"),
+            spaceAfter=5 * mm,
+        )
+
+        subtitle_style = ParagraphStyle(
+            "LowStockReportSubtitle",
+            parent=styles["Normal"],
+            fontName="DejaVu",
+            fontSize=9,
+            alignment=TA_CENTER,
+            textColor=colors.HexColor("#555555"),
+            spaceAfter=8 * mm,
+        )
+
+        header_style = ParagraphStyle(
+            "LowStockTableHeader",
+            parent=styles["Normal"],
+            fontName="DejaVu-Bold",
+            fontSize=9,
+            textColor=colors.white,
+        )
+
+        cell_style = ParagraphStyle(
+            "LowStockTableCell",
+            parent=styles["Normal"],
+            fontName="DejaVu",
+            fontSize=9,
+        )
+
+        elements = [
+            Paragraph(
+                "Low Stock Spare Parts Report",
+                title_style,
+            ),
+            Paragraph(
+                f"Total records: {len(spare_parts)} | "
+                f"Low-stock threshold: {threshold}",
+                subtitle_style,
+            ),
+        ]
+
+        table_data = [
+            [
+                Paragraph("Spare Part Name", header_style),
+                Paragraph("Stock Quantity", header_style),
+            ]
+        ]
+
+        for part in spare_parts:
+            table_data.append([
+                Paragraph(
+                    escape(str(part.part_name or "")),
+                    cell_style,
+                ),
+                Paragraph(
+                    str(part.stock_quantity),
+                    cell_style,
+                ),
+            ])
+
+        table = Table(
+            table_data,
+            colWidths=[120 * mm, 50 * mm],
+            repeatRows=1,
+            hAlign="CENTER",
+        )
+
+        table.setStyle(TableStyle([
+            (
+                "BACKGROUND",
+                (0, 0),
+                (-1, 0),
+                colors.HexColor("#1F4E78"),
+            ),
+            (
+                "TEXTCOLOR",
+                (0, 0),
+                (-1, 0),
+                colors.white,
+            ),
+            (
+                "GRID",
+                (0, 0),
+                (-1, -1),
+                0.4,
+                colors.HexColor("#CCCCCC"),
+            ),
+            (
+                "VALIGN",
+                (0, 0),
+                (-1, -1),
+                "MIDDLE",
+            ),
+            (
+                "ALIGN",
+                (1, 1),
+                (1, -1),
+                "CENTER",
+            ),
+            (
+                "ROWBACKGROUNDS",
+                (0, 1),
+                (-1, -1),
+                [
+                    colors.white,
+                    colors.HexColor("#F2F6FA"),
+                ],
+            ),
+            (
+                "LEFTPADDING",
+                (0, 0),
+                (-1, -1),
+                6,
+            ),
+            (
+                "RIGHTPADDING",
+                (0, 0),
+                (-1, -1),
+                6,
+            ),
+            (
+                "TOPPADDING",
+                (0, 0),
+                (-1, -1),
+                7,
+            ),
+            (
+                "BOTTOMPADDING",
+                (0, 0),
+                (-1, -1),
+                7,
+            ),
+        ]))
+
+        elements.append(table)
+
+        document.build(elements)
+
+        output.seek(0)
+
+        return output, "low-stock-spare-parts.pdf"
+
+
     """  
     
         Spare Parts Reports Generation Service

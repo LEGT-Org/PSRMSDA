@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted } from 'vue';
+import { useRouter } from 'vue-router';
 
 import { FormatAlertType } from '@/helper/SymptomsParser';
 import { FormatDate } from '@/helper/DateFormatter';
@@ -24,6 +25,9 @@ import {
     StatusFilter,
     TypeFilter,
 } from '@/services/state/ProcurementAlert';
+
+
+const router = useRouter();
 
 // The backend already handles searching and filtering.
 const FilteredAlerts = computed(() => ProcurementAlerts.value);
@@ -99,6 +103,16 @@ const GoToPreviousPage = async () => {
     );
 
 };
+
+
+const GoToLowStockDetail = (alertId: number)  => {
+    router.push({
+        name: 'Admin Low Stock Details',
+        params: {
+            id: alertId
+        }
+    });
+}
 
 
 onMounted(async () => {
@@ -242,7 +256,18 @@ onMounted(async () => {
                         >
                             <td class="Alert-Message-Cell">
                                 <strong>
-                                    {{ Alert.part_name_snapshot || 'Service Request Update' }}
+                                    {{
+                                        Alert.part_name_snapshot
+                                            ? Alert.part_name_snapshot
+                                            : Alert.alert_type === 'Finalized Request'
+                                                ? 'Service Request Finalization'
+                                                : Alert.alert_type === 'Insufficient Stock'
+                                                    ? 'Insufficient Stock Alert'
+                                                    : Alert.alert_type === 'No Part Match' 
+                                                        || Alert.alert_type === 'Part Not Found'
+                                                    ? 'Spare Part Unavailable Alert'
+                                                    : 'Service Request Update' 
+                                    }}
                                 </strong>
 
                                 <p>{{ Alert.alert_message }}</p>
@@ -256,7 +281,11 @@ onMounted(async () => {
 
                             <td>
                                 <span class="Alert-Request-ID">
-                                    No. {{ Alert.request_id }}
+                                    {{ 
+                                        Alert.request_id 
+                                            ? `No. ${Alert.request_id}` 
+                                            : 'N/A'
+                                    }}
                                 </span>
                             </td>
 
@@ -284,19 +313,31 @@ onMounted(async () => {
                             </td>
 
                             <td>
-                                <button
-                                    v-if="!Alert.is_resolved"
-                                    type="button"
-                                    class="Alert-Action-Button"
-                                    :disabled="IsLoading"
-                                    @click="ToggleResolved(Alert.id)"
-                                >
-                                    {{
-                                        Alert.alert_type === 'Request Stage'
-                                            ? 'Mark as Read'
-                                            : 'Mark as Resolve'
-                                    }}
-                                </button>
+                                <div class="Alert-Action-Container">
+                                    <button
+                                        type="button"
+                                        class="Alert-Action-Button"
+                                        @click="ToggleResolved(Alert.id)"
+                                        :disabled="Alert.is_resolved === true"
+                                    >
+                                        {{
+                                            Alert.alert_type === 'Request Stage'
+                                                ? 'Mark as Read'
+                                                : 'Mark as Resolve'
+                                        }}
+                                    </button>
+
+                                    <button
+                                        v-if="Alert.alert_type === 'Insufficient Stock'
+                                            && Alert.low_stock_parts_snapshot !== null
+                                        "
+                                        type="button"
+                                        class="View-Request-Button"
+                                        @click="GoToLowStockDetail(Alert.id)"
+                                    >
+                                        →
+                                    </button>
+                                </div>
                             </td>
                         </tr>
 

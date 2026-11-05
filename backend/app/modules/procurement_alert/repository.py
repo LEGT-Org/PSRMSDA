@@ -1,5 +1,5 @@
 from datetime import datetime
-from sqlalchemy import select, cast, func, or_, select, String
+from sqlalchemy import select, cast, func, or_, String
 from sqlalchemy.orm import Session
 
 from app.modules.procurement_alert.model import ProcurementAlert
@@ -138,4 +138,77 @@ class ProcurementAlertRepository:
     ) -> None:
 
         stored_procurement_alert.is_resolved = is_resolved
+        stored_procurement_alert.updated_at = now
+        
+
+    def get_unresolved_low_stock_alert(
+        self,
+    ) -> ProcurementAlert | None:
+
+        statement = (
+            select(ProcurementAlert)
+            .where(
+                ProcurementAlert.alert_type == ProcurementAlertType.INSUFFICIENT_STOCK,
+                ProcurementAlert.request_id.is_(None),
+                ProcurementAlert.part_id.is_(None),
+                ProcurementAlert.is_resolved.is_(False),
+            )
+            .order_by(
+                ProcurementAlert.created_at.desc(),
+                ProcurementAlert.id.desc(),
+            )
+            .limit(1)
+        )
+
+        return self.db.scalar(statement)
+
+
+    def update_low_stock_snapshot(
+        self,
+        stored_procurement_alert: ProcurementAlert,
+        low_stock_parts_snapshot: list[dict],
+        alert_message: str,
+        now: datetime,
+    ) -> None:
+
+        stored_procurement_alert.low_stock_parts_snapshot = (
+            low_stock_parts_snapshot
+        )
+
+        stored_procurement_alert.alert_message = alert_message
+        stored_procurement_alert.updated_at = now
+
+
+        
+    def get_unresolved_inventory_alert(
+        self,
+        part_id: int,
+    ) -> ProcurementAlert | None:
+
+        statement = (
+            select(ProcurementAlert)
+            .where(
+                ProcurementAlert.alert_type == ProcurementAlertType.INSUFFICIENT_STOCK,
+                ProcurementAlert.part_id == part_id,
+                ProcurementAlert.request_id.is_(None),
+                ProcurementAlert.is_resolved.is_(False),
+            )
+            .order_by(
+                ProcurementAlert.created_at.desc(),
+                ProcurementAlert.id.desc(),
+            )
+            .limit(1)
+        )
+
+        return self.db.scalar(statement)
+
+
+    def update_inventory_alert(
+        self,
+        stored_procurement_alert: ProcurementAlert,
+        alert_message: str,
+        now: datetime,
+    ) -> None:
+
+        stored_procurement_alert.alert_message = alert_message
         stored_procurement_alert.updated_at = now
