@@ -164,7 +164,9 @@ The integration follows an asynchronous request-response process:
 
 **Organization:** Lightyear Electrical Goods Trading (LEGT)
 
-**Course:** SIA301 – System Integration and Architecture
+**Course:**
+- SE2 – Software Engineering 2
+- SIA301 – System Integration and Architecture
 
 **Integration Partner:** Groq LLM API
 
