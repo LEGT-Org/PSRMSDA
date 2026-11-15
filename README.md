@@ -28,6 +28,7 @@ The system also cross-references recommended components with its internal spare 
 | Database | MySQL |
 | ORM | SQLAlchemy |
 | Data Validation | Pydantic |
+| Database Migration | Alembic |
 | Package Manager | uv |
 | AI Integration | Groq LLM API |
 | API Client | Python AsyncGroq |
@@ -37,14 +38,19 @@ The system also cross-references recommended components with its internal spare 
 ```text
 PSRMSDA/
 ├── backend/
+│   ├── app/
+│   ├── alembic/
+│   │   └── versions/
+│   ├── alembic.ini
 │   ├── pyproject.toml
-│   ├── uv.lock
-│   └── Backend source code
+│   └── uv.lock
 ├── frontend/
 │   └── Frontend source code
 ├── README.md
 └── .gitignore
 ```
+
+*Note: The directory structure above illustrates the expected project organization. Adjust it if your actual repository structure differs.*
 
 ## Prerequisites
 
@@ -79,18 +85,125 @@ Install the backend dependencies using uv:
 uv sync
 ```
 
-This command installs the dependencies defined in `pyproject.toml` and uses `uv.lock` when available.
+This command installs the dependencies defined in `pyproject.toml` and uses `uv.lock` to maintain the project's dependency versions.
 
-Configure the required backend environment variables, including the database connection settings and Groq API credentials, according to the project's configuration.
+#### Environment Configuration
 
-### 3. Database Setup
+Create a `.env` file using the provided `.env.example` as a reference.
+
+Configure the required environment variables, including:
+
+- MySQL database connection settings.
+- Groq API key.
+- Other environment variables required by the backend.
+
+Use your own credentials and configuration values.
+
+**Important:** Never commit or distribute your actual `.env` file or API credentials.
+
+### 3. Database Setup and Migration
+
+PSRMSDA uses MySQL for data storage and Alembic for database schema migration.
 
 1. Start your MySQL server.
-2. Create the required project database.
-3. Configure the database connection settings in the backend environment file.
-4. Run the database initialization or migration process used by the project.
+2. Create an empty database for PSRMSDA.
+3. Configure the database connection settings in the backend `.env` file.
+4. Ensure that the Alembic configuration points to the correct database.
+5. Apply the database migrations.
 
-### 4. Frontend Setup
+Run the following command from the backend directory:
+
+```bash
+uv run alembic upgrade head
+```
+
+This applies all available migration revisions and updates the database schema to the latest version.
+
+To check the current migration revision:
+
+```bash
+uv run alembic current
+```
+
+To view the available migration history:
+
+```bash
+uv run alembic history
+```
+
+### 4. Initial Administrator Account Setup
+
+To create the initial administrator account, temporarily modify the administrator registration endpoint in:
+
+`backend/app/modules/user/router.py`
+
+**Original implementation:**
+
+```python
+@router.post(
+    "/admin/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED
+)
+@limiter.limit("15/minute")
+def register(
+    request: Request,
+    data: UserCreate,
+    service: UserService,
+    current_user: AdminUser,
+    _: ValidateCSRF
+):
+    return service.create_user(
+        data=data,
+        actor_id=current_user.id
+    )
+```
+
+**Temporary implementation for initial administrator registration:**
+
+```python
+@router.post(
+    "/admin/register",
+    response_model=UserResponse,
+    status_code=status.HTTP_201_CREATED
+)
+@limiter.limit("15/minute")
+def register(
+    request: Request,
+    data: UserCreate,
+    service: UserService,
+    _: ValidateCSRF
+):
+    return service.create_user(
+        data=data,
+        actor_id=1
+    )
+```
+
+The temporary modification removes the authenticated administrator requirement and uses `actor_id=1` when creating the initial administrator account.
+
+**Create the administrator account through Swagger:**
+
+1. Start the backend server.
+2. Open the Swagger documentation:
+
+   http://127.0.0.1:8000/docs
+
+3. Locate the `POST /admin/register` endpoint.
+4. Expand the endpoint and select **Try it out**.
+5. Enter the required administrator account information according to the `UserCreate` schema.
+6. Select **Execute** to create the administrator account.
+7. Verify that the account was successfully created.
+
+**Important:** The temporary implementation is intended only for local initial setup. After successfully creating the administrator account:
+
+1. Restore the original implementation containing `current_user: AdminUser`.
+2. Restart the backend server.
+3. Log in using the newly created administrator account.
+
+Do not deploy or expose the temporarily modified endpoint to a public network. Also, ensure that user ID `1` exists if the audit logic requires it as the actor.
+
+### 5. Frontend Setup
 
 Open another terminal and navigate to the frontend directory:
 
@@ -108,7 +221,7 @@ npm install
 
 ### Backend
 
-Navigate to the backend directory:
+Open a terminal and navigate to the backend directory:
 
 ```bash
 cd backend
@@ -120,11 +233,11 @@ Start the FastAPI development server using uv:
 uv run uvicorn app.main:app --reload
 ```
 
-Replace `<MODULE_NAME>` with the actual Python module containing the FastAPI application.
+The FastAPI application will start using the application instance defined in `app.main`.
 
 ### Frontend
 
-Navigate to the frontend directory:
+Open another terminal and navigate to the frontend directory:
 
 ```bash
 cd frontend
@@ -164,9 +277,7 @@ The integration follows an asynchronous request-response process:
 
 **Organization:** Lightyear Electrical Goods Trading (LEGT)
 
-**Course:**
-- SE2 – Software Engineering 2
-- SIA301 – System Integration and Architecture
+**Course:** SIA301 – System Integration and Architecture
 
 **Integration Partner:** Groq LLM API
 
