@@ -199,7 +199,8 @@ The temporary modification removes the authenticated administrator requirement a
 
 1. Restore the original implementation containing `current_user: AdminUser`.
 2. Restart the backend server.
-3. Log in using the newly created administrator account.
+3. Go to your development database and users table to change user role from user to admin.
+4. Log in using the newly created administrator account.
 
 Do not deploy or expose the temporarily modified endpoint to a public network. Also, ensure that user ID `1` exists if the audit logic requires it as the actor.
 
@@ -277,7 +278,10 @@ The integration follows an asynchronous request-response process:
 
 **Organization:** Lightyear Electrical Goods Trading (LEGT)
 
-**Course:** SIA301 – System Integration and Architecture
+**Course:** 
+
+- SE2 – Software Engineering 2
+- SIA301 – System Integration and Architecture
 
 **Integration Partner:** Groq LLM API
 
